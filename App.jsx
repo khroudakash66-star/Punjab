@@ -1,59 +1,55 @@
 import React, { useState, useRef } from 'react';
 import { 
   Heart, MessageCircle, Send, Bookmark, Home, Film, PlusSquare, 
-  User, LogOut, CheckCircle2, Globe, Camera, Grid, BookmarkCheck, X 
+  User, LogOut, Globe, Camera, Grid, BookmarkCheck, X 
 } from 'lucide-react';
 
-const safeGet = (key, fallback) => {
+const safeGet = (k, def) => {
   try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    const v = localStorage.getItem(k);
+    return v ? JSON.parse(v) : def;
   } catch {
-    return fallback;
+    return def;
   }
 };
 
-const safeSet = (key, value) => {
+const safeSet = (k, v) => {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    localStorage.setItem(k, JSON.stringify(v));
   } catch (e) {
-    console.warn("Storage warning", e);
+    console.warn(e);
   }
 };
 
-// Canvas Calligraphy Logo Component
-const PunjabCanvasLogo = ({ size = "small" }) => {
+const PunjabLogo = ({ size = "small" }) => {
   if (size === "large") {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-500/70 shadow-2xl p-2 bg-gradient-to-br from-red-800 via-yellow-700 to-teal-900 flex flex-col items-center justify-center text-center">
-          <span className="text-4xl select-none mb-1">🌾</span>
-          <span className="font-black text-3xl text-white tracking-wide select-none drop-shadow-md">
+        <div className="w-32 h-32 rounded-2xl border-2 border-amber-500/70 shadow-2xl p-2 bg-gradient-to-br from-red-800 via-amber-700 to-teal-900 flex flex-col items-center justify-center text-center">
+          <span className="text-3xl select-none mb-1">🌾</span>
+          <span className="font-black text-3xl text-white tracking-wide select-none drop-shadow">
             ਪੰਜਾਬ
           </span>
-          <span className="text-xs italic text-amber-200 font-serif tracking-widest mt-0.5 select-none">
+          <span className="text-[11px] italic text-amber-200 font-serif tracking-widest select-none">
             Panjaab
           </span>
         </div>
-        <span className="font-extrabold text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
+        <span className="font-black text-2xl tracking-[0.2em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-2">
           PUNJAB
         </span>
       </div>
     );
   }
-
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-500/50 shadow-md flex items-center justify-center bg-gradient-to-br from-red-800 via-amber-600 to-teal-900">
-        <span className="font-black text-white text-base">ਪੰ</span>
+    <div className="flex items-center gap-2">
+      <div className="w-9 h-9 rounded-lg border border-amber-500/60 bg-gradient-to-br from-red-800 via-amber-600 to-teal-900 flex items-center justify-center shadow">
+        <span className="font-black text-white text-sm">ਪੰ</span>
       </div>
       <div className="flex flex-col">
-        <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent leading-none">
+        <span className="font-extrabold text-sm tracking-wider bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent leading-none">
           PUNJAB
         </span>
-        <span className="text-[10px] tracking-widest text-amber-300/80 font-medium">
-          Panjaab
-        </span>
+        <span className="text-[9px] text-amber-300 font-medium">Panjaab</span>
       </div>
     </div>
   );
@@ -61,68 +57,48 @@ const PunjabCanvasLogo = ({ size = "small" }) => {
 
 export default function App() {
   const [lang, setLang] = useState('en');
-  const [currentUser, setCurrentUser] = useState(() => safeGet('punjab_user_session', null));
+  const [currentUser, setCurrentUser] = useState(() => safeGet('punjab_user', null));
   const [authMode, setAuthMode] = useState('login');
-  const [usernameInput, setUsernameInput] = useState('');
-  const [passwordInput, setPasswordInput] = useState('');
-  const [newPasswordInput, setNewPasswordInput] = useState('');
-  const [nameInput, setNameInput] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [authSuccess, setAuthSuccess] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [authMsg, setAuthMsg] = useState('');
 
-  const [activeTab, setActiveTab] = useState('home');
-  const [profileSubTab, setProfileSubTab] = useState('posts');
-  const [activeStory, setActiveStory] = useState(null);
+  const [tab, setTab] = useState('home');
+  const [profileTab, setProfileTab] = useState('posts');
+  const [story, setStory] = useState(null);
   const [storyLiked, setStoryLiked] = useState(false);
 
-  const fileInputRef = useRef(null);
-  const [selectedFileImage, setSelectedFileImage] = useState(null);
-  const [newCaption, setNewCaption] = useState('');
+  const fileRef = useRef(null);
+  const [postImg, setPostImg] = useState(null);
+  const [caption, setCaption] = useState('');
 
   const stories = [
-    { id: 1, user: "amritsar", name: "Amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=800&auto=format&fit=crop" },
-    { id: 2, user: "virasat", name: "Virasat", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop" },
-    { id: 3, user: "kisaan", name: "Fields", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop" },
-    { id: 4, user: "pendu", name: "Village", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&auto=format&fit=crop" }
+    { id: 1, user: "amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=600&auto=format&fit=crop" },
+    { id: 2, user: "virasat", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop" },
+    { id: 3, user: "kisaan", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&auto=format&fit=crop" },
+    { id: 4, user: "pendu", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&auto=format&fit=crop" }
   ];
 
   const reels = [
     {
       id: 101,
       author: "virasat_punjab",
-      desc: "Rangla Punjab #Punjab #Virasat #Reels",
-      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop",
+      desc: "Rangla Punjab 🌾✨ #Punjab #Reels",
+      img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop",
       likes: 3420
-    },
-    {
-      id: 102,
-      author: "kisaan_jatt",
-      desc: "Desi Khet Te Thandi Hava #Kisaan",
-      image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop",
-      likes: 5120
     }
   ];
 
-  const [posts, setPosts] = useState(() => safeGet('punjab_feed_posts_v3', [
+  const [posts, setPosts] = useState(() => safeGet('punjab_feed', [
     {
       id: 1,
       author: "virasat_punjab",
       authorName: "Virasat Punjab",
       location: "Sri Amritsar Sahib",
       image: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?auto=format&fit=crop&w=800&q=80",
-      caption: "Golden Temple Darshan #HarmandirSahib",
+      caption: "Golden Temple Darshan ✨ #HarmandirSahib",
       likes: 1240,
-      isLiked: false,
-      isSaved: false
-    },
-    {
-      id: 2,
-      author: "kisaan_majdoor",
-      authorName: "Punjab Fields",
-      location: "Malwa, Punjab",
-      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
-      caption: "Lush green fields of Punjab #Farmer",
-      likes: 890,
       isLiked: false,
       isSaved: false
     }
@@ -130,140 +106,95 @@ export default function App() {
 
   const t = {
     en: {
-      login: "Log In", signup: "Sign Up", forgot: "Forgot Password?",
-      userId: "User ID / Username", password: "Password", newPass: "New Password",
-      fullName: "Full Name", dontHave: "Need an account?", alreadyHave: "Already have an account?",
-      logout: "Log Out", sharePost: "Share Post", newPost: "New Post",
-      choosePhoto: "Select from Camera / Gallery", changePhoto: "Choose Another Photo",
-      captionPlaceholder: "Write a caption...", likes: "likes", close: "Close",
-      posts: "Posts", followers: "Followers", following: "Following"
+      login: "Log In", signup: "Sign Up", uid: "User ID", pass: "Password",
+      name: "Full Name", needAcc: "Need account? Sign up", hasAcc: "Have account? Log in",
+      out: "Logout", postBtn: "Share Post", newP: "New Post",
+      cam: "Choose from Camera / Gallery", change: "Change Photo", cap: "Write a caption...",
+      likes: "likes", posts: "Posts", fol: "Followers", fing: "Following"
     },
     pa: {
-      login: "ਲਾਗ ਇਨ", signup: "ਸਾਈਨ ਅੱਪ", forgot: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?",
-      userId: "ਯੂਜ਼ਰ ਆਈਡੀ", password: "ਪਾਸਵਰਡ", newPass: "ਨਵਾਂ ਪਾਸਵਰਡ",
-      fullName: "ਪੂਰਾ ਨਾਮ", dontHave: "ਖਾਤਾ ਨਹੀਂ ਹੈ?", alreadyHave: "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ?",
-      logout: "ਲੌਗ ਆਉਟ", sharePost: "ਪੋਸਟ ਕਰੋ", newPost: "ਨਵੀਂ ਪੋਸਟ",
-      choosePhoto: "ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਚੋਂ ਫੋਟੋ ਚੁਣੋ", changePhoto: "ਹੋਰ ਫੋਟੋ ਚੁਣੋ",
-      captionPlaceholder: "ਕੁਝ ਲਿਖੋ...", likes: "ਪਸੰਦ", close: "ਬੰਦ ਕਰੋ",
-      posts: "ਪੋਸਟਾਂ", followers: "ਫੋਲੋਅਰਜ਼", following: "ਫੋਲੋਇੰਗ"
+      login: "ਲਾਗ ਇਨ", signup: "ਸਾਈਨ ਅੱਪ", uid: "ਯੂਜ਼ਰ ਆਈਡੀ", pass: "ਪਾਸਵਰਡ",
+      name: "ਪੂਰਾ ਨਾਮ", needAcc: "ਖਾਤਾ ਬਣਾਓ", hasAcc: "ਲਾਗ ਇਨ ਕਰੋ",
+      out: "ਲੌਗ ਆਉਟ", postBtn: "ਸਾਂਝੀ ਕਰੋ", newP: "ਨਵੀਂ ਪੋਸਟ",
+      cam: "ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਚੋਂ ਚੁਣੋ", change: "ਹੋਰ ਫੋਟੋ ਲਵੋ", cap: "ਕੁਝ ਲਿਖੋ...",
+      likes: "ਪਸੰਦ", posts: "ਪੋਸਟਾਂ", fol: "ਫੋਲੋਅਰਜ਼", fing: "ਫੋਲੋਇੰਗ"
     }
   }[lang];
 
   const handleAuth = (e) => {
     e.preventDefault();
-    setAuthError('');
-    setAuthSuccess('');
-
-    const users = safeGet('punjab_users_db_v3', []);
+    setAuthMsg('');
+    const users = safeGet('punjab_users', []);
 
     if (authMode === 'signup') {
-      if (!usernameInput.trim() || !passwordInput.trim()) {
-        setAuthError(lang === 'en' ? 'Please fill all fields' : 'ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
+      if (!username.trim() || !password.trim()) {
+        setAuthMsg(lang === 'en' ? 'Fill all fields' : 'ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
         return;
       }
-      const exists = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
-      if (exists) {
-        setAuthError(lang === 'en' ? 'Username already taken' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ');
+      if (users.find(u => u.uid.toLowerCase() === username.trim().toLowerCase())) {
+        setAuthMsg(lang === 'en' ? 'User ID taken' : 'ਆਈਡੀ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ');
         return;
       }
-      const newUser = {
-        username: usernameInput.trim(),
-        name: nameInput.trim() || usernameInput.trim(),
-        password: passwordInput.trim(),
-        followers: 128,
-        following: 95
-      };
-      users.push(newUser);
-      safeSet('punjab_users_db_v3', users);
-      safeSet('punjab_user_session', newUser);
-      setCurrentUser(newUser);
-    } else if (authMode === 'login') {
-      const found = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase() && u.password === passwordInput.trim());
-      if (!found) {
-        setAuthError(lang === 'en' ? 'Invalid credentials' : 'ਗਲਤ ਆਈਡੀ ਜਾਂ ਪਾਸਵਰਡ');
+      const u = { uid: username.trim(), name: name.trim() || username.trim(), pass: password.trim(), fol: 140, fing: 80 };
+      users.push(u);
+      safeSet('punjab_users', users);
+      safeSet('punjab_user', u);
+      setCurrentUser(u);
+    } else {
+      const u = users.find(x => x.uid.toLowerCase() === username.trim().toLowerCase() && x.pass === password.trim());
+      if (!u) {
+        setAuthMsg(lang === 'en' ? 'Invalid credentials' : 'ਗਲਤ ਆਈਡੀ ਜਾਂ ਪਾਸਵਰਡ');
         return;
       }
-      safeSet('punjab_user_session', found);
-      setCurrentUser(found);
-    } else if (authMode === 'forgot') {
-      const idx = users.findIndex(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
-      if (idx === -1) {
-        setAuthError(lang === 'en' ? 'User not found' : 'ਯੂਜ਼ਰ ਨਹੀਂ ਮਿਲਿਆ');
-        return;
-      }
-      users[idx].password = newPasswordInput.trim();
-      safeSet('punjab_users_db_v3', users);
-      setAuthSuccess(lang === 'en' ? 'Password updated!' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ!');
-      setTimeout(() => {
-        setAuthMode('login');
-        setAuthSuccess('');
-      }, 1200);
+      safeSet('punjab_user', u);
+      setCurrentUser(u);
     }
   };
 
-  const handleLogout = () => {
-    safeSet('punjab_user_session', null);
-    setCurrentUser(null);
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedFileImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const handleFile = (e) => {
+    const f = e.target.files[0];
+    if (f) {
+      const r = new FileReader();
+      r.onloadend = () => setPostImg(r.result);
+      r.readAsDataURL(f);
     }
   };
 
-  const handlePublishPost = (e) => {
+  const submitPost = (e) => {
     e.preventDefault();
-    if (!selectedFileImage) return;
-
-    const newPost = {
+    if (!postImg) return;
+    const np = {
       id: Date.now(),
-      author: currentUser.username,
+      author: currentUser.uid,
       authorName: currentUser.name,
       location: "Punjab",
-      image: selectedFileImage,
-      caption: newCaption,
+      image: postImg,
+      caption,
       likes: 0,
       isLiked: false,
       isSaved: false
     };
-
-    const updated = [newPost, ...posts];
+    const updated = [np, ...posts];
     setPosts(updated);
-    safeSet('punjab_feed_posts_v3', updated);
-    setSelectedFileImage(null);
-    setNewCaption('');
-    setActiveTab('home');
+    safeSet('punjab_feed', updated);
+    setPostImg(null);
+    setCaption('');
+    setTab('home');
   };
 
-  const handleLikePost = (id) => {
-    const updated = posts.map(p => {
-      if (p.id === id) {
-        return { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 };
-      }
-      return p;
-    });
-    setPosts(updated);
-    safeSet('punjab_feed_posts_v3', updated);
+  const toggleLike = (id) => {
+    const u = posts.map(p => p.id === id ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p);
+    setPosts(u);
+    safeSet('punjab_feed', u);
   };
 
-  const handleSavePost = (id) => {
-    const updated = posts.map(p => {
-      if (p.id === id) {
-        return { ...p, isSaved: !p.isSaved };
-      }
-      return p;
-    });
-    setPosts(updated);
-    safeSet('punjab_feed_posts_v3', updated);
+  const toggleSave = (id) => {
+    const u = posts.map(p => p.id === id ? { ...p, isSaved: !p.isSaved } : p);
+    setPosts(u);
+    safeSet('punjab_feed', u);
   };
 
-  const myPosts = posts.filter(p => p.author === currentUser?.username);
+  const myPosts = posts.filter(p => p.author === currentUser?.uid);
   const savedPosts = posts.filter(p => p.isSaved);
 
   if (!currentUser) {
@@ -272,25 +203,20 @@ export default function App() {
         <div className="w-full max-w-sm flex justify-end mb-3">
           <button
             onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-semibold text-amber-400"
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-semibold text-amber-400"
           >
-            <Globe size={14} />
+            <Globe size={13} />
             <span>{lang === 'en' ? 'ਪੰਜਾਬੀ' : 'English'}</span>
           </button>
         </div>
 
-        <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-8 rounded-3xl shadow-2xl flex flex-col items-center">
-          <PunjabCanvasLogo size="large" />
+        <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-7 rounded-3xl shadow-2xl flex flex-col items-center">
+          <PunjabLogo size="large" />
 
-          <div className="w-full mt-6">
-            {authError && (
-              <div className="w-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs py-2 px-3 rounded-lg mb-4 text-center">
-                {authError}
-              </div>
-            )}
-            {authSuccess && (
-              <div className="w-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs py-2 px-3 rounded-lg mb-4 text-center">
-                {authSuccess}
+          <div className="w-full mt-5">
+            {authMsg && (
+              <div className="w-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs py-2 px-3 rounded-lg mb-3 text-center">
+                {authMsg}
               </div>
             )}
 
@@ -298,79 +224,42 @@ export default function App() {
               {authMode === 'signup' && (
                 <input
                   type="text"
-                  placeholder={t.fullName}
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
+                  placeholder={t.name}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
                 />
               )}
-
               <input
                 type="text"
-                placeholder={t.userId}
-                value={usernameInput}
-                onChange={(e) => setUsernameInput(e.target.value)}
-                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
+                placeholder={t.uid}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
               />
-
-              {authMode !== 'forgot' && (
-                <input
-                  type="password"
-                  placeholder={t.password}
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
-                />
-              )}
-
-              {authMode === 'forgot' && (
-                <input
-                  type="password"
-                  placeholder={t.newPass}
-                  value={newPasswordInput}
-                  onChange={(e) => setNewPasswordInput(e.target.value)}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
-                />
-              )}
-
-              {authMode === 'login' && (
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setAuthMode('forgot')}
-                    className="text-xs text-amber-400 hover:underline"
-                  >
-                    {t.forgot}
-                  </button>
-                </div>
-              )}
+              <input
+                type="password"
+                placeholder={t.pass}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+              />
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-sm hover:opacity-95 transition"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-sm hover:opacity-95 transition mt-2"
               >
-                {authMode === 'login' && t.login}
-                {authMode === 'signup' && t.signup}
-                {authMode === 'forgot' && 'Reset'}
+                {authMode === 'login' ? t.login : t.signup}
               </button>
             </form>
 
-            <div className="mt-5 text-center text-xs text-neutral-400">
-              {authMode === 'login' ? (
-                <p>
-                  {t.dontHave}{' '}
-                  <button onClick={() => setAuthMode('signup')} className="text-amber-400 font-semibold hover:underline">
-                    {t.signup}
-                  </button>
-                </p>
-              ) : (
-                <p>
-                  {t.alreadyHave}{' '}
-                  <button onClick={() => setAuthMode('login')} className="text-amber-400 font-semibold hover:underline">
-                    {t.login}
-                  </button>
-                </p>
-              )}
+            <div className="mt-4 text-center text-xs text-neutral-400">
+              <button
+                onClick={() => { setAuthMode(authMode === 'login' ? 'signup' : 'login'); setAuthMsg(''); }}
+                className="text-amber-400 hover:underline font-medium"
+              >
+                {authMode === 'login' ? t.needAcc : t.hasAcc}
+              </button>
             </div>
           </div>
         </div>
@@ -382,96 +271,72 @@ export default function App() {
     <div className="min-h-screen bg-black text-white flex justify-center pb-16 font-sans">
       <div className="w-full max-w-md border-x border-neutral-800 min-h-screen flex flex-col bg-neutral-950">
         
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2 flex items-center justify-between">
-          <PunjabCanvasLogo size="small" />
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2.5 flex items-center justify-between">
+          <PunjabLogo size="small" />
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
-              className="px-2.5 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-[11px] font-semibold text-amber-400"
+              className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800 text-[11px] font-semibold text-amber-400"
             >
               {lang === 'en' ? 'ਪੰ' : 'EN'}
             </button>
             <button 
-              onClick={handleLogout} 
-              className="flex items-center gap-1.5 text-xs text-neutral-300 hover:text-red-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-md transition"
+              onClick={() => { safeSet('punjab_user', null); setCurrentUser(null); }} 
+              className="flex items-center gap-1 text-xs text-neutral-300 hover:text-red-400 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded"
             >
-              <LogOut size={13} />
-              <span>{t.logout}</span>
+              <LogOut size={12} />
+              <span>{t.out}</span>
             </button>
           </div>
         </header>
 
         {/* Story Modal */}
-        {activeStory && (
-          <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between">
-            <div className="p-3 z-10 bg-gradient-to-b from-black/80 to-transparent">
-              <div className="w-full h-1 bg-neutral-700 rounded-full overflow-hidden mb-2">
-                <div className="h-full bg-white w-full" />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full border border-amber-500 overflow-hidden">
-                    <img src={activeStory.img} alt={activeStory.user} className="w-full h-full object-cover" />
-                  </div>
-                  <span className="font-bold text-xs">{activeStory.name}</span>
-                </div>
-                <button onClick={() => setActiveStory(null)} className="p-1 text-white">
-                  <X size={24} />
-                </button>
-              </div>
+        {story && (
+          <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between p-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-neutral-200">@{story.user}</span>
+              <button onClick={() => setStory(null)} className="text-white p-1">
+                <X size={22} />
+              </button>
             </div>
-
-            <div className="flex-1 flex items-center justify-center p-2">
-              <img src={activeStory.img} alt="Story" className="max-h-[75vh] w-full object-contain rounded-2xl" />
+            <div className="flex-1 flex items-center justify-center">
+              <img src={story.img} alt="Story" className="max-h-[70vh] w-full object-contain rounded-2xl" />
             </div>
-
-            <div className="p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex items-center gap-3">
+            <div className="flex items-center gap-3 p-2">
               <input 
                 type="text" 
-                placeholder={`Reply to @${activeStory.user}...`}
-                className="flex-1 bg-transparent border border-white/40 rounded-full px-4 py-2.5 text-xs text-white placeholder-white/60 focus:outline-none focus:border-white"
+                placeholder={`Reply to @${story.user}...`} 
+                className="flex-1 bg-neutral-900 border border-neutral-800 rounded-full px-4 py-2 text-xs text-white focus:outline-none"
               />
-              <button 
-                onClick={() => setStoryLiked(!storyLiked)} 
-                className="p-1 transition active:scale-125"
-              >
-                <Heart size={26} className={storyLiked ? "fill-red-500 text-red-500" : "text-white"} />
-              </button>
-              <button className="p-1 text-white">
-                <Send size={24} />
+              <button onClick={() => setStoryLiked(!storyLiked)}>
+                <Heart size={24} className={storyLiked ? "fill-red-500 text-red-500" : "text-white"} />
               </button>
             </div>
           </div>
         )}
 
         <main className="flex-1 overflow-y-auto">
-          
-          {/* HOME FEED */}
-          {activeTab === 'home' && (
+          {tab === 'home' && (
             <div>
-              {/* Stories */}
+              {/* Stories Bar */}
               <div className="flex gap-3 px-4 py-3 overflow-x-auto border-b border-neutral-800 no-scrollbar">
-                {stories.map(story => (
-                  <div
-                    key={story.id}
-                    onClick={() => { setActiveStory(story); setStoryLiked(false); }}
-                    className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
-                  >
-                    <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-300">
-                      <img src={story.img} alt={story.user} className="w-full h-full rounded-full object-cover border-2 border-black" />
+                {stories.map(s => (
+                  <div key={s.id} onClick={() => { setStory(s); setStoryLiked(false); }} className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer">
+                    <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-300">
+                      <img src={s.img} alt={s.user} className="w-full h-full rounded-full object-cover border-2 border-black" />
                     </div>
-                    <span className="text-[11px] text-neutral-300 truncate w-16 text-center">{story.name}</span>
+                    <span className="text-[10px] text-neutral-400">@{s.user}</span>
                   </div>
                 ))}
               </div>
 
               {/* Feed */}
               <div className="divide-y divide-neutral-800">
-                {posts.map((post) => (
+                {posts.map(post => (
                   <article key={post.id} className="pb-3">
-                    <div className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500/40 flex items-center justify-center text-xs font-bold text-amber-400">
+                    <div className="flex items-center gap-2.5 px-4 py-2.5">
+                      <div className="w-7 h-7 rounded-full bg-neutral-800 border border-amber-500 flex items-center justify-center text-xs font-bold text-amber-400">
                         {post.authorName[0]}
                       </div>
                       <div>
@@ -480,11 +345,191 @@ export default function App() {
                       </div>
                     </div>
 
-                    <img src={post.image} alt="Post" className="w-full aspect-square object-cover" />
+                    <img src={post.image} alt="Feed" className="w-full aspect-square object-cover" />
 
                     <div className="px-4 pt-2.5">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-4">
-                          <button onClick={() => handleLikePost(post.id)}>
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => toggleLike(post.id)}>
                             <Heart size={22} className={post.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
                           </button>
+                          <MessageCircle size={22} />
+                          <Send size={22} />
+                        </div>
+                        <button onClick={() => toggleSave(post.id)}>
+                          <Bookmark size={22} className={post.isSaved ? "fill-amber-400 text-amber-400" : "text-white"} />
+                        </button>
+                      </div>
+                      <div className="text-xs font-semibold mb-1">{post.likes.toLocaleString()} {t.likes}</div>
+                      <p className="text-xs text-neutral-200">
+                        <span className="font-bold mr-1.5">{post.author}</span>
+                        {post.caption}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tab === 'reels' && (
+            <div className="h-[calc(100vh-125px)] overflow-y-scroll snap-y snap-mandatory">
+              {reels.map(r => (
+                <div key={r.id} className="relative h-full w-full snap-start bg-black flex items-center justify-center">
+                  <img src={r.img} alt="Reel" className="w-full h-full object-cover" />
+                  <div className="absolute right-4 bottom-16 flex flex-col items-center gap-4">
+                    <Heart size={26} className="fill-red-500 text-red-500" />
+                    <span className="text-[11px]">{r.likes}</span>
+                    <MessageCircle size={26} />
+                    <Send size={24} />
+                  </div>
+                  <div className="absolute left-4 bottom-6 right-16 bg-black/50 p-2.5 rounded-xl backdrop-blur-sm">
+                    <div className="font-bold text-xs text-amber-400">@{r.author}</div>
+                    <div className="text-xs text-neutral-200">{r.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'create' && (
+            <div className="p-4">
+              <h2 className="text-sm font-bold mb-3">{t.newP}</h2>
+              <form onSubmit={submitPost} className="space-y-4">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  ref={fileRef} 
+                  onChange={handleFile} 
+                  className="hidden" 
+                />
+
+                {!postImg ? (
+                  <div 
+                    onClick={() => fileRef.current?.click()}
+                    className="border-2 border-dashed border-neutral-700 hover:border-amber-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-2 cursor-pointer bg-neutral-900/50"
+                  >
+                    <Camera size={32} className="text-amber-400" />
+                    <span className="text-xs text-neutral-300 font-medium">{t.cam}</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="relative rounded-2xl overflow-hidden aspect-square border border-neutral-800">
+                      <img src={postImg} alt="Upload" className="w-full h-full object-cover" />
+                      <button 
+                        type="button" 
+                        onClick={() => setPostImg(null)}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-black/70 text-white"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="text-xs text-amber-400 hover:underline"
+                    >
+                      {t.change}
+                    </button>
+                  </div>
+                )}
+
+                <textarea
+                  rows={3}
+                  placeholder={t.cap}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+
+                <button
+                  type="submit"
+                  disabled={!postImg}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-xs disabled:opacity-40 transition"
+                >
+                  {t.postBtn}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {tab === 'profile' && (
+            <div>
+              <div className="p-4 border-b border-neutral-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-16 h-16 rounded-full border-2 border-amber-500 bg-neutral-800 flex items-center justify-center text-xl font-bold text-amber-400">
+                    {currentUser.name[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex gap-6 text-center pr-2">
+                    <div>
+                      <div className="font-bold text-sm">{myPosts.length}</div>
+                      <div className="text-[10px] text-neutral-400">{t.posts}</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm">{currentUser.fol}</div>
+                      <div className="text-[10px] text-neutral-400">{t.fol}</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm">{currentUser.fing}</div>
+                      <div className="text-[10px] text-neutral-400">{t.fing}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="font-bold text-sm">{currentUser.name}</h3>
+                <p className="text-xs text-neutral-400 mb-3">@{currentUser.uid}</p>
+
+                <button
+                  onClick={() => { safeSet('punjab_user', null); setCurrentUser(null); }}
+                  className="w-full py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-red-400"
+                >
+                  {t.out}
+                </button>
+              </div>
+
+              <div className="flex border-b border-neutral-800">
+                <button 
+                  onClick={() => setProfileTab('posts')} 
+                  className={`flex-1 py-2.5 flex justify-center border-b-2 ${profileTab === 'posts' ? 'border-amber-500 text-amber-500' : 'border-transparent text-neutral-500'}`}
+                >
+                  <Grid size={16} />
+                </button>
+                <button 
+                  onClick={() => setProfileTab('saved')} 
+                  className={`flex-1 py-2.5 flex justify-center border-b-2 ${profileTab === 'saved' ? 'border-amber-500 text-amber-500' : 'border-transparent text-neutral-500'}`}
+                >
+                  <BookmarkCheck size={16} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-1 p-1">
+                {(profileTab === 'posts' ? myPosts : savedPosts).map(item => (
+                  <div key={item.id} className="aspect-square bg-neutral-900">
+                    <img src={item.image} alt="post" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Bottom Nav */}
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 border-t border-neutral-800 flex justify-around py-3 z-30">
+          <button onClick={() => setTab('home')} className={tab === 'home' ? "text-amber-500" : "text-neutral-400"}>
+            <Home size={20} />
+          </button>
+          <button onClick={() => setTab('reels')} className={tab === 'reels' ? "text-amber-500" : "text-neutral-400"}>
+            <Film size={20} />
+          </button>
+          <button onClick={() => setTab('create')} className={tab === 'create' ? "text-amber-500" : "text-neutral-400"}>
+            <PlusSquare size={20} />
+          </button>
+          <button onClick={() => setTab('profile')} className={tab === 'profile' ? "text-amber-500" : "text-neutral-400"}>
+            <User size={20} />
+          </button>
+        </nav>
+
+      </div>
+    </div>
+  );
+}
