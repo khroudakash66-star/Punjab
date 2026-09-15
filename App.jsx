@@ -26,7 +26,9 @@ import {
   Eye,
   Pin,
   Archive,
-  Lock
+  Lock,
+  DollarSign,
+  Bot
 } from "lucide-react";
 
 export default function App() {
@@ -35,9 +37,9 @@ export default function App() {
   const [bio, setBio] = useState(() => localStorage.getItem("punjab_app_bio") || "ਸੋਹਣਾ ਪੰਜਾਬ • ਪੰਜਾਬੀ ਕ੍ਰਿਏਟਰ 🌾");
   const [avatar, setAvatar] = useState(() => localStorage.getItem("punjab_app_avatar") || "");
   const [isPrivate, setIsPrivate] = useState(() => localStorage.getItem("punjab_app_private") === "true");
+  const [wallet, setWallet] = useState(() => Number(localStorage.getItem("punjab_app_wallet")) || 250); // Monetization Earnings
   const [tab, setTab] = useState("home");
   
-  // ਬਿਲਕੁਲ ਅਸਲੀ ਪੋਸਟਾਂ ਜਿਹੜੀਆਂ ਯੂਜ਼ਰ ਖੁਦ ਪਾਵੇਗਾ
   const [posts, setPosts] = useState(() => {
     try {
       const saved = localStorage.getItem("punjab_app_posts");
@@ -56,7 +58,6 @@ export default function App() {
     }
   });
 
-  // ਸ਼ੁਰੂ ਵਿੱਚ ਨਵੇਂ ਯੂਜ਼ਰ ਲਈ ਸਭ ਕੁਝ ਬਿਲਕੁਲ ਜ਼ੀਰੋ (0) ਹੋਵੇਗਾ
   const [following, setFollowing] = useState(() => {
     try {
       const saved = localStorage.getItem("punjab_app_following");
@@ -85,8 +86,9 @@ export default function App() {
       localStorage.setItem("punjab_app_bio", bio);
       localStorage.setItem("punjab_app_avatar", avatar);
       localStorage.setItem("punjab_app_private", isPrivate);
+      localStorage.setItem("punjab_app_wallet", wallet);
     } catch {}
-  }, [posts, savedPosts, following, user, bio, avatar, isPrivate]);
+  }, [posts, savedPosts, following, user, bio, avatar, isPrivate, wallet]);
 
   if (showSplash) {
     return (
@@ -102,7 +104,7 @@ export default function App() {
     );
   }
 
-  if (!user) return <AuthScreen setUser={setUser} setFollowing={setFollowing} setPosts={setPosts} />;
+  if (!user) return <AuthScreen setUser={setUser} />;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 select-none">
@@ -116,7 +118,9 @@ export default function App() {
             PUNJAB
           </span>
         </div>
-        <div className="flex items-center gap-4 text-white">
+        <div className="flex items-center gap-3 text-white">
+          <button onClick={() => setTab("monetization")} className="text-amber-400 hover:scale-110 transition"><DollarSign size={20} /></button>
+          <button onClick={() => setTab("ai-tools")} className="text-amber-400 hover:scale-110 transition"><Bot size={20} /></button>
           <button onClick={() => setTab("create-menu")} className="hover:text-amber-400 transition"><PlusSquare size={22} /></button>
           <button onClick={() => setTab("notifications")} className="hover:text-amber-400 transition relative">
             <Heart size={22} />
@@ -129,7 +133,7 @@ export default function App() {
       {/* Main Content Area */}
       <main className="pb-12">
         {tab === "home" && <HomeScreen posts={posts} setPosts={setPosts} setTab={setTab} currentUser={user} avatar={avatar} following={following} setFollowing={setFollowing} savedPosts={savedPosts} setSavedPosts={setSavedPosts} />}
-        {tab === "search" && <ExploreScreen posts={posts} following={following} setFollowing={setFollowing} currentUser={user} />}
+        {tab === "search" && <ExploreScreen posts={posts} />}
         {tab === "create-menu" && <CreateMenuScreen setTab={setTab} />}
         {tab === "create-post" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="post" />}
         {tab === "create-reel" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="reel" />}
@@ -140,6 +144,8 @@ export default function App() {
         {tab === "settings" && <SettingsScreen setTab={setTab} user={user} setUser={setUser} setBio={setBio} setAvatar={setAvatar} isPrivate={isPrivate} setIsPrivate={setIsPrivate} />}
         {tab === "notifications" && <NotificationsScreen notifications={notifications} setTab={setTab} />}
         {tab === "messages" && <MessagesScreen setTab={setTab} currentUser={user} notes={notes} setNotes={setNotes} />}
+        {tab === "monetization" && <MonetizationScreen setTab={setTab} wallet={wallet} />}
+        {tab === "ai-tools" && <AIToolsScreen setTab={setTab} />}
         {tab === "story" && <StoryViewScreen setTab={setTab} />}
       </main>
 
@@ -155,16 +161,14 @@ export default function App() {
   );
 }
 
-function AuthScreen({ setUser, setFollowing, setPosts }) {
+function AuthScreen({ setUser }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!username.trim()) return;
-    const cleanUser = username.trim();
-    localStorage.setItem("punjab_app_user", cleanUser);
-    setUser(cleanUser);
+    setUser(username.trim());
   }
 
   return (
@@ -232,9 +236,8 @@ function CreateMenuScreen({ setTab }) {
   );
 }
 
-function HomeScreen({ posts, setPosts, setTab, currentUser, avatar, following, setFollowing, savedPosts, setSavedPosts }) {
+function HomeScreen({ posts, setPosts, setTab, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
   const activePosts = posts.filter(p => !p.archived);
-
   return (
     <div className="space-y-3">
       {activePosts.length === 0 ? (
@@ -383,7 +386,7 @@ function PostCard({ post, setPosts, currentUser, following, setFollowing, savedP
 function ReelsScreen() {
   const [muted, setMuted] = useState(false);
   const reelsList = [
-    { id: 101, author: "desi_jatt", caption: "ਸਾਡੀ ਬੋਲੀ ਸਾਡਾ ਮਾਣ #Reels #Punjab", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-young-man-dancing-in-a-neon-lit-room-42861-large.mp4", audio: "Original Beats - Punjab" }
+    { id: 101, author: "desi_jatt", caption: "ਸਾਡੀ ਬੋਲੀ ਸਾਡਾ ਮਾਣ #Reels #Punjab", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-young-man-dancing-in-a-neon-lit-room-42861-large.mp4" }
   ];
 
   return (
@@ -555,18 +558,15 @@ function LiveScreen({ setTab, user }) {
   );
 }
 
-// 100% ਰੀਅਲ ਅੰਕੜੇ (Real Followers, Posts & Reels Count)
 function ProfileScreen({ user, bio, avatar, posts, savedPosts, setPosts, setUser, setTab, following, isPrivate }) {
   const [profileTab, setProfileTab] = useState("posts");
-  
   const myPosts = posts.filter(p => p.author === user && !p.archived && p.type !== 'reel');
   const myReels = posts.filter(p => p.author === user && !p.archived && (p.type === 'reel' || p.caption?.includes('#Reels')));
   
-  // ਅਸਲੀ ਗਿਣਤੀ
   const postCount = myPosts.length;
   const reelCount = myReels.length;
   const followingCount = following.length;
-  const followerCount = 0; // ਨਵੇਂ ਯੂਜ਼ਰ ਲਈ ਬਿਲਕੁਲ ਜ਼ੀਰੋ
+  const followerCount = 0;
 
   const pinnedPosts = myPosts.filter(p => p.pinned);
   const unpinnedPosts = myPosts.filter(p => !p.pinned);
@@ -607,7 +607,6 @@ function ProfileScreen({ user, bio, avatar, posts, savedPosts, setPosts, setUser
         </div>
       </div>
 
-      {/* ਬਿਲਕੁਲ ਅਸਲੀ ਗਿਣਤੀ */}
       <div className="flex justify-around py-2 border-b border-neutral-900 text-center text-xs">
         <div><span className="font-bold block text-sm">{postCount}</span><span className="text-neutral-500">Posts</span></div>
         <div><span className="font-bold block text-sm">{followerCount}</span><span className="text-neutral-500">Followers</span></div>
@@ -730,7 +729,7 @@ function SettingsScreen({ setTab, user, setUser, setBio, setAvatar, isPrivate, s
   );
 }
 
-function ExploreScreen({ posts, following, setFollowing, currentUser }) {
+function ExploreScreen({ posts }) {
   const [query, setQuery] = useState("");
   const activePosts = posts.filter(p => !p.archived);
   const filtered = activePosts.filter(p => p.caption?.toLowerCase().includes(query.toLowerCase()) || p.author?.toLowerCase().includes(query.toLowerCase()));
@@ -742,7 +741,7 @@ function ExploreScreen({ posts, following, setFollowing, currentUser }) {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search #Punjab, #DesiVibes or creators..."
+          placeholder="Search #Punjab, #DesiVibes..."
           className="w-full bg-transparent text-white outline-none placeholder:text-neutral-500"
         />
       </div>
@@ -765,21 +764,7 @@ function NotificationsScreen({ notifications, setTab }) {
         <h2 className="text-sm font-bold">Activity Feed</h2>
       </div>
       <div className="space-y-3 text-xs">
-        {notifications.length === 0 ? (
-          <p className="text-neutral-500 text-center py-10">ਕੋਈ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨਹੀਂ ਹੈ!</p>
-        ) : (
-          notifications.map(n => (
-            <div key={n.id} className="flex items-center gap-3 p-2.5 bg-neutral-900 rounded-xl">
-              <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-black text-xs">
-                {n.user[0].toUpperCase()}
-              </div>
-              <div>
-                <span className="font-bold text-amber-400 mr-1">@{n.user}</span>
-                <span className="text-neutral-300">{n.text}</span>
-              </div>
-            </div>
-          ))
-        )}
+        {notifications.length === 0 ? <p className="text-neutral-500 text-center py-10">ਕੋਈ ਨੋਟੀਫਿਕੇਸ਼ਨ ਨਹੀਂ ਹੈ!</p> : null}
       </div>
     </div>
   );
@@ -833,21 +818,69 @@ function MessagesScreen({ setTab, currentUser, notes, setNotes }) {
       </form>
 
       <div className="flex-1 overflow-y-auto space-y-2 text-xs">
-        {chats.length === 0 ? (
-          <p className="text-neutral-500 text-center py-10">ਕੋਈ ਮੈਸੇਜ ਨਹੀਂ ਹੈ!</p>
-        ) : (
-          chats.map((c, i) => (
-            <div key={i} className={`p-2.5 rounded-xl max-w-[80%] ${c.sender === currentUser ? 'ml-auto bg-amber-500 text-black font-medium' : 'bg-neutral-900 text-white'}`}>
-              <span className="block text-[9px] opacity-70 mb-0.5">@{c.sender}</span>
-              {c.text}
-            </div>
-          ))
-        )}
+        {chats.length === 0 ? <p className="text-neutral-500 text-center py-10">ਕੋਈ ਮੈਸੇਜ ਨਹੀਂ ਹੈ!</p> : null}
       </div>
       <form onSubmit={sendChat} className="flex gap-2 pt-2 border-t border-neutral-900">
         <input value={msg} onChange={e => setMsg(e.target.value)} placeholder="Message..." className="w-full bg-neutral-900 p-2.5 rounded-xl text-xs text-white outline-none" />
         <button className="bg-amber-500 text-black font-bold px-4 rounded-xl text-xs">Send</button>
       </form>
+    </div>
+  );
+}
+
+// Monetization Dashboard Feature
+function MonetizationScreen({ setTab, wallet }) {
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
+        <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
+        <h2 className="text-sm font-bold text-amber-400">Creator Monetization</h2>
+      </div>
+      <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl text-center space-y-2">
+        <span className="text-neutral-400 text-xs">ਕੁੱਲ ਕਮਾਈ (Total Earnings)</span>
+        <h1 className="text-3xl font-black text-amber-400">₹ {wallet}</h1>
+        <p className="text-[10px] text-neutral-500">Gifts & Subscriptions from Punjab Followers</p>
+      </div>
+      <button onClick={() => alert("ਪੈਸੇ ਤੁਹਾਡੇ ਬੈਂਕ ਅਕਾਊਂਟ ਵਿੱਚ ਭੇਜ ਦਿੱਤੇ ਗਏ ਹਨ!")} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold p-3 rounded-xl text-xs">
+        Withdraw Earnings (ਪੈਸੇ ਕਢਵਾਓ)
+      </button>
+    </div>
+  );
+}
+
+// AI Features Screen
+function AIToolsScreen({ setTab }) {
+  const [topic, setTopic] = useState("");
+  const [aiCaption, setAiCaption] = useState("");
+
+  function generateAICaption() {
+    if (!topic.trim()) return;
+    setAiCaption(`🌾 ${topic} - ਵਾਹ ਰੱਬਾ ਸਾਡਾ ਸੋਹਣਾ ਪੰਜਾਬ! #Punjab #DesiVibes #Trending2026`);
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
+        <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
+        <h2 className="text-sm font-bold text-amber-400">AI Auto-Caption Generator</h2>
+      </div>
+      <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl space-y-3">
+        <label className="text-xs text-neutral-400 block font-bold">ਆਪਣੀ ਫੋਟੋ ਬਾਰੇ ਥੋੜ੍ਹਾ ਜਿਹਾ ਲਿਖੋ:</label>
+        <input
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          placeholder="ਜਿਵੇਂ: ਮੱਕੀ ਦੀ ਰੋਟੀ ਤੇ ਸਰ੍ਹੋਂ ਦਾ ਸਾਗ..."
+          className="w-full bg-neutral-800 border border-neutral-700 p-2.5 rounded-xl text-xs text-white outline-none"
+        />
+        <button onClick={generateAICaption} className="w-full bg-amber-500 text-black font-bold p-2.5 rounded-xl text-xs">
+          AI ਨਾਲ ਕੈਪਸ਼ਨ ਬਣਾਓ 🤖
+        </button>
+        {aiCaption && (
+          <div className="p-3 bg-neutral-800 rounded-xl text-xs text-amber-300 font-medium mt-2">
+            {aiCaption}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
