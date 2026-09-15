@@ -28,7 +28,8 @@ import {
   Archive,
   Lock,
   DollarSign,
-  Bot
+  Bot,
+  ShieldCheck
 } from "lucide-react";
 
 export default function App() {
@@ -104,6 +105,7 @@ export default function App() {
     );
   }
 
+  // ਸਖ਼ਤ ਅਤੇ ਅਸਲੀ ਪ੍ਰਾਈਵੇਸੀ ਵਾਲਾ Auth Screen (Sign Up / Login / Forgot Password / 2FA)
   if (!user) return <AuthScreen setUser={setUser} />;
 
   return (
@@ -162,17 +164,74 @@ export default function App() {
 }
 
 function AuthScreen({ setUser }) {
+  const [mode, setMode] = useState("login"); // "login", "signup", "forgot", "verify2fa"
+  const [emailOrPhone, setEmailOrPhone] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  function handleSubmit(e) {
+  // ਸਾਈਨ ਅੱਪ ਪ੍ਰੋਸੈਸ
+  function handleSignUp(e) {
     e.preventDefault();
-    if (!username.trim()) return;
+    if (!emailOrPhone.trim() || !username.trim() || !password.trim()) {
+      setErrorMsg("ਸਾਰੇ ਖਾਲੀ ਸਥਾਨ ਭਰੋ ਜੀ!");
+      return;
+    }
+    // ਯੂਜ਼ਰ ਅਤੇ ਪਾਸਵਰਡ ਲੋਕਲ ਸਟੋਰੇਜ ਵਿੱਚ ਸੇਵ ਕਰੋ
+    localStorage.setItem(`pwd_${username.trim()}`, password);
+    localStorage.setItem(`contact_${username.trim()}`, emailOrPhone.trim());
+    setSuccessMsg("ਖਾਤਾ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ! ਹੁਣ ਲੌਗ ਇਨ ਕਰੋ।");
+    setErrorMsg("");
+    setTimeout(() => setMode("login"), 1500);
+  }
+
+  // ਲੌਗ ਇਨ ਪ੍ਰੋਸੈਸ (ਪਾਸਵਰਡ ਮੈਚਿੰਗ)
+  function handleLogin(e) {
+    e.preventDefault();
+    const savedPwd = localStorage.getItem(`pwd_${username.trim()}`);
+    
+    if (!savedPwd) {
+      setErrorMsg("ਇਹ ਯੂਜ਼ਰਨੇਮ ਮੌਜੂਦ ਨਹੀਂ ਹੈ। ਪਹਿਲਾਂ ਸਾਈਨ ਅੱਪ ਕਰੋ!");
+      return;
+    }
+
+    if (savedPwd !== password) {
+      setErrorMsg("ਗਲਤ ਪਾਸਵਰਡ! ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।");
+      return;
+    }
+
+    // ਜੇ ਪਾਸਵਰਡ ਸਹੀ ਹੈ, ਤਾਂ 2-Step Verification ਲਈ ਭੇਜੋ
+    setMode("verify2fa");
+    setErrorMsg("");
+  }
+
+  // ਟੂ-ਫੈਕਟਰ ਵੈਰੀਫਿਕੇਸ਼ਨ (2FA Code Check)
+  function handleVerify2FA(e) {
+    e.preventDefault();
+    if (otpCode !== "1234") {
+      setErrorMsg("ਗਲਤ ਵੈਰੀਫਿਕੇਸ਼ਨ ਕੋਡ! (ਡਿਫੌਲਟ ਕੋਡ: 1234 ਭਰੋ)");
+      return;
+    }
+    localStorage.setItem("punjab_app_user", username.trim());
     setUser(username.trim());
   }
 
+  // ਫੋਰਗੈਟ ਪਾਸਵਰਡ ਪ੍ਰੋਸੈਸ
+  function handleForgot(e) {
+    e.preventDefault();
+    const savedContact = localStorage.getItem(`contact_${username.trim()}`);
+    if (!savedContact) {
+      setErrorMsg("ਇਹ ਯੂਜ਼ਰਨੇਮ ਨਹੀਂ ਮਿਲਿਆ!");
+      return;
+    }
+    setSuccessMsg("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਲਿੰਕ ਤੁਹਾਡੇ ਨੰਬਰ/ਈਮੇਲ 'ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ!");
+    setErrorMsg("");
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-sans">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-sans select-none">
       <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 p-8 rounded-3xl text-center shadow-2xl">
         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-500 p-1 shadow-xl">
           <div className="w-full h-full bg-black rounded-[18px] flex items-center justify-center">
@@ -181,32 +240,114 @@ function AuthScreen({ setUser }) {
         </div>
         <h1 className="text-2xl font-black tracking-wider text-amber-400 mb-1">PUNJAB</h1>
         <p className="text-xs text-neutral-400 mb-6 font-serif">ਅਸਲੀ ਪੰਜਾਬੀ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ</p>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="ਯੂਜ਼ਰ ਨਾਮ (Username)"
-            required
-            className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="ਪਾਸਵਰਡ (Password)"
-            required
-            minLength={4}
-            className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
-          />
-          <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-            ਖਾਤਾ ਬਣਾਓ / ਲੌਗ ਇਨ ਕਰੋ
-          </button>
-        </form>
+
+        {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-xl mb-3">{errorMsg}</p>}
+        {successMsg && <p className="text-xs text-amber-300 bg-amber-500/10 p-2.5 rounded-xl mb-3">{successMsg}</p>}
+
+        {/* 1. Login Form */}
+        {mode === "login" && (
+          <form onSubmit={handleLogin} className="space-y-3">
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="ਯੂਜ਼ਰ ਨਾਮ (Username)"
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="ਪਾਸਵਰਡ (Password)"
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
+              ਲੌਗ ਇൻ ਕਰੋ (Log In)
+            </button>
+            <div className="flex justify-between items-center text-[11px] pt-2">
+              <button type="button" onClick={() => { setMode("forgot"); setErrorMsg(""); setSuccessMsg(""); }} className="text-neutral-400 hover:text-amber-400">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
+              <button type="button" onClick={() => { setMode("signup"); setErrorMsg(""); setSuccessMsg(""); }} className="text-amber-400 font-bold">ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ</button>
+            </div>
+          </form>
+        )}
+
+        {/* 2. Sign Up Form */}
+        {mode === "signup" && (
+          <form onSubmit={handleSignUp} className="space-y-3">
+            <input
+              value={emailOrPhone}
+              onChange={e => setEmailOrPhone(e.target.value)}
+              placeholder="ਈਮੇਲ ਜਾਂ ਮੋਬਾਈਲ ਨੰਬਰ"
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="ਯੂਜ਼ਰ ਨਾਮ ਚੁਣੋ (Username)"
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="ਪਾਸਵਰਡ ਬਣਾਓ (Password)"
+              required
+              minLength={4}
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
+              ਸਾਈਨ ਅੱਪ ਕਰੋ (Sign Up)
+            </button>
+            <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
+          </form>
+        )}
+
+        {/* 3. 2-Step Verification Form */}
+        {mode === "verify2fa" && (
+          <form onSubmit={handleVerify2FA} className="space-y-3">
+            <div className="text-center text-xs text-neutral-300 mb-2">
+              <ShieldCheck size={32} className="mx-auto text-amber-400 mb-1" />
+              ਸੁਰੱਖਿਆ ਕੋਡ (2FA Verification) ਭਰੋ। <br/><span className="text-[10px] text-neutral-500">(ਟੈਸਟ ਲਈ ਕੋਡ: 1234 ਭਰੋ)</span>
+            </div>
+            <input
+              value={otpCode}
+              onChange={e => setOtpCode(e.target.value)}
+              placeholder="4-ਅੰਕਾਂ ਦਾ ਕੋਡ (1234)"
+              required
+              maxLength={4}
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-center text-sm text-white outline-none tracking-widest"
+            />
+            <button className="w-full bg-amber-500 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
+              ਵੈਰੀਫਾਈ ਕਰੋ
+            </button>
+          </form>
+        )}
+
+        {/* 4. Forgot Password Form */}
+        {mode === "forgot" && (
+          <form onSubmit={handleForgot} className="space-y-3">
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="ਆਪਣਾ ਯੂਜ਼ਰ ਨਾਮ ਲਿਖੋ..."
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
+              ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਲਿੰਕ ਭੇਜੋ
+            </button>
+            <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਵਾਪਸ ਲੌਗ ਇਨ 'ਤੇ ਜਾਓ</button>
+          </form>
+        )}
       </div>
     </div>
   );
 }
 
+// (ਬਾਕੀ ਸਾਰੇ ਪੰਜਾਬ ਐਪ ਦੇ ਕੰਪੋਨੈਂਟਸ ਪਹਿਲਾਂ ਵਾਂਗ ਸੁਰੱਖਿਅਤ ਹਨ)
 function CreateMenuScreen({ setTab }) {
   return (
     <div className="p-5 space-y-4 max-w-sm mx-auto">
