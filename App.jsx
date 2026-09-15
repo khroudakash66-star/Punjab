@@ -21,33 +21,19 @@ const safeSet = (key, value) => {
   }
 };
 
-// ਨਵਾਂ ਕੈਲੀਗ੍ਰਾਫੀ ਪੰਜਾਬ ਲੋਗੋ ਕੰਪੋਨੈਂਟ
+// Canvas Calligraphy Logo Component
 const PunjabCanvasLogo = ({ size = "small" }) => {
   if (size === "large") {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-500/60 shadow-2xl p-0.5 bg-gradient-to-br from-red-600 via-yellow-600 to-teal-800 flex items-center justify-center">
-          <svg viewBox="0 0 300 300" className="w-full h-full rounded-2xl">
-            <defs>
-              <linearGradient id="artBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#7f1d1d" />
-                <stop offset="35%" stopColor="#991b1b" />
-                <stop offset="65%" stopColor="#d97706" />
-                <stop offset="100%" stopColor="#115e59" />
-              </linearGradient>
-              <filter id="canvasTexture">
-                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" />
-                <feBlend mode="multiply" in="SourceGraphic" in2="noise" />
-              </filter>
-            </defs>
-            <rect width="300" height="300" fill="url(#artBg)" filter="url(#canvasTexture)" />
-            <text x="150" y="170" textAnchor="middle" fill="#ffffff" stroke="#1c1917" strokeWidth="4" fontSize="82" fontWeight="900" fontFamily="sans-serif">
-              ਪੰਜਾਬ
-            </text>
-            <text x="150" y="215" textAnchor="middle" fill="#ffffff" stroke="#1c1917" strokeWidth="1.5" fontSize="30" fontStyle="italic" fontFamily="cursive, serif">
-              Panjaab
-            </text>
-          </svg>
+        <div className="w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-500/70 shadow-2xl p-2 bg-gradient-to-br from-red-800 via-yellow-700 to-teal-900 flex flex-col items-center justify-center text-center">
+          <span className="text-4xl select-none mb-1">🌾</span>
+          <span className="font-black text-3xl text-white tracking-wide select-none drop-shadow-md">
+            ਪੰਜਾਬ
+          </span>
+          <span className="text-xs italic text-amber-200 font-serif tracking-widest mt-0.5 select-none">
+            Panjaab
+          </span>
         </div>
         <span className="font-extrabold text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
           PUNJAB
@@ -58,12 +44,8 @@ const PunjabCanvasLogo = ({ size = "small" }) => {
 
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-500/50 shadow-md flex items-center justify-center bg-gradient-to-br from-red-700 via-amber-600 to-teal-800">
-        <svg viewBox="0 0 300 300" className="w-full h-full">
-          <text x="150" y="175" textAnchor="middle" fill="#ffffff" stroke="#000" strokeWidth="6" fontSize="100" fontWeight="900">
-            ਪੰ
-          </text>
-        </svg>
+      <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-500/50 shadow-md flex items-center justify-center bg-gradient-to-br from-red-800 via-amber-600 to-teal-900">
+        <span className="font-black text-white text-base">ਪੰ</span>
       </div>
       <div className="flex flex-col">
         <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent leading-none">
@@ -89,7 +71,7 @@ export default function App() {
   const [authSuccess, setAuthSuccess] = useState('');
 
   const [activeTab, setActiveTab] = useState('home');
-  const [profileSubTab, setProfileSubTab] = useState('posts'); // 'posts' | 'saved'
+  const [profileSubTab, setProfileSubTab] = useState('posts');
   const [activeStory, setActiveStory] = useState(null);
   const [storyLiked, setStoryLiked] = useState(false);
 
@@ -97,40 +79,38 @@ export default function App() {
   const [selectedFileImage, setSelectedFileImage] = useState(null);
   const [newCaption, setNewCaption] = useState('');
 
-  const [stories, setStories] = useState([
-    { id: 1, user: "amritsar", name: "ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=800&auto=format&fit=crop" },
-    { id: 2, user: "virasat", name: "ਵਿਰਾਸਤ", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop" },
-    { id: 3, user: "kisaan", name: "ਖੇਤ ਪੰਜਾਬ ਦੇ", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop" },
-    { id: 4, user: "pendu", name: "ਪਿੰਡ", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&auto=format&fit=crop" }
-  ]);
+  const stories = [
+    { id: 1, user: "amritsar", name: "Amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=800&auto=format&fit=crop" },
+    { id: 2, user: "virasat", name: "Virasat", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop" },
+    { id: 3, user: "kisaan", name: "Fields", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop" },
+    { id: 4, user: "pendu", name: "Village", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&auto=format&fit=crop" }
+  ];
 
-  const [reels, setReels] = useState([
+  const reels = [
     {
       id: 101,
       author: "virasat_punjab",
-      desc: "Rangla Punjab 🌾✨ #Punjab #Virasat #Reels",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4",
-      likes: 3420,
-      isLiked: false
+      desc: "Rangla Punjab #Punjab #Virasat #Reels",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop",
+      likes: 3420
     },
     {
       id: 102,
       author: "kisaan_jatt",
-      desc: "Desi Khet Te Thandi Hava 🚜❤️ #Kisaan",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-countryside-road-between-fields-41315-large.mp4",
-      likes: 5120,
-      isLiked: false
+      desc: "Desi Khet Te Thandi Hava #Kisaan",
+      image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop",
+      likes: 5120
     }
-  ]);
+  ];
 
-  const [posts, setPosts] = useState(() => safeGet('punjab_feed_posts_v2', [
+  const [posts, setPosts] = useState(() => safeGet('punjab_feed_posts_v3', [
     {
       id: 1,
       author: "virasat_punjab",
       authorName: "Virasat Punjab",
       location: "Sri Amritsar Sahib",
       image: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?auto=format&fit=crop&w=800&q=80",
-      caption: "Golden Temple Darshan ✨ #HarmandirSahib",
+      caption: "Golden Temple Darshan #HarmandirSahib",
       likes: 1240,
       isLiked: false,
       isSaved: false
@@ -141,7 +121,7 @@ export default function App() {
       authorName: "Punjab Fields",
       location: "Malwa, Punjab",
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
-      caption: "Lush green fields of Punjab 🌾 #Farmer",
+      caption: "Lush green fields of Punjab #Farmer",
       likes: 890,
       isLiked: false,
       isSaved: false
@@ -152,20 +132,20 @@ export default function App() {
     en: {
       login: "Log In", signup: "Sign Up", forgot: "Forgot Password?",
       userId: "User ID / Username", password: "Password", newPass: "New Password",
-      fullName: "Full Name", dontHave: "Don't have an account?", alreadyHave: "Already have an account?",
+      fullName: "Full Name", dontHave: "Need an account?", alreadyHave: "Already have an account?",
       logout: "Log Out", sharePost: "Share Post", newPost: "New Post",
-      choosePhoto: "Select from Camera / Gallery", changePhoto: "Choose Different Photo",
+      choosePhoto: "Select from Camera / Gallery", changePhoto: "Choose Another Photo",
       captionPlaceholder: "Write a caption...", likes: "likes", close: "Close",
-      posts: "Posts", followers: "Followers", following: "Following", saved: "Saved"
+      posts: "Posts", followers: "Followers", following: "Following"
     },
     pa: {
       login: "ਲਾਗ ਇਨ", signup: "ਸਾਈਨ ਅੱਪ", forgot: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?",
       userId: "ਯੂਜ਼ਰ ਆਈਡੀ", password: "ਪਾਸਵਰਡ", newPass: "ਨਵਾਂ ਪਾਸਵਰਡ",
       fullName: "ਪੂਰਾ ਨਾਮ", dontHave: "ਖਾਤਾ ਨਹੀਂ ਹੈ?", alreadyHave: "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ?",
       logout: "ਲੌਗ ਆਉਟ", sharePost: "ਪੋਸਟ ਕਰੋ", newPost: "ਨਵੀਂ ਪੋਸਟ",
-      choosePhoto: "ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ 'ਚੋਂ ਫੋਟੋ ਚੁਣੋ", changePhoto: "ਹੋਰ ਫੋਟੋ ਚੁਣੋ",
+      choosePhoto: "ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਚੋਂ ਫੋਟੋ ਚੁਣੋ", changePhoto: "ਹੋਰ ਫੋਟੋ ਚੁਣੋ",
       captionPlaceholder: "ਕੁਝ ਲਿਖੋ...", likes: "ਪਸੰਦ", close: "ਬੰਦ ਕਰੋ",
-      posts: "ਪੋਸਟਾਂ", followers: "ਫੋਲੋਅਰਜ਼", following: "ਫੋਲੋਇੰਗ", saved: "ਸੇਵ ਕੀਤੀਆਂ"
+      posts: "ਪੋਸਟਾਂ", followers: "ਫੋਲੋਅਰਜ਼", following: "ਫੋਲੋਇੰਗ"
     }
   }[lang];
 
@@ -174,11 +154,11 @@ export default function App() {
     setAuthError('');
     setAuthSuccess('');
 
-    const users = safeGet('punjab_users_db', []);
+    const users = safeGet('punjab_users_db_v3', []);
 
     if (authMode === 'signup') {
       if (!usernameInput.trim() || !passwordInput.trim()) {
-        setAuthError(lang === 'en' ? 'Please fill in all fields' : 'ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
+        setAuthError(lang === 'en' ? 'Please fill all fields' : 'ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
         return;
       }
       const exists = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
@@ -194,7 +174,7 @@ export default function App() {
         following: 95
       };
       users.push(newUser);
-      safeSet('punjab_users_db', users);
+      safeSet('punjab_users_db_v3', users);
       safeSet('punjab_user_session', newUser);
       setCurrentUser(newUser);
     } else if (authMode === 'login') {
@@ -212,8 +192,8 @@ export default function App() {
         return;
       }
       users[idx].password = newPasswordInput.trim();
-      safeSet('punjab_users_db', users);
-      setAuthSuccess(lang === 'en' ? 'Password reset successfully!' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ!');
+      safeSet('punjab_users_db_v3', users);
+      setAuthSuccess(lang === 'en' ? 'Password updated!' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ!');
       setTimeout(() => {
         setAuthMode('login');
         setAuthSuccess('');
@@ -255,7 +235,7 @@ export default function App() {
 
     const updated = [newPost, ...posts];
     setPosts(updated);
-    safeSet('punjab_feed_posts_v2', updated);
+    safeSet('punjab_feed_posts_v3', updated);
     setSelectedFileImage(null);
     setNewCaption('');
     setActiveTab('home');
@@ -269,7 +249,7 @@ export default function App() {
       return p;
     });
     setPosts(updated);
-    safeSet('punjab_feed_posts_v2', updated);
+    safeSet('punjab_feed_posts_v3', updated);
   };
 
   const handleSavePost = (id) => {
@@ -280,7 +260,7 @@ export default function App() {
       return p;
     });
     setPosts(updated);
-    safeSet('punjab_feed_posts_v2', updated);
+    safeSet('punjab_feed_posts_v3', updated);
   };
 
   const myPosts = posts.filter(p => p.author === currentUser?.username);
@@ -422,13 +402,12 @@ export default function App() {
           </div>
         </header>
 
-        {/* Real Instagram-Style Story Modal */}
+        {/* Story Modal */}
         {activeStory && (
           <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between">
-            {/* Top Bar with Progress */}
             <div className="p-3 z-10 bg-gradient-to-b from-black/80 to-transparent">
               <div className="w-full h-1 bg-neutral-700 rounded-full overflow-hidden mb-2">
-                <div className="h-full bg-white animate-[pulse_5s_ease-in-out]" style={{ width: '100%' }} />
+                <div className="h-full bg-white w-full" />
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -443,12 +422,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Story Image */}
             <div className="flex-1 flex items-center justify-center p-2">
               <img src={activeStory.img} alt="Story" className="max-h-[75vh] w-full object-contain rounded-2xl" />
             </div>
 
-            {/* Bottom Story Interaction (Like & Reply) */}
             <div className="p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex items-center gap-3">
               <input 
                 type="text" 
@@ -473,7 +450,7 @@ export default function App() {
           {/* HOME FEED */}
           {activeTab === 'home' && (
             <div>
-              {/* Instagram Stories Carousel */}
+              {/* Stories */}
               <div className="flex gap-3 px-4 py-3 overflow-x-auto border-b border-neutral-800 no-scrollbar">
                 {stories.map(story => (
                   <div
@@ -484,4 +461,30 @@ export default function App() {
                     <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-300">
                       <img src={story.img} alt={story.user} className="w-full h-full rounded-full object-cover border-2 border-black" />
                     </div>
-                    <span cla
+                    <span className="text-[11px] text-neutral-300 truncate w-16 text-center">{story.name}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feed */}
+              <div className="divide-y divide-neutral-800">
+                {posts.map((post) => (
+                  <article key={post.id} className="pb-3">
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500/40 flex items-center justify-center text-xs font-bold text-amber-400">
+                        {post.authorName[0]}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">{post.authorName}</div>
+                        <div className="text-[10px] text-neutral-400">{post.location}</div>
+                      </div>
+                    </div>
+
+                    <img src={post.image} alt="Post" className="w-full aspect-square object-cover" />
+
+                    <div className="px-4 pt-2.5">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-4">
+                          <button onClick={() => handleLikePost(post.id)}>
+                            <Heart size={22} className={post.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
+                          </button>
