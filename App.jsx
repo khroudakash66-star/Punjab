@@ -25,7 +25,12 @@ export default function App() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    if (user) loadPosts();
+    if (user) {
+      loadPosts();
+      // Real-time polling to keep feed updated like a real app
+      const interval = setInterval(loadPosts, 5000);
+      return () => clearInterval(interval);
+    }
   }, [user]);
 
   async function loadPosts() {
@@ -52,7 +57,7 @@ export default function App() {
       {/* Top Header */}
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-neutral-900 px-4 h-12 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-400 p-0.5 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-400 p-0.5 flex items-center justify-center shadow-lg">
             <div className="w-full h-full bg-black rounded-[6px] flex items-center justify-center text-[10px] font-black text-amber-400">ਪੰ</div>
           </div>
           <span className="text-base font-black tracking-widest bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
@@ -60,7 +65,7 @@ export default function App() {
           </span>
         </div>
         <div className="flex items-center gap-4 text-white">
-          <button><PlusSquare size={22} /></button>
+          <button onClick={() => setTab("create")}><PlusSquare size={22} /></button>
           <button><Heart size={22} /></button>
           <button><Send size={22} /></button>
         </div>
@@ -68,7 +73,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="pb-12">
-        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} reload={loadPosts} />}
+        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} reload={loadPosts} currentUser={user} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
         {tab === "create" && <CreateScreen user={user} setTab={setTab} reload={loadPosts} />}
         {tab === "reels" && <ReelsScreen posts={posts} />}
@@ -77,11 +82,11 @@ export default function App() {
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/95 backdrop-blur border-t border-neutral-900 flex justify-around items-center h-14 z-50">
-        <button onClick={() => setTab("home")} className={tab === "home" ? "text-amber-400" : "text-white/60"}><Home size={24} /></button>
-        <button onClick={() => setTab("search")} className={tab === "search" ? "text-amber-400" : "text-white/60"}><Search size={24} /></button>
-        <button onClick={() => setTab("create")} className={tab === "create" ? "text-amber-400" : "text-white/60"}><PlusSquare size={26} /></button>
-        <button onClick={() => setTab("reels")} className={tab === "reels" ? "text-amber-400" : "text-white/60"}><Film size={24} /></button>
-        <button onClick={() => setTab("profile")} className={tab === "profile" ? "text-amber-400" : "text-white/60"}><User size={24} /></button>
+        <button onClick={() => setTab("home")} className={tab === "home" ? "text-amber-400 scale-110" : "text-white/60"}><Home size={24} /></button>
+        <button onClick={() => setTab("search")} className={tab === "search" ? "text-amber-400 scale-110" : "text-white/60"}><Search size={24} /></button>
+        <button onClick={() => setTab("create")} className={tab === "create" ? "text-amber-400 scale-110" : "text-white/60"}><PlusSquare size={26} /></button>
+        <button onClick={() => setTab("reels")} className={tab === "reels" ? "text-amber-400 scale-110" : "text-white/60"}><Film size={24} /></button>
+        <button onClick={() => setTab("profile")} className={tab === "profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
       </nav>
     </div>
   );
@@ -126,9 +131,9 @@ function AuthScreen({ setUser }) {
   );
 }
 
-function HomeScreen({ posts, setTab, reload }) {
+function HomeScreen({ posts, setTab, reload, currentUser }) {
   const stories = [
-    { name: "Your story", active: true },
+    { name: currentUser, active: true },
     { name: "jassu_082" },
     { name: "randeep_pb" },
     { name: "simran.kaur" },
@@ -162,18 +167,38 @@ function HomeScreen({ posts, setTab, reload }) {
           </button>
         </div>
       ) : (
-        posts.map((p) => <PostCard key={p.id} post={p} />)
+        posts.map((p) => <PostCard key={p.id} post={p} currentUser={currentUser} />)
       )}
     </div>
   );
 }
 
-function PostCard({ post }) {
+function PostCard({ post, currentUser }) {
   const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes || 12);
   const [saved, setSaved] = useState(false);
+  const [comment, setComment] = useState("");
+  const [commentsList, setCommentsList] = useState([]);
+
+  function handleLike() {
+    if (!liked) {
+      setLiked(true);
+      setLikesCount(prev => prev + 1);
+    } else {
+      setLiked(false);
+      setLikesCount(prev => prev - 1);
+    }
+  }
+
+  function handleAddComment(e) {
+    e.preventDefault();
+    if (!comment.trim()) return;
+    setCommentsList([...commentsList, { user: currentUser, text: comment }]);
+    setComment("");
+  }
 
   return (
-    <article className="bg-black border-b border-neutral-900 pb-2">
+    <article className="bg-black border-b border-neutral-900 pb-3">
       <div className="flex items-center justify-between px-3 py-2">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 p-0.5">
@@ -194,7 +219,7 @@ function PostCard({ post }) {
       <div className="px-3 py-2.5 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => setLiked(!liked)}>
+            <button onClick={handleLike} className="transition transform active:scale-125">
               <Heart size={24} fill={liked ? "#ef4444" : "none"} stroke={liked ? "#ef4444" : "currentColor"} />
             </button>
             <MessageCircle size={24} />
@@ -205,12 +230,37 @@ function PostCard({ post }) {
           </button>
         </div>
 
+        <div className="text-xs font-bold text-white">{likesCount} likes</div>
+
         {post.caption && (
           <p className="text-xs text-neutral-200">
             <span className="font-bold mr-2 text-amber-400">@{post.author}</span>
             {post.caption}
           </p>
         )}
+
+        {/* Real-time comments display */}
+        {commentsList.length > 0 && (
+          <div className="space-y-1 pt-1">
+            {commentsList.map((c, idx) => (
+              <p key={idx} className="text-[11px] text-neutral-300">
+                <span className="font-bold text-amber-300 mr-2">@{c.user}</span>
+                {c.text}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {/* Comment Input Form */}
+        <form onSubmit={handleAddComment} className="flex gap-2 pt-1">
+          <input
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Add a comment..."
+            className="w-full bg-transparent text-xs text-white outline-none placeholder:text-neutral-600"
+          />
+          {comment && <button type="submit" className="text-xs font-bold text-amber-400">Post</button>}
+        </form>
       </div>
     </article>
   );
@@ -225,7 +275,7 @@ function ExploreScreen({ posts }) {
       </div>
       <div className="grid grid-cols-3 gap-1">
         {posts.map((p) => (
-          <div key={p.id} className="aspect-square bg-neutral-900">
+          <div key={p.id} className="aspect-square bg-neutral-900 relative group">
             <img src={p.image} alt="" className="w-full h-full object-cover" />
           </div>
         ))}
@@ -279,7 +329,7 @@ function CreateScreen({ user, setTab, reload }) {
           author: user,
           caption: caption,
           image: preview,
-          location: "Punjab",
+          location: "Punjab, India",
         }),
       });
 
@@ -332,17 +382,17 @@ function CreateScreen({ user, setTab, reload }) {
 
 function ReelsScreen({ posts }) {
   return (
-    <div className="space-y-4">
-      <div className="p-3 font-bold text-sm border-b border-neutral-900 flex justify-between items-center">
+    <div className="space-y-4 pb-10">
+      <div className="p-3 font-bold text-sm border-b border-neutral-900 flex justify-between items-center sticky top-12 bg-black/95 z-40 backdrop-blur">
         <span>Reels</span>
         <Sparkles size={18} className="text-amber-400" />
       </div>
       {posts.map((p) => (
         <div key={p.id} className="bg-black border-b border-neutral-900 relative">
-          {p.image && <img src={p.image} alt="" className="w-full aspect-square object-cover" />}
-          <div className="p-3 text-xs bg-gradient-to-t from-black/80 to-transparent">
-            <span className="font-bold text-amber-400 mr-2">@{p.author}</span>
-            {p.caption}
+          {p.image && <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
+          <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl">
+            <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
+            <p className="text-neutral-200 mt-1">{p.caption}</p>
           </div>
         </div>
       ))}
