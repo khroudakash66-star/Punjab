@@ -26,35 +26,43 @@ import {
 export default function App() {
   const [user, setUser] = useState(() => localStorage.getItem("punjab_user") || "");
   const [tab, setTab] = useState("home");
-  const [posts, setPosts] = useState(() => {
-    try {
-      const saved = localStorage.getItem("punjab_posts_db");
-      return saved ? JSON.parse(saved) : [
-        {
-          id: 1,
-          author: "jassu_082",
-          caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
-          image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
-          location: "Amritsar, Punjab",
-          likes: [],
-          comments: [],
-          type: "post"
-        }
-      ];
-    } catch {
-      return [];
+  const [posts, setPosts] = useState([
+    {
+      id: 1,
+      author: "jassu_082",
+      caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
+      image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
+      location: "Amritsar, Punjab",
+      likes: [],
+      comments: [],
+      type: "post"
     }
-  });
+  ]);
   const [savedPosts, setSavedPosts] = useState([]);
   const [following, setFollowing] = useState([]);
 
   useEffect(() => {
+    const saved = localStorage.getItem("punjab_posts_db");
+    if (saved) {
+      try {
+        setPosts(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     try {
       localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   }, [posts]);
 
-  if (!user) return <AuthScreen setUser={setUser} />;
+  if (!user) {
+    return <AuthScreen setUser={setUser} />;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 select-none">
@@ -105,7 +113,7 @@ export default function App() {
 }
 
 function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login"); // login, signup, forgot
+  const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -116,12 +124,6 @@ function AuthScreen({ setUser }) {
 
     if (mode === "forgot") {
       setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਤੁਹਾਡੀ ਈਮੇਲ ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
-      return;
-    }
-
-    if (mode === "signup") {
-      localStorage.setItem("punjab_user", username.trim());
-      setUser(username.trim());
       return;
     }
 
@@ -304,11 +306,7 @@ function PostCard({ post, setPosts, currentUser, following, setFollowing, savedP
 
   function handleShare() {
     if (navigator.share) {
-      navigator.share({
-        title: 'Punjab App Post',
-        text: post.caption,
-        url: window.location.href,
-      }).catch(() => {});
+      navigator.share({ title: 'Punjab App Post', text: post.caption, url: window.location.href }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("ਪੋਸਟ ਦਾ ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ!");
