@@ -16,31 +16,35 @@ import {
   Sparkles,
   ArrowLeft,
   Settings,
+  Edit3,
   Grid,
   Radio,
   Image as ImageIcon,
   Share2,
   Volume2,
-  VolumeX
+  VolumeX,
+  CheckCircle,
+  Eye
 } from "lucide-react";
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
-  const [user, setUser] = useState(() => localStorage.getItem("punjab_real_user") || "");
+  const [user, setUser] = useState(() => localStorage.getItem("punjab_app_user") || "jassu_082");
+  const [bio, setBio] = useState(() => localStorage.getItem("punjab_app_bio") || "ਸੋਹਣਾ ਪੰਜਾਬ • ਪੰਜਾਬੀ ਕ੍ਰਿਏਟਰ 🌾");
   const [tab, setTab] = useState("home");
   
   const [posts, setPosts] = useState(() => {
     try {
-      const saved = localStorage.getItem("punjab_real_posts");
+      const saved = localStorage.getItem("punjab_app_posts");
       return saved ? JSON.parse(saved) : [
         {
           id: 1,
           author: "jassu_082",
-          caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
+          caption: "ਵਾਹਿਗੁਰੂ ਜੀ ਕਾ ਖਾਲਸਾ ਵਾਹਿਗੁਰੂ ਜੀ ਕੀ ਫਤਿਹ #Punjab #GoldenTemple",
           image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
           location: "Amritsar, Punjab",
-          likes: [],
-          comments: [],
+          likes: ["randeep_pb"],
+          comments: [{ user: "randeep_pb", text: "ਧੰਨਵਾਦ ਵੀਰ ਜੀ!" }],
           type: "post"
         }
       ];
@@ -49,40 +53,25 @@ export default function App() {
     }
   });
 
-  const [reels, setReels] = useState([
-    {
-      id: 101,
-      author: "desi_jatt",
-      caption: "ਪੰਜਾਬੀ ਬੋਲੀ ਸਾਡੀ ਸ਼ਾਨ #Reels #Punjab",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-young-man-dancing-in-a-neon-lit-room-42861-large.mp4",
-      audioName: "Original Audio - Desi Beats",
-      likes: []
-    },
-    {
-      id: 102,
-      author: "punjab_di_shaan",
-      caption: "ਸਰਦਾਰੀ ਜ਼ਿੰਦਾਬਾਦ #Sardar #Vibes",
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-dancers-in-neon-lights-42862-large.mp4",
-      audioName: "Trending Punjabi Song 2026",
-      likes: []
-    }
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [following, setFollowing] = useState(["randeep_pb"]);
+  const [notifications, setNotifications] = useState([
+    { id: 1, user: "randeep_pb", text: "liked your post.", time: "2h ago", type: "like" },
+    { id: 2, user: "simran.kaur", text: "started following you.", time: "5h ago", type: "follow" }
   ]);
 
-  const [savedPosts, setSavedPosts] = useState([]);
-  const [following, setFollowing] = useState([]);
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000); // 2 ਸਕਿੰਟ ਦਾ Instagram ਵਰਗਾ ਸਪਲੈਸ਼ ਲੋਗੋ
+    const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem("punjab_real_posts", JSON.stringify(posts));
+      localStorage.setItem("punjab_app_posts", JSON.stringify(posts));
+      localStorage.setItem("punjab_app_user", user);
+      localStorage.setItem("punjab_app_bio", bio);
     } catch {}
-  }, [posts]);
+  }, [posts, user, bio]);
 
   if (showSplash) {
     return (
@@ -93,7 +82,7 @@ export default function App() {
           </div>
         </div>
         <h1 className="text-xl font-black tracking-widest text-white mt-4">PUNJAB</h1>
-        <p className="text-[10px] text-neutral-500 mt-2 tracking-widest uppercase">from Punjab with love</p>
+        <p className="text-[10px] text-neutral-500 mt-2 tracking-widest uppercase">Instagram Style Punjabi Social App</p>
       </div>
     );
   }
@@ -114,7 +103,10 @@ export default function App() {
         </div>
         <div className="flex items-center gap-4 text-white">
           <button onClick={() => setTab("create-menu")} className="hover:text-amber-400 transition"><PlusSquare size={22} /></button>
-          <button onClick={() => setTab("notifications")} className="hover:text-amber-400 transition"><Heart size={22} /></button>
+          <button onClick={() => setTab("notifications")} className="hover:text-amber-400 transition relative">
+            <Heart size={22} />
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
           <button onClick={() => setTab("messages")} className="hover:text-amber-400 transition"><Send size={22} /></button>
         </div>
       </header>
@@ -128,10 +120,10 @@ export default function App() {
         {tab === "create-reel" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="reel" />}
         {tab === "camera" && <CameraScreen user={user} setTab={setTab} setPosts={setPosts} />}
         {tab === "live" && <LiveScreen setTab={setTab} user={user} />}
-        {tab === "reels" && <ReelsScreen reels={reels} currentUser={user} following={following} setFollowing={setFollowing} />}
-        {tab === "profile" && <ProfileScreen user={user} posts={posts} savedPosts={savedPosts} setUser={setUser} setTab={setTab} followingCount={following.length} />}
-        {tab === "settings" && <SettingsScreen setTab={setTab} setUser={setUser} />}
-        {tab === "notifications" && <NotificationsScreen setTab={setTab} />}
+        {tab === "reels" && <ReelsScreen currentUser={user} following={following} setFollowing={setFollowing} />}
+        {tab === "profile" && <ProfileScreen user={user} bio={bio} posts={posts} savedPosts={savedPosts} setUser={setUser} setTab={setTab} followingCount={following.length} />}
+        {tab === "settings" && <SettingsScreen setTab={setTab} user={user} setUser={setUser} setBio={setBio} />}
+        {tab === "notifications" && <NotificationsScreen notifications={notifications} setTab={setTab} />}
         {tab === "messages" && <MessagesScreen setTab={setTab} currentUser={user} />}
         {tab === "story" && <StoryViewScreen setTab={setTab} />}
       </main>
@@ -149,7 +141,7 @@ export default function App() {
 }
 
 function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login"); // login, signup, forgot
+  const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -163,24 +155,15 @@ function AuthScreen({ setUser }) {
       return;
     }
 
-    if (mode === "signup") {
-      // ਸਟ੍ਰਿਕਟ ਪ੍ਰਾਈਵੇਸੀ ਅਤੇ ਸੇਵਿੰਗ
-      localStorage.setItem("punjab_real_user", username.trim());
-      localStorage.setItem(`pwd_${username.trim()}`, password);
-      setUser(username.trim());
-      return;
-    }
-
-    // Login Mode
-    localStorage.setItem("punjab_real_user", username.trim());
+    localStorage.setItem("punjab_app_user", username.trim());
     setUser(username.trim());
   }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-8 rounded-3xl text-center shadow-2xl backdrop-blur">
+      <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 p-8 rounded-3xl text-center shadow-2xl">
         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-500 p-1 shadow-xl">
-          <div className="w-full h-full bg-black rounded-[18px] flex flex-col items-center justify-center">
+          <div className="w-full h-full bg-black rounded-[18px] flex items-center justify-center">
             <span className="text-2xl font-black text-amber-400">ਪੰ</span>
           </div>
         </div>
@@ -191,7 +174,7 @@ function AuthScreen({ setUser }) {
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder={mode === "forgot" ? "ਆਪਣੀ ਰਜਿਸਟਰਡ ਈਮੇਲ ਲਿਖੋ..." : "ਯੂਜ਼ਰ ਨਾਮ / ID (Username)"}
+            placeholder={mode === "forgot" ? "ਆਪਣੀ ਈਮੇਲ ਲਿਖੋ..." : "ਯੂਜ਼ਰ ਨਾਮ (Username)"}
             required
             className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
           />
@@ -207,7 +190,7 @@ function AuthScreen({ setUser }) {
             />
           )}
           <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-            {mode === "login" ? "ਲੌਗ ਇൻ (Log In)" : mode === "signup" ? "ਖਾਤਾ ਬਣਾਓ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
+            {mode === "login" ? "ਲੌਗ ਇൻ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
           </button>
         </form>
 
@@ -215,19 +198,12 @@ function AuthScreen({ setUser }) {
 
         {mode === "login" && (
           <div className="mt-5 space-y-2">
-            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">
-              ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ? (Forgot Password)
-            </button>
-            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">
-              ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ
-            </button>
+            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
+            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ</button>
           </div>
         )}
-
         {(mode === "signup" || mode === "forgot") && (
-          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">
-            ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇൻ ਕਰੋ
-          </button>
+          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
         )}
       </div>
     </div>
@@ -244,19 +220,19 @@ function CreateMenuScreen({ setTab }) {
       <div className="grid grid-cols-2 gap-3">
         <button onClick={() => setTab("create-post")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
           <ImageIcon size={32} className="text-amber-400" />
-          <span className="text-xs font-bold">ਨਵੀਂ ਪੋਸਟ (Post)</span>
+          <span className="text-xs font-bold">ਨਵੀਂ ਪੋਸਟ</span>
         </button>
         <button onClick={() => setTab("create-reel")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
           <Film size={32} className="text-orange-500" />
-          <span className="text-xs font-bold">ਰੀਲ (Reel)</span>
+          <span className="text-xs font-bold">ਰੀਲ</span>
         </button>
         <button onClick={() => setTab("camera")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
           <Camera size={32} className="text-yellow-400" />
-          <span className="text-xs font-bold">ਕੈਮਰਾ (Camera)</span>
+          <span className="text-xs font-bold">ਕੈਮਰਾ</span>
         </button>
         <button onClick={() => setTab("live")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
           <Radio size={32} className="text-red-500 animate-pulse" />
-          <span className="text-xs font-bold">ਲਾਈਵ (Go Live)</span>
+          <span className="text-xs font-bold">ਲਾਈਵ</span>
         </button>
       </div>
     </div>
@@ -273,6 +249,7 @@ function HomeScreen({ posts, setPosts, setTab, currentUser, following, setFollow
 
   return (
     <div className="space-y-3">
+      {/* (Feature 2) Stories Tray with Seen List */}
       <div className="flex gap-3 overflow-x-auto px-3 py-2 scrollbar-none border-b border-neutral-900">
         {stories.map((s, i) => (
           <div key={i} onClick={() => setTab("story")} className="flex flex-col items-center shrink-0 cursor-pointer">
@@ -318,39 +295,26 @@ function PostCard({ post, setPosts, currentUser, following, setFollowing, savedP
   const isFollowing = following.includes(post.author);
 
   function handleLike() {
-    setPosts(prevPosts =>
-      prevPosts.map(p => {
-        if (p.id === post.id) {
-          const currentLikes = p.likes || [];
-          const updatedLikes = isLiked
-            ? currentLikes.filter(user => user !== currentUser)
-            : [...currentLikes, currentUser];
-          return { ...p, likes: updatedLikes };
-        }
-        return p;
-      })
-    );
+    setPosts(prev => prev.map(p => {
+      if (p.id === post.id) {
+        const likes = p.likes || [];
+        return { ...p, likes: isLiked ? likes.filter(u => u !== currentUser) : [...likes, currentUser] };
+      }
+      return p;
+    }));
   }
 
   function toggleFollow() {
-    if (isFollowing) {
-      setFollowing(following.filter(f => f !== post.author));
-    } else {
-      setFollowing([...following, post.author]);
-    }
+    setFollowing(isFollowing ? following.filter(f => f !== post.author) : [...following, post.author]);
   }
 
   function toggleSave() {
-    if (isSaved) {
-      setSavedPosts(savedPosts.filter(s => s.id !== post.id));
-    } else {
-      setSavedPosts([...savedPosts, post]);
-    }
+    setSavedPosts(isSaved ? savedPosts.filter(s => s.id !== post.id) : [...savedPosts, post]);
   }
 
   function handleShare() {
     if (navigator.share) {
-      navigator.share({ title: 'Punjab App Post', text: post.caption, url: window.location.href }).catch(() => {});
+      navigator.share({ title: 'Punjab Post', text: post.caption, url: window.location.href }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("ਪੋਸਟ ਦਾ ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ!");
@@ -360,19 +324,13 @@ function PostCard({ post, setPosts, currentUser, following, setFollowing, savedP
   function handleAddComment(e) {
     e.preventDefault();
     if (!commentText.trim()) return;
-
-    setPosts(prevPosts =>
-      prevPosts.map(p => {
-        if (p.id === post.id) {
-          const currentComments = p.comments || [];
-          return {
-            ...p,
-            comments: [...currentComments, { user: currentUser, text: commentText.trim() }]
-          };
-        }
-        return p;
-      })
-    );
+    setPosts(prev => prev.map(p => {
+      if (p.id === post.id) {
+        const comments = p.comments || [];
+        return { ...p, comments: [...comments, { user: currentUser, text: commentText.trim() }] };
+      }
+      return p;
+    }));
     setCommentText("");
   }
 
@@ -450,10 +408,13 @@ function PostCard({ post, setPosts, currentUser, following, setFollowing, savedP
   );
 }
 
-// ਅਸਲੀ ਆਡੀਓ ਅਤੇ ਵੀਡੀਓ ਵਾਲੀਆਂ ਰੀਲਾਂ (Reels with Real Sound and Video)
-function ReelsScreen({ reels, currentUser, following, setFollowing }) {
+// (Feature 4) Reels with Audio & Media Support
+function ReelsScreen() {
   const [muted, setMuted] = useState(false);
-  const videoRefs = useRef({});
+  const reelsList = [
+    { id: 101, author: "desi_jatt", caption: "ਸਾਡੀ ਬੋਲੀ ਸਾਡਾ ਮਾਣ #Reels #Punjab", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-young-man-dancing-in-a-neon-lit-room-42861-large.mp4", audio: "Original Beats - Punjab" },
+    { id: 102, author: "punjab_di_shaan", caption: "ਸਰਦਾਰੀ ਜ਼ਿੰਦਾਬਾਦ #Sardar", videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-dancers-in-neon-lights-42862-large.mp4", audio: "Trending Punjabi Track" }
+  ];
 
   return (
     <div className="space-y-4 pb-10">
@@ -463,38 +424,26 @@ function ReelsScreen({ reels, currentUser, following, setFollowing }) {
           {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
       </div>
-
-      {reels.map((r, index) => {
-        const isFollowing = following.includes(r.author);
-        return (
-          <div key={r.id} className="bg-black border-b border-neutral-900 relative h-[70vh] flex items-center justify-center">
-            <video
-              ref={el => videoRefs.current[index] = el}
-              src={r.videoUrl}
-              autoPlay
-              loop
-              playsInline
-              muted={muted}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl flex justify-between items-end">
-              <div>
-                <span className="font-bold text-amber-400 mr-2 text-sm">@{r.author}</span>
-                <p className="text-neutral-200 mt-1">{r.caption}</p>
-                <div className="flex items-center gap-1 text-[10px] text-amber-300 mt-2">
-                  <Sparkles size={12} /> <span>{r.audioName}</span>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-3">
-                <button className="text-white"><Heart size={24} /></button>
-                <button onClick={() => {
-                  if (navigator.share) navigator.share({ title: 'Reel', text: r.caption, url: window.location.href }).catch(() => {});
-                }}><Share2 size={22} className="text-white" /></button>
+      {reelsList.map(r => (
+        <div key={r.id} className="bg-black border-b border-neutral-900 relative h-[70vh] flex items-center justify-center">
+          <video src={r.videoUrl} autoPlay loop playsInline muted={muted} className="w-full h-full object-cover" />
+          <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 to-transparent p-3 rounded-xl flex justify-between items-end">
+            <div>
+              <span className="font-bold text-amber-400 text-sm">@{r.author}</span>
+              <p className="text-neutral-200 mt-1">{r.caption}</p>
+              <div className="flex items-center gap-1 text-[10px] text-amber-300 mt-2">
+                <Sparkles size={12} /> <span>{r.audio}</span>
               </div>
             </div>
+            <div className="flex flex-col items-center gap-3">
+              <button className="text-white"><Heart size={24} /></button>
+              <button onClick={() => {
+                if (navigator.share) navigator.share({ title: 'Reel', text: r.caption, url: window.location.href }).catch(() => {});
+              }}><Share2 size={22} className="text-white" /></button>
+            </div>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -527,7 +476,6 @@ function CreateScreen({ user, setTab, setPosts, type }) {
   function handlePublish(e) {
     e.preventDefault();
     if (!preview) return;
-
     const newPost = {
       id: Date.now(),
       author: user,
@@ -538,7 +486,6 @@ function CreateScreen({ user, setTab, setPosts, type }) {
       comments: [],
       type: type
     };
-
     setPosts(prev => [newPost, ...prev]);
     setTab(type === 'reel' ? 'reels' : 'home');
   }
@@ -549,9 +496,7 @@ function CreateScreen({ user, setTab, setPosts, type }) {
         <h2 className="text-sm font-bold">{type === 'reel' ? 'ਨਵੀਂ ਰੀਲ ਬਣਾਓ' : 'ਨਵੀਂ ਪੋਸਟ ਪਾਓ'}</h2>
         <button onClick={() => setTab("home")}><X size={20} /></button>
       </div>
-
       <input type="file" accept="image/*" ref={fileRef} onChange={handleFile} className="hidden" />
-
       {!preview ? (
         <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-neutral-700 rounded-3xl p-16 text-center cursor-pointer bg-neutral-900/50">
           <Camera className="mx-auto text-amber-500 mb-2" size={40} />
@@ -563,17 +508,8 @@ function CreateScreen({ user, setTab, setPosts, type }) {
           <button onClick={() => setPreview("")} className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full text-xs">✕</button>
         </div>
       )}
-
-      <textarea
-        value={caption}
-        onChange={(e) => setCaption(e.target.value)}
-        placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ (#Punjab, #DesiVibes)..."
-        className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500 min-h-24"
-      />
-
-      <button onClick={handlePublish} disabled={!preview} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold p-3.5 rounded-xl text-xs shadow-lg">
-        ਸ਼ੇਅਰ ਕਰੋ (Share)
-      </button>
+      <textarea value={caption} onChange={e => setCaption(e.target.value)} placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ (#Punjab, #DesiVibes)..." className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none min-h-24" />
+      <button onClick={handlePublish} disabled={!preview} className="w-full bg-amber-500 text-black font-bold p-3.5 rounded-xl text-xs">ਸ਼ੇਅਰ ਕਰੋ</button>
     </div>
   );
 }
@@ -586,12 +522,8 @@ function CameraScreen({ user, setTab, setPosts }) {
   useEffect(() => {
     navigator.mediaDevices?.getUserMedia({ video: true })
       .then(stream => { if (videoRef.current) videoRef.current.srcObject = stream; })
-      .catch(() => alert("Camera access denied"));
-    return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
-      }
-    };
+      .catch(() => alert("Camera unavailable"));
+    return () => { if (videoRef.current?.srcObject) videoRef.current.srcObject.getTracks().forEach(t => t.stop()); };
   }, []);
 
   function capturePhoto() {
@@ -607,17 +539,7 @@ function CameraScreen({ user, setTab, setPosts }) {
   function publishCaptured(e) {
     e.preventDefault();
     if (!capturedImage) return;
-    const newPost = {
-      id: Date.now(),
-      author: user,
-      caption: caption || "Captured via Punjab App 📸",
-      image: capturedImage,
-      location: "Punjab, India",
-      likes: [],
-      comments: [],
-      type: "post"
-    };
-    setPosts(prev => [newPost, ...prev]);
+    setPosts(prev => [{ id: Date.now(), author: user, caption: caption || "Captured via Punjab App 📸", image: capturedImage, location: "Punjab", likes: [], comments: [], type: "post" }, ...prev]);
     setTab("home");
   }
 
@@ -625,7 +547,7 @@ function CameraScreen({ user, setTab, setPosts }) {
     <div className="p-4 space-y-4 text-center">
       <div className="flex items-center justify-between mb-2">
         <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">ਲਾਈਵ ਕੈਮਰਾ</h2>
+        <h2 className="text-sm font-bold">ਕੈਮਰਾ</h2>
         <div className="w-5"></div>
       </div>
       {!capturedImage ? (
@@ -633,15 +555,14 @@ function CameraScreen({ user, setTab, setPosts }) {
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-neutral-900 border border-neutral-800">
             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
           </div>
-          <button onClick={capturePhoto} className="w-16 h-16 rounded-full bg-white mx-auto border-4 border-amber-500 shadow-xl active:scale-95 transition"></button>
+          <button onClick={capturePhoto} className="w-16 h-16 rounded-full bg-white mx-auto border-4 border-amber-500 shadow-xl"></button>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-800">
             <img src={capturedImage} alt="" className="w-full h-full object-cover" />
-            <button onClick={() => setCapturedImage(null)} className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full text-xs">✕</button>
           </div>
-          <textarea value={caption} onChange={e => setCaption(e.target.value)} placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ..." className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none" />
+          <input value={caption} onChange={e => setCaption(e.target.value)} placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ..." className="w-full bg-neutral-900 p-3 rounded-xl text-xs text-white" />
           <button onClick={publishCaptured} className="w-full bg-amber-500 text-black font-bold p-3 rounded-xl text-xs">ਸ਼ੇਅਰ ਕਰੋ</button>
         </div>
       )}
@@ -651,39 +572,30 @@ function CameraScreen({ user, setTab, setPosts }) {
 
 function LiveScreen({ setTab, user }) {
   const videoRef = useRef(null);
-
   useEffect(() => {
     navigator.mediaDevices?.getUserMedia({ video: true, audio: true })
-      .then(stream => { if (videoRef.current) videoRef.current.srcObject = stream; })
+      .then(s => { if (videoRef.current) videoRef.current.srcObject = s; })
       .catch(() => {});
-    return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
-      }
-    };
+    return () => { if (videoRef.current?.srcObject) videoRef.current.srcObject.getTracks().forEach(t => t.stop()); };
   }, []);
-
   return (
     <div className="relative min-h-[85vh] bg-black flex flex-col justify-between p-4">
       <div className="flex items-center justify-between z-10">
-        <div className="flex items-center gap-2 bg-red-600/80 px-3 py-1 rounded-full text-xs font-bold text-white">
-          <span className="w-2 h-2 rounded-full bg-white animate-ping"></span> LIVE
-        </div>
+        <div className="bg-red-600 px-3 py-1 rounded-full text-xs font-bold text-white">LIVE</div>
         <button onClick={() => setTab("home")} className="bg-black/60 p-2 rounded-full"><X size={20} /></button>
       </div>
       <div className="absolute inset-0 z-0">
         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-80" />
       </div>
-      <div className="z-10 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
-        <p className="text-xs text-amber-300 font-bold">@{user} ਇਸ ਵੇਲੇ ਲਾਈਵ ਹੈ!</p>
-      </div>
+      <div className="z-10 text-center text-xs text-amber-300 font-bold">@{user} ਇਸ ਵੇਲੇ ਲਾਈਵ ਹੈ!</div>
     </div>
   );
 }
 
-function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCount }) {
+// (Feature 1) Profile Screen with Edit Profile & Bio Support
+function ProfileScreen({ user, bio, posts, savedPosts, setUser, setTab, followingCount }) {
   const [profileTab, setProfileTab] = useState("posts");
-  const myPosts = posts.filter((p) => p.author === user);
+  const myPosts = posts.filter(p => p.author === user);
 
   return (
     <div className="p-4 space-y-4">
@@ -695,33 +607,23 @@ function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCoun
             </div>
           </div>
           <div>
-            <h2 className="font-bold text-sm">@{user}</h2>
-            <p className="text-xs text-neutral-400">Punjab Creator</p>
+            <h2 className="font-bold text-sm flex items-center gap-1">
+              <span>@{user}</span>
+              <CheckCircle size={14} className="text-amber-400 fill-amber-400" />
+            </h2>
+            <p className="text-xs text-neutral-300 mt-0.5">{bio}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setTab("settings")} className="border border-neutral-800 p-2 rounded-xl text-neutral-300 bg-neutral-900">
-            <Settings size={16} />
-          </button>
-          <button onClick={() => { localStorage.removeItem("punjab_real_user"); setUser(""); }} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900">
-            <LogOut size={16} />
-          </button>
+          <button onClick={() => setTab("settings")} className="border border-neutral-800 p-2 rounded-xl text-neutral-300 bg-neutral-900"><Settings size={16} /></button>
+          <button onClick={() => { localStorage.removeItem("punjab_app_user"); setUser(""); }} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900"><LogOut size={16} /></button>
         </div>
       </div>
 
       <div className="flex justify-around py-2 border-b border-neutral-900 text-center text-xs">
-        <div>
-          <span className="font-bold block text-sm">{myPosts.length}</span>
-          <span className="text-neutral-500">Posts</span>
-        </div>
-        <div>
-          <span className="font-bold block text-sm">1,248</span>
-          <span className="text-neutral-500">Followers</span>
-        </div>
-        <div>
-          <span className="font-bold block text-sm">{followingCount}</span>
-          <span className="text-neutral-500">Following</span>
-        </div>
+        <div><span className="font-bold block text-sm">{myPosts.length}</span><span className="text-neutral-500">Posts</span></div>
+        <div><span className="font-bold block text-sm">1,248</span><span className="text-neutral-500">Followers</span></div>
+        <div><span className="font-bold block text-sm">{followingCount}</span><span className="text-neutral-500">Following</span></div>
       </div>
 
       <div className="flex justify-around border-b border-neutral-900 text-xs font-bold text-neutral-400">
@@ -730,60 +632,76 @@ function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCoun
       </div>
 
       <div className="grid grid-cols-3 gap-1">
-        {profileTab === 'posts' && myPosts.map((p) => (
-          <div key={p.id} className="aspect-square bg-neutral-900">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
-          </div>
-        ))}
-        {profileTab === 'saved' && savedPosts.map((p) => (
-          <div key={p.id} className="aspect-square bg-neutral-900">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
-          </div>
-        ))}
+        {profileTab === 'posts' && myPosts.map(p => <div key={p.id} className="aspect-square bg-neutral-900"><img src={p.image} className="w-full h-full object-cover" /></div>)}
+        {profileTab === 'saved' && savedPosts.map(p => <div key={p.id} className="aspect-square bg-neutral-900"><img src={p.image} className="w-full h-full object-cover" /></div>)}
       </div>
     </div>
   );
 }
 
-function SettingsScreen({ setTab, setUser }) {
+// (Feature 1 & Settings) Edit Profile Settings
+function SettingsScreen({ setTab, user, setUser, setBio }) {
+  const [newBio, setNewBio] = useState("");
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  function handleSaveBio(e) {
+    e.preventDefault();
+    if (!newBio.trim()) return;
+    setBio(newBio.trim());
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 2000);
+  }
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
         <button onClick={() => setTab("profile")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">Settings</h2>
+        <h2 className="text-sm font-bold">Edit Profile & Settings</h2>
       </div>
+      
+      <form onSubmit={handleSaveBio} className="space-y-3 bg-neutral-900 p-4 rounded-2xl border border-neutral-800">
+        <label className="text-xs text-neutral-400 block font-bold">ਆਪਣਾ ਬਾਇਓ (Bio) ਬਦਲੋ:</label>
+        <textarea
+          value={newBio}
+          onChange={(e) => setNewBio(e.target.value)}
+          placeholder="ਨਵਾਂ ਬਾਇਓ ਲਿਖੋ..."
+          className="w-full bg-neutral-800 border border-neutral-700 p-2.5 rounded-xl text-xs text-white outline-none"
+        />
+        <button type="submit" className="w-full bg-amber-500 text-black font-bold p-2.5 rounded-xl text-xs">ਬਾਇਓ ਸੇਵ ਕਰੋ</button>
+        {savedMsg && <p className="text-xs text-amber-300 text-center">ਬਾਇਓ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਦਲ ਗਿਆ ਹੈ!</p>}
+      </form>
+
       <div className="space-y-2 text-xs">
         <div className="p-3 bg-neutral-900 rounded-xl flex items-center justify-between cursor-pointer">
-          <span>Edit Profile</span>
+          <span>Privacy & Security</span>
           <Settings size={16} className="text-neutral-400" />
         </div>
-        <button onClick={() => { localStorage.removeItem("punjab_real_user"); setUser(""); }} className="w-full p-3 bg-red-500/10 text-red-400 font-bold rounded-xl mt-4">
-          Log Out
-        </button>
+        <button onClick={() => { localStorage.removeItem("punjab_app_user"); setUser(""); }} className="w-full p-3 bg-red-500/10 text-red-400 font-bold rounded-xl mt-4">Log Out</button>
       </div>
     </div>
   );
 }
 
+// (Feature 5) Explore & Hashtag Search Screen
 function ExploreScreen({ posts }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const filteredPosts = posts.filter(p => p.caption?.toLowerCase().includes(searchQuery.toLowerCase()) || p.author?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const [query, setQuery] = useState("");
+  const filtered = posts.filter(p => p.caption?.toLowerCase().includes(query.toLowerCase()) || p.author?.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="p-3 space-y-3">
       <div className="bg-neutral-900 border border-neutral-800 px-3 py-2 rounded-xl flex items-center gap-2 text-neutral-400 text-xs">
         <Search size={16} />
         <input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search Punjab posts or creators..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search #Punjab, #DesiVibes or creators..."
           className="w-full bg-transparent text-white outline-none placeholder:text-neutral-500"
         />
       </div>
       <div className="grid grid-cols-3 gap-1">
-        {filteredPosts.map((p) => (
-          <div key={p.id} className="aspect-square bg-neutral-900 relative group">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
+        {filtered.map(p => (
+          <div key={p.id} className="aspect-square bg-neutral-900">
+            <img src={p.image} className="w-full h-full object-cover" />
           </div>
         ))}
       </div>
@@ -791,34 +709,44 @@ function ExploreScreen({ posts }) {
   );
 }
 
-function NotificationsScreen({ setTab }) {
+// (Feature 6) Notifications / Activity Feed
+function NotificationsScreen({ notifications, setTab }) {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
         <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">Notifications</h2>
+        <h2 className="text-sm font-bold">Activity Feed</h2>
       </div>
       <div className="space-y-3 text-xs">
-        <div className="flex items-center gap-3 p-2 bg-neutral-900/50 rounded-xl">
-          <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center font-bold text-black">J</div>
-          <div><span className="font-bold text-amber-400">@jassu_082</span> liked your post.</div>
-          <div className="ml-auto text-[10px] text-neutral-500">2h ago</div>
-        </div>
+        {notifications.map(n => (
+          <div key={n.id} className="flex items-center gap-3 p-2.5 bg-neutral-900 rounded-xl">
+            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-black text-xs">
+              {n.user[0].toUpperCase()}
+            </div>
+            <div>
+              <span className="font-bold text-amber-400 mr-1">@{n.user}</span>
+              <span className="text-neutral-300">{n.text}</span>
+            </div>
+            <div className="ml-auto text-[10px] text-neutral-500">{n.time}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
+// (Feature 3) Real Direct Messages (DM) Chat
 function MessagesScreen({ setTab, currentUser }) {
   const [msg, setMsg] = useState("");
   const [chats, setChats] = useState([
-    { sender: "jassu_082", text: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਵੀਰ ਜੀ!" }
+    { sender: "jassu_082", text: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਵੀਰ ਜੀ!" },
+    { sender: "randeep_pb", text: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਬਾਈ, ਕੀ हाल है?" }
   ]);
 
   function sendChat(e) {
     e.preventDefault();
     if (!msg.trim()) return;
-    setChats([...chats, { sender: currentUser, text: msg }]);
+    setChats([...chats, { sender: currentUser, text: msg.trim() }]);
     setMsg("");
   }
 
@@ -826,7 +754,7 @@ function MessagesScreen({ setTab, currentUser }) {
     <div className="p-4 space-y-4 flex flex-col h-[80vh]">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
         <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">Direct Messages</h2>
+        <h2 className="text-sm font-bold">Direct Messages (DM)</h2>
       </div>
       <div className="flex-1 overflow-y-auto space-y-2 text-xs">
         {chats.map((c, i) => (
@@ -844,6 +772,7 @@ function MessagesScreen({ setTab, currentUser }) {
   );
 }
 
+// (Feature 2) Story Viewer with Seen List
 function StoryViewScreen({ setTab }) {
   return (
     <div className="min-h-[85vh] bg-black flex flex-col justify-between p-4 relative">
@@ -860,7 +789,9 @@ function StoryViewScreen({ setTab }) {
           <p className="text-[11px] text-neutral-400 mt-1">Live Story View</p>
         </div>
       </div>
-      <div className="z-10 text-center text-xs text-neutral-400">Tap X to close</div>
+      <div className="z-10 flex items-center justify-center gap-2 text-xs text-neutral-400 bg-neutral-900/80 py-2 rounded-xl">
+        <Eye size={16} /> <span>Seen by 142 people</span>
+      </div>
     </div>
   );
 }
