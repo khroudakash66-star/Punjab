@@ -27,8 +27,7 @@ export default function App() {
   useEffect(() => {
     if (user) {
       loadPosts();
-      // Real-time polling to keep feed updated like a real app
-      const interval = setInterval(loadPosts, 5000);
+      const interval = setInterval(loadPosts, 4000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -239,7 +238,6 @@ function PostCard({ post, currentUser }) {
           </p>
         )}
 
-        {/* Real-time comments display */}
         {commentsList.length > 0 && (
           <div className="space-y-1 pt-1">
             {commentsList.map((c, idx) => (
@@ -251,7 +249,6 @@ function PostCard({ post, currentUser }) {
           </div>
         )}
 
-        {/* Comment Input Form */}
         <form onSubmit={handleAddComment} className="flex gap-2 pt-1">
           <input
             value={comment}
@@ -298,13 +295,13 @@ function CreateScreen({ user, setTab, reload }) {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const MAX = 700;
+        const MAX = 600;
         const scale = MAX / img.width;
         canvas.width = MAX;
         canvas.height = img.height * scale;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setPreview(canvas.toDataURL("image/jpeg", 0.8));
+        setPreview(canvas.toDataURL("image/jpeg", 0.7));
       };
       img.src = ev.target.result;
     };
@@ -334,10 +331,11 @@ function CreateScreen({ user, setTab, reload }) {
       });
 
       if (res.ok) {
-        reload();
+        await reload();
         setTab("home");
       } else {
-        alert("Upload error.");
+        const errText = await res.text();
+        alert("Upload failed: " + errText);
       }
     } catch (err) {
       alert("Error: " + err.message);
