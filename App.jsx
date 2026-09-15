@@ -172,7 +172,6 @@ function AuthScreen() {
 function HomeScreen({ posts, profile, setScreen }) {
   const [likes, setLikes] = useState({});
   const [saved, setSaved] = useState({});
-  const [comments, setComments] = useState({});
   const [showComments, setShowComments] = useState({});
   const [commentText, setCommentText] = useState("");
 
@@ -190,7 +189,6 @@ function HomeScreen({ posts, profile, setScreen }) {
 
   return (
     <div className="space-y-3">
-      {/* Stories Bar */}
       <div className="flex gap-3 overflow-x-auto px-3 py-3 border-b border-neutral-900 scrollbar-none">
         <div className="flex flex-col items-center flex-shrink-0 cursor-pointer" onClick={() => setScreen("create")}>
           <div className="w-16 h-16 rounded-full bg-neutral-800 border-2 border-amber-500 flex items-center justify-center text-amber-400 font-bold relative">
@@ -211,7 +209,6 @@ function HomeScreen({ posts, profile, setScreen }) {
         ))}
       </div>
 
-      {/* Posts Feed */}
       {posts.length === 0 ? (
         <div className="text-center py-20 px-4">
           <p className="text-neutral-500 text-xs mb-3">ਅਜੇ ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਹੈ!</p>
@@ -258,7 +255,6 @@ function HomeScreen({ posts, profile, setScreen }) {
                 </p>
               )}
 
-              {/* Comments Section Toggle */}
               {showComments[post.id] && (
                 <div className="mt-3 pt-3 border-t border-neutral-900 space-y-2">
                   <div className="text-[11px] text-neutral-400">ਕਮੈਂਟ (Comments)</div>
@@ -438,4 +434,6 @@ function SearchScreen({ posts }) {
 function ProfileScreen({ profile, posts, reload }) {
   const myPosts = posts.filter(p => p.user_id === profile?.id);
 
-  a
+  async function deletePost(postId) {
+    if (!confirm("ਕੀ ਤੁਸੀਂ ਇਸ ਪੋਸਟ ਨੂੰ ਡਿਲੀਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?")) return;
+    await supabase.from("posts").dele
