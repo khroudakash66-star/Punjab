@@ -22,69 +22,41 @@ import {
   Image as ImageIcon,
   Share2,
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneWxhY25xcnhlemp4cWpvZXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzE3NDAsImV4cCI6MjA1NzgwNjc0MH0";
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(() => localStorage.getItem("punjab_user") || "");
   const [tab, setTab] = useState("home");
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        loadProfile(session.user.id);
-        loadPosts();
-      }
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        loadProfile(session.user.id);
-        loadPosts();
-      } else {
-        setProfile(null);
-        setPosts([]);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  async function loadProfile(userId) {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    if (data) setProfile(data);
-  }
+    if (user) {
+      loadPosts();
+      const interval = setInterval(loadPosts, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   async function loadPosts() {
-    const { data } = await supabase
-      .from("posts")
-      .select(`*, profiles:user_id (username, full_name)`)
-      .order("created_at", { ascending: false });
-    if (data) setPosts(data);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?select=*&order=created_at.desc`, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
-        <div className="text-center">
-          <div className="text-3xl font-black tracking-widest text-amber-400">ਪੰਜਾਬ</div>
-          <div className="text-xs mt-1 text-neutral-500">ਕਲਾਊਡ ਨਾਲ ਜੁੜ ਰਿਹਾ ਹੈ...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) return <AuthScreen />;
+  if (!user) return <AuthScreen setUser={setUser} />;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 select-none">
@@ -100,18 +72,18 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="pb-12">
-        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} profile={profile} reload={loadPosts} />}
+        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} currentUser={user} reload={loadPosts} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
         {tab === "create-menu" && <CreateMenuScreen setTab={setTab} />}
-        {tab === "create-post" && <CreateScreen profile={profile} setTab={setTab} reload={loadPosts} type="post" />}
-        {tab === "create-reel" && <CreateScreen profile={profile} setTab={setTab} reload={loadPosts} type="reel" />}
-        {tab === "camera" && <CameraScreen profile={profile} setTab={setTab} reload={loadPosts} />}
-        {tab === "live" && <LiveScreen setTab={setTab} profile={profile} />}
-        {tab === "reels" && <ReelsScreen posts={posts} profile={profile} />}
-        {tab === "profile" && <ProfileScreen profile={profile} posts={posts} setTab={setTab} />}
-        {tab === "settings" && <SettingsScreen setTab={setTab} />}
+        {tab === "create-post" && <CreateScreen user={user} setTab={setTab} reload={loadPosts} type="post" />}
+        {tab === "create-reel" && <CreateScreen user={user} setTab={setTab} reload={loadPosts} type="reel" />}
+        {tab === "camera" && <CameraScreen user={user} setTab={setTab} reload={loadPosts} />}
+        {tab === "live" && <LiveScreen setTab={setTab} user={user} />}
+        {tab === "reels" && <ReelsScreen posts={posts} currentUser={user} />}
+        {tab === "profile" && <ProfileScreen user={user} posts={posts} setUser={setUser} setTab={setTab} />}
+        {tab === "settings" && <SettingsScreen setTab={setTab} setUser={setUser} />}
         {tab === "notifications" && <NotificationsScreen setTab={setTab} />}
-        {tab === "messages" && <MessagesScreen setTab={setTab} profile={profile} />}
+        {tab === "messages" && <MessagesScreen setTab={setTab} currentUser={user} />}
         {tab === "story" && <StoryViewScreen setTab={setTab} />}
       </main>
 
@@ -127,38 +99,23 @@ export default function App() {
   );
 }
 
-function AuthScreen() {
-  const [mode, setMode] = useState("login"); // login, signup, forgot
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function AuthScreen({ setUser }) {
+  const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
-  const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    setMessage("");
-    setBusy(true);
+    if (!username.trim()) return;
 
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-    } else if (mode === "signup") {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { username, full_name: username } },
-      });
-      if (error) setError(error.message);
-      else setMessage("ਸਾਈਨ ਅੱਪ ਸਫ਼ਲ ਰਿਹਾ! ਆਪਣੀ ਈਮੇਲ ਵੈਰੀਫਾਈ ਕਰੋ ਜਾਂ ਲੌਗਇਨ ਕਰੋ।");
-    } else if (mode === "forgot") {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) setError(error.message);
-      else setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਲਿੰਕ ਈਮੇਲ ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
+    if (mode === "forgot") {
+      setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
+      return;
     }
-    setBusy(false);
+
+    localStorage.setItem("punjab_user", username.trim());
+    setUser(username.trim());
   }
 
   return (
@@ -166,22 +123,11 @@ function AuthScreen() {
       <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 p-8 rounded-3xl text-center shadow-2xl">
         <h1 className="text-3xl font-black text-amber-400 mb-1">ਪੰਜਾਬ</h1>
         <p className="text-xs text-neutral-400 mb-6 font-serif">ਕਲਾਊਡ ਆਧਾਰਿਤ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ</p>
-
         <form onSubmit={handleSubmit} className="space-y-3">
-          {mode === "signup" && (
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="ਯੂਜ਼ਰ ਨਾਮ (Username)"
-              required
-              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
-            />
-          )}
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="ਈਮੇਲ (Email)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder={mode === "forgot" ? "ਆਪਣੀ ਈਮੇਲ ਲਿਖੋ..." : "ਯੂਜ਼ਰ ਨਾਮ / ID (Username)"}
             required
             className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
           />
@@ -192,26 +138,23 @@ function AuthScreen() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="ਪਾਸਵਰਡ (Password)"
               required
-              minLength={6}
+              minLength={4}
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
           )}
-          <button disabled={busy} className="w-full bg-amber-500 text-black font-bold p-3 rounded-xl text-xs shadow-lg disabled:opacity-50">
-            {busy ? "ਪ੍ਰੋਸੈਸਿੰਗ..." : mode === "login" ? "ਲੌਗ ਇਨ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
+          <button className="w-full bg-amber-500 text-black font-bold p-3 rounded-xl text-xs shadow-lg">
+            {mode === "login" ? "ਲੌਗ ਇൻ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
           </button>
         </form>
-
-        {error && <p className="text-xs text-red-400 mt-3 bg-red-500/10 p-2 rounded-lg">{error}</p>}
         {message && <p className="text-xs text-amber-300 mt-3 bg-amber-500/10 p-2 rounded-lg">{message}</p>}
-
         {mode === "login" && (
           <div className="mt-5 space-y-2">
-            <button onClick={() => { setMode("forgot"); setError(""); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
-            <button onClick={() => { setMode("signup"); setError(""); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ</button>
+            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
+            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ</button>
           </div>
         )}
         {(mode === "signup" || mode === "forgot") && (
-          <button onClick={() => { setMode("login"); setError(""); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
+          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
         )}
       </div>
     </div>
@@ -247,12 +190,12 @@ function CreateMenuScreen({ setTab }) {
   );
 }
 
-function HomeScreen({ posts, setTab, profile, reload }) {
+function HomeScreen({ posts, setTab, currentUser, reload }) {
   return (
     <div className="space-y-2">
       <div className="h-[100px] flex items-center">
         <div className="flex gap-3 overflow-x-auto px-3 py-2 scrollbar-none w-full">
-          {[profile?.username || "You", "jassu_082", "randeep_pb", "simran.kaur", "gurpreet"].map((name, i) => (
+          {[currentUser, "jassu_082", "randeep_pb", "simran.kaur", "gurpreet"].map((name, i) => (
             <div key={i} onClick={() => setTab("story")} className="flex flex-col items-center shrink-0 cursor-pointer">
               <div className="w-[64px] h-[64px] rounded-full p-[2px] bg-amber-500">
                 <div className="w-full h-full bg-neutral-800 rounded-full flex items-center justify-center text-white">
@@ -266,17 +209,23 @@ function HomeScreen({ posts, setTab, profile, reload }) {
       </div>
       <hr className="border-neutral-800 opacity-20" />
 
-      {posts.map((p) => (
-        <PostCard key={p.id} post={p} profile={profile} reload={reload} />
-      ))}
+      {posts.length === 0 ? (
+        <div className="text-center py-20 px-4">
+          <p className="text-neutral-500 text-xs mb-3">ਅਜੇ ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਹੈ!</p>
+          <button onClick={() => setTab("create-menu")} className="bg-amber-500 text-black font-bold text-xs px-4 py-2 rounded-xl">ਪਹਿਲੀ ਪੋਸਟ ਪਾਓ</button>
+        </div>
+      ) : (
+        posts.map((p) => <PostCard key={p.id} post={p} currentUser={currentUser} />)
+      )}
     </div>
   );
 }
 
-function PostCard({ post, profile, reload }) {
-  const [commentText, setCommentText] = useState("");
+function PostCard({ post, currentUser }) {
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(12);
 
-  async function handleShare() {
+  function handleShare() {
     if (navigator.share) {
       navigator.share({ title: 'Punjab Post', text: post.caption, url: window.location.href }).catch(() => {});
     } else {
@@ -290,10 +239,10 @@ function PostCard({ post, profile, reload }) {
       <div className="flex items-center justify-between px-3 py-2">
         <div className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black font-bold">
-            {(post.profiles?.username || "P")[0].toUpperCase()}
+            {(post.author || "P")[0].toUpperCase()}
           </div>
           <div>
-            <div className="text-white font-bold text-sm">@{post.profiles?.username || "user"}</div>
+            <div className="text-white font-bold text-sm">@{post.author}</div>
             <div className="text-gray-400 text-xs">{post.location || "Punjab, India"}</div>
           </div>
         </div>
@@ -301,19 +250,21 @@ function PostCard({ post, profile, reload }) {
       </div>
 
       <div className="h-[350px] bg-neutral-900">
-        <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+        <img src={post.image} alt="" className="w-full h-full object-cover" />
       </div>
 
       <div className="px-3 py-2">
         <div className="flex items-center">
-          <Heart size={24} className="text-white cursor-pointer" />
-          <MessageCircle size={24} className="text-white ml-4 cursor-pointer" />
+          <button onClick={() => { setLiked(!liked); setLikesCount(liked ? likesCount - 1 : likesCount + 1); }}>
+            <Heart size={24} className={liked ? "text-red-500 fill-red-500" : "text-white"} />
+          </button>
+          <MessageCircle size={24} className="text-white ml-4" />
           <Send size={24} className="text-white ml-4 cursor-pointer" onClick={handleShare} />
-          <Bookmark size={24} className="text-white ml-auto cursor-pointer" />
+          <Bookmark size={24} className="text-white ml-auto" />
         </div>
-        <div className="text-white font-bold text-sm mt-2">12 likes</div>
+        <div className="text-white font-bold text-sm mt-2">{likesCount} likes</div>
         <div className="text-white/70 text-xs mt-1">
-          <span className="font-bold text-white mr-2">@{post.profiles?.username}</span>
+          <span className="font-bold text-white mr-2">@{post.author}</span>
           {post.caption}
         </div>
       </div>
@@ -321,7 +272,7 @@ function PostCard({ post, profile, reload }) {
   );
 }
 
-function CreateScreen({ profile, setTab, reload, type }) {
+function CreateScreen({ user, setTab, reload, type }) {
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState("");
   const [busy, setBusy] = useState(false);
@@ -349,21 +300,34 @@ function CreateScreen({ profile, setTab, reload, type }) {
 
   async function handlePublish(e) {
     e.preventDefault();
-    if (!preview || !profile || busy) return;
+    if (!preview || busy) return;
     setBusy(true);
 
-    const { error } = await supabase.from("posts").insert({
-      user_id: profile.id,
-      caption: caption + (type === 'reel' ? ' #Reels' : ''),
-      image_url: preview,
-      location: "Punjab, India",
-    });
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({
+          author: user,
+          caption: caption + (type === 'reel' ? ' #Reels' : ''),
+          image: preview,
+          location: "Punjab, India",
+        }),
+      });
 
-    if (!error) {
-      await reload();
-      setTab(type === 'reel' ? 'reels' : 'home');
-    } else {
-      alert("Upload failed: " + error.message);
+      if (res.ok) {
+        await reload();
+        setTab(type === 'reel' ? 'reels' : 'home');
+      } else {
+        alert("Upload failed.");
+      }
+    } catch (err) {
+      alert(err.message);
     }
     setBusy(false);
   }
@@ -394,7 +358,7 @@ function CreateScreen({ profile, setTab, reload, type }) {
   );
 }
 
-function CameraScreen({ profile, setTab, reload }) {
+function CameraScreen({ user, setTab, reload }) {
   const videoRef = useRef(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [caption, setCaption] = useState("");
@@ -418,12 +382,15 @@ function CameraScreen({ profile, setTab, reload }) {
 
   async function publishCaptured(e) {
     e.preventDefault();
-    if (!capturedImage || !profile) return;
-    await supabase.from("posts").insert({
-      user_id: profile.id,
-      caption: caption || "Captured 📸",
-      image_url: capturedImage,
-      location: "Punjab",
+    if (!capturedImage) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/posts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({ author: user, caption: caption || "Captured 📸", image: capturedImage, location: "Punjab" }),
     });
     await reload();
     setTab("home");
@@ -456,7 +423,7 @@ function CameraScreen({ profile, setTab, reload }) {
   );
 }
 
-function LiveScreen({ setTab, profile }) {
+function LiveScreen({ setTab, user }) {
   const videoRef = useRef(null);
   useEffect(() => {
     navigator.mediaDevices?.getUserMedia({ video: true, audio: true })
@@ -473,12 +440,12 @@ function LiveScreen({ setTab, profile }) {
       <div className="absolute inset-0 z-0">
         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-80" />
       </div>
-      <div className="z-10 text-center text-xs text-amber-300 font-bold">@{profile?.username} ਲਾਈਵ ਹੈ!</div>
+      <div className="z-10 text-center text-xs text-amber-300 font-bold">@{user} ਲਾਈਵ ਹੈ!</div>
     </div>
   );
 }
 
-function ReelsScreen({ posts, profile }) {
+function ReelsScreen({ posts, currentUser }) {
   const reelPosts = posts.filter(p => p.type === 'reel' || p.caption?.includes('#Reels'));
   const displayPosts = reelPosts.length > 0 ? reelPosts : posts;
   return (
@@ -486,9 +453,9 @@ function ReelsScreen({ posts, profile }) {
       <div className="p-3 font-bold text-sm border-b border-neutral-900 sticky top-14 bg-black z-40">Reels</div>
       {displayPosts.map(p => (
         <div key={p.id} className="bg-black border-b border-neutral-900 relative">
-          <img src={p.image_url} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />
+          <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />
           <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 to-transparent p-3 rounded-xl">
-            <span className="font-bold text-amber-400 text-sm">@{p.profiles?.username}</span>
+            <span className="font-bold text-amber-400 text-sm">@{p.author}</span>
             <p className="text-neutral-200 mt-1">{p.caption}</p>
           </div>
         </div>
@@ -497,25 +464,24 @@ function ReelsScreen({ posts, profile }) {
   );
 }
 
-function ProfileScreen({ profile, posts, setTab }) {
-  const [profileTab, setProfileTab] = useState("posts");
-  const myPosts = posts.filter(p => p.user_id === profile?.id);
+function ProfileScreen({ user, posts, setUser, setTab }) {
+  const myPosts = posts.filter(p => p.author === user);
 
   return (
     <div className="p-4 space-y-4">
       <div className="flex justify-between items-start border-b border-neutral-900 pb-4">
         <div className="flex items-center gap-3">
           <div className="w-16 h-16 rounded-full bg-amber-500 flex items-center justify-center text-black font-bold text-lg">
-            {(profile?.username || "P")[0].toUpperCase()}
+            {user[0].toUpperCase()}
           </div>
           <div>
-            <h2 className="font-bold text-sm">@{profile?.username}</h2>
-            <p className="text-xs text-neutral-400">{profile?.full_name || "Punjab Creator"}</p>
+            <h2 className="font-bold text-sm">@{user}</h2>
+            <p className="text-xs text-neutral-400">Punjab Creator</p>
           </div>
         </div>
         <div className="flex gap-2">
           <button onClick={() => setTab("settings")} className="border border-neutral-800 p-2 rounded-xl bg-neutral-900"><Settings size={16} /></button>
-          <button onClick={() => supabase.auth.signOut()} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900"><LogOut size={16} /></button>
+          <button onClick={() => { localStorage.removeItem("punjab_user"); setUser(""); }} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900"><LogOut size={16} /></button>
         </div>
       </div>
       <div className="flex justify-around py-2 border-b border-neutral-900 text-center text-xs">
@@ -524,20 +490,20 @@ function ProfileScreen({ profile, posts, setTab }) {
         <div><span className="font-bold block text-sm">21</span><span className="text-neutral-500">Following</span></div>
       </div>
       <div className="grid grid-cols-3 gap-1">
-        {myPosts.map(p => <div key={p.id} className="aspect-square bg-neutral-900"><img src={p.image_url} className="w-full h-full object-cover" /></div>)}
+        {myPosts.map(p => <div key={p.id} className="aspect-square bg-neutral-900"><img src={p.image} className="w-full h-full object-cover" /></div>)}
       </div>
     </div>
   );
 }
 
-function SettingsScreen({ setTab }) {
+function SettingsScreen({ setTab, setUser }) {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
         <button onClick={() => setTab("profile")}><ArrowLeft size={20} /></button>
         <h2 className="text-sm font-bold">Settings</h2>
       </div>
-      <button onClick={() => supabase.auth.signOut()} className="w-full p-3 bg-red-500/10 text-red-400 font-bold rounded-xl mt-4">Log Out</button>
+      <button onClick={() => { localStorage.removeItem("punjab_user"); setUser(""); }} className="w-full p-3 bg-red-500/10 text-red-400 font-bold rounded-xl mt-4">Log Out</button>
     </div>
   );
 }
@@ -550,7 +516,7 @@ function ExploreScreen({ posts }) {
         <input placeholder="Search..." className="w-full bg-transparent text-white outline-none" />
       </div>
       <div className="grid grid-cols-3 gap-1">
-        {posts.map(p => <div key={p.id} className="aspect-square bg-neutral-900"><img src={p.image_url} className="w-full h-full object-cover" /></div>)}
+        {posts.map(p => <div key={p.id} className="aspect-square bg-neutral-900"><img src={p.image} className="w-full h-full object-cover" /></div>)}
       </div>
     </div>
   );
@@ -568,7 +534,7 @@ function NotificationsScreen({ setTab }) {
   );
 }
 
-function MessagesScreen({ setTab, profile }) {
+function MessagesScreen({ setTab, currentUser }) {
   const [msg, setMsg] = useState("");
   const [chats, setChats] = useState([{ sender: "jassu_082", text: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਵੀਰ ਜੀ!" }]);
   return (
@@ -579,12 +545,12 @@ function MessagesScreen({ setTab, profile }) {
       </div>
       <div className="flex-1 overflow-y-auto space-y-2 text-xs">
         {chats.map((c, i) => (
-          <div key={i} className={`p-2.5 rounded-xl max-w-[80%] ${c.sender === profile?.username ? 'ml-auto bg-amber-500 text-black' : 'bg-neutral-900 text-white'}`}>
+          <div key={i} className={`p-2.5 rounded-xl max-w-[80%] ${c.sender === currentUser ? 'ml-auto bg-amber-500 text-black' : 'bg-neutral-900 text-white'}`}>
             {c.text}
           </div>
         ))}
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); if (!msg.trim()) return; setChats([...chats, { sender: profile?.username, text: msg }]); setMsg(""); }} className="flex gap-2 pt-2 border-t border-neutral-900">
+      <form onSubmit={(e) => { e.preventDefault(); if (!msg.trim()) return; setChats([...chats, { sender: currentUser, text: msg }]); setMsg(""); }} className="flex gap-2 pt-2 border-t border-neutral-900">
         <input value={msg} onChange={e => setMsg(e.target.value)} placeholder="Message..." className="w-full bg-neutral-900 p-2.5 rounded-xl text-xs text-white outline-none" />
         <button className="bg-amber-500 text-black font-bold px-4 rounded-xl text-xs">Send</button>
       </form>
