@@ -29,8 +29,8 @@ import {
   Lock,
   DollarSign,
   Bot,
-  ShieldCheck,
-  Mail
+  Smartphone,
+  ShieldCheck
 } from "lucide-react";
 
 export default function App() {
@@ -157,78 +157,100 @@ export default function App() {
         <button onClick={() => setTab("search")} className={tab === "search" ? "text-amber-400 scale-110" : "text-white/60"}><Search size={24} /></button>
         <button onClick={() => setTab("create-menu")} className={tab === "create-menu" ? "text-amber-400 scale-110" : "text-white/60"}><PlusSquare size={26} /></button>
         <button onClick={() => setTab("reels")} className={tab === "reels" ? "text-amber-400 scale-110" : "text-white/60"}><Film size={24} /></button>
-        <button onClick={() => setTab("profile")} className={tab ===="profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
+        <button onClick={() => setTab("profile")} className={tab === "profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
       </nav>
     </div>
   );
 }
 
-// ਅਸਲੀ ਈਮੇਲ OTP ਵੈਰੀਫਿਕੇਸ਼ਨ ਵਾਲਾ Auth Screen
+// ਮੋਬਾਈਲ ਨੰਬਰ ਸਾਈਨ-ਅੱਪ, ਸਹੀ ਪਾਸਵਰਡ ਮੈਚਿੰਗ ਅਤੇ ਮੋਬਾਈਲ OTP ਫੋਰਗੈਟ ਸਿਸਟਮ
 function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login"); // "login", "signup", "verifyOTP", "forgot"
-  const [email, setEmail] = useState("");
+  const [mode, setMode] = useState("login"); // "login", "signup", "forgot", "verifyForgotOTP"
+  const [mobile, setMobile] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [inputOtp, setInputOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [forgotOtpInput, setForgotOtpInput] = useState("");
+  const [generatedForgotOtp, setGeneratedForgotOtp] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // 1. ਸਾਈਨ ਅੱਪ ਕਰਨ ਵੇਲੇ ਈਮੇਲ 'ਤੇ OTP ਭੇਜਣਾ
-  function handleSendOTP(e) {
+  // 1. ਸਾਈਨ ਅੱਪ (ਮੋਬਾਈਲ ਨੰਬਰ ਨਾਲ)
+  function handleSignUp(e) {
     e.preventDefault();
-    if (!email.includes("@") || !username.trim() || !password.trim()) {
-      setErrorMsg("ਸਹੀ ਈਮੇਲ, ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ!");
+    if (mobile.length < 10 || !username.trim() || !password.trim()) {
+      setErrorMsg("ਸਹੀ 10-ਅੰਕਾਂ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ, ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ!");
       return;
     }
 
-    // 4 ਅੰਕਾਂ ਦਾ ਰੈਂਡਮ OTP ਕੋਡ ਜਨਰੇਟ ਕਰੋ (ਜੋ ਈਮੇਲ 'ਤੇ ਜਾਵੇਗਾ)
-    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(randomOtp);
-    
-    // ਈਮੇਲ ਭੇਜਣ ਦੀ ਸਿਮੂਲੇਸ਼ਨ (ਅਸਲ ਵਿੱਚ ਇਹ ਜੀਮੇਲ 'ਤੇ ਡਿਲੀਵਰ ਹੋਵੇਗਾ)
-    setSuccessMsg(`OTP ਕੋਡ ਤੁਹਾਡੀ ਈਮੇਲ (${email}) 'ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ! ਕੋਡ: ${randomOtp}`);
-    setErrorMsg("");
-    setMode("verifyOTP");
-  }
-
-  // 2. ਈਮੇਲ OTP ਵੈਰੀਫਾਈ ਕਰਕੇ ਅਕਾਊਂਟ ਪੱਕਾ ਕਰਨਾ
-  function handleVerifyOTP(e) {
-    e.preventDefault();
-    if (inputOtp !== generatedOtp) {
-      setErrorMsg("ਗਲਤ OTP ਕੋਡ! ਕਿਰਪਾ ਕਰਕੇ ਸਹੀ ਕੋਡ ਭਰੋ।");
-      return;
-    }
-
-    // ਡਾਟਾ ਸੇਵ ਕਰੋ
+    // ਲੋਕਲ ਸਟੋਰੇਜ ਵਿੱਚ ਸੇਵ ਕਰੋ
     localStorage.setItem(`pwd_${username.trim()}`, password);
-    localStorage.setItem(`email_${username.trim()}`, email.trim());
-    
-    setSuccessMsg("ਈਮੇਲ ਵੈਰੀਫਾਈ ਹੋ ਗਈ! ਹੁਣ ਲੌਗ ਇਨ ਕਰੋ।");
+    localStorage.setItem(`mobile_${username.trim()}`, mobile.trim());
+
+    setSuccessMsg("ਖਾਤਾ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ! ਹੁਣ ਆਪਣੇ ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਨਾਲ ਲੌਗ ਇਨ ਕਰੋ।");
     setErrorMsg("");
     setTimeout(() => {
       setMode("login");
       setSuccessMsg("");
-    }, 1500);
+    }, 2000);
   }
 
-  // 3. ਲੌਗ ਇਨ ਪ੍ਰੋਸੈਸ
+  // 2. ਲੌਗ ਇਨ (ਸਿਰਫ਼ ਸਹੀ ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਨਾਲ)
   function handleLogin(e) {
     e.preventDefault();
-    const savedPwd = localStorage.getItem(`pwd_${username.trim()}`);
-    
+    const cleanUser = username.trim();
+    const cleanPwd = password.trim();
+    const savedPwd = localStorage.getItem(`pwd_${cleanUser}`);
+
     if (!savedPwd) {
       setErrorMsg("ਇਹ ਯੂਜ਼ਰਨੇਮ ਮੌਜੂਦ ਨਹੀਂ ਹੈ। ਪਹਿਲਾਂ ਸਾਈਨ ਅੱਪ ਕਰੋ!");
       return;
     }
 
-    if (savedPwd !== password) {
-      setErrorMsg("ਗਲਤ ਪਾਸਵਰਡ! ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।");
+    if (savedPwd !== cleanPwd) {
+      setErrorMsg("ਗਲਤ ਪਾਸਵਰਡ! ਕਿਰਪਾ ਕਰਕੇ ਸਹੀ ਪਾਸਵਰਡ ਭਰੋ।");
       return;
     }
 
-    localStorage.setItem("punjab_app_user", username.trim());
-    setUser(username.trim());
+    localStorage.setItem("punjab_app_user", cleanUser);
+    setUser(cleanUser);
+  }
+
+  // 3. ਫੋਰਗੈਟ ਪਾਸਵਰਡ (ਮੋਬਾਈਲ ਨੰਬਰ 'ਤੇ OTP ਭੇਜਣਾ)
+  function handleSendForgotOTP(e) {
+    e.preventDefault();
+    const cleanUser = username.trim();
+    const savedMobile = localStorage.getItem(`mobile_${cleanUser}`);
+
+    if (!savedMobile) {
+      setErrorMsg("ਇਹ ਯੂਜ਼ਰਨੇਮ ਸਾਡੇ ਸਿਸਟਮ ਵਿੱਚ ਨਹੀਂ ਮਿਲਿਆ!");
+      return;
+    }
+
+    // 4 ਅੰਕਾਂ ਦਾ ਓਟੀਪੀ ਮੋਬਾਈਲ ਨੰਬਰ ਲਈ ਬਣਾਓ
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedForgotOtp(otp);
+
+    setSuccessMsg(`ਮੋਬਾਈਲ ਨੰਬਰ (${savedMobile}) 'ਤੇ OTP ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ! ਕੋਡ: ${otp}`);
+    setErrorMsg("");
+    setMode("verifyForgotOTP");
+  }
+
+  // 4. OTP ਵੈਰੀਫਾਈ ਕਰਕੇ ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨਾ
+  function handleResetPassword(e) {
+    e.preventDefault();
+    if (forgotOtpInput !== generatedForgotOtp) {
+      setErrorMsg("ਗਲਤ OTP ਕੋਡ! ਸਹੀ ਕੋਡ ਭਰੋ।");
+      return;
+    }
+
+    localStorage.setItem(`pwd_${username.trim()}`, password.trim());
+    setSuccessMsg("ਪਾਸਵਰਡ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਦਲ ਗਿਆ ਹੈ! ਹੁਣ ਨਵੇਂ ਪਾਸਵਰਡ ਨਾਲ ਲੌਗ ਇನ್ ਕਰੋ।");
+    setErrorMsg("");
+    setTimeout(() => {
+      setMode("login");
+      setSuccessMsg("");
+      setPassword("");
+    }, 2000);
   }
 
   return (
@@ -236,7 +258,7 @@ function AuthScreen({ setUser }) {
       <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 p-8 rounded-3xl text-center shadow-2xl">
         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-500 p-1 shadow-xl">
           <div className="w-full h-full bg-black rounded-[18px] flex items-center justify-center">
-            <span className="text-2xl font-black text-amber-400">ਪੰ</span>
+            <span className="text-4xl font-black text-amber-400">ਪੰ</span>
           </div>
         </div>
         <h1 className="text-2xl font-black tracking-wider text-amber-400 mb-1">PUNJAB</h1>
@@ -245,7 +267,7 @@ function AuthScreen({ setUser }) {
         {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-xl mb-3">{errorMsg}</p>}
         {successMsg && <p className="text-xs text-amber-300 bg-amber-500/10 p-2.5 rounded-xl mb-3 leading-relaxed">{successMsg}</p>}
 
-        {/* Login Form */}
+        {/* 1. Login Form */}
         {mode === "login" && (
           <form onSubmit={handleLogin} className="space-y-3">
             <input
@@ -267,20 +289,22 @@ function AuthScreen({ setUser }) {
               ਲੌਗ ਇൻ ਕਰੋ (Log In)
             </button>
             <div className="flex justify-between items-center text-[11px] pt-2">
-              <button type="button" onClick={() => { setMode("signup"); setErrorMsg(""); setSuccessMsg(""); }} className="text-amber-400 font-bold w-full">ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ (Sign Up)</button>
+              <button type="button" onClick={() => { setMode("forgot"); setErrorMsg(""); setSuccessMsg(""); }} className="text-neutral-400 hover:text-amber-400">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
+              <button type="button" onClick={() => { setMode("signup"); setErrorMsg(""); setSuccessMsg(""); }} className="text-amber-400 font-bold">ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ</button>
             </div>
           </form>
         )}
 
-        {/* Sign Up Form */}
+        {/* 2. Sign Up Form with Mobile Number */}
         {mode === "signup" && (
-          <form onSubmit={handleSendOTP} className="space-y-3">
+          <form onSubmit={handleSignUp} className="space-y-3">
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="ਆਪਣੀ ਜੀਮੇਲ (Gmail Address)"
+              type="tel"
+              value={mobile}
+              onChange={e => setMobile(e.target.value)}
+              placeholder="ਮੋਬਾਈਲ ਨੰਬਰ (Mobile Number)"
               required
+              maxLength={10}
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
             <input
@@ -300,29 +324,59 @@ function AuthScreen({ setUser }) {
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
             <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-              ਈਮੇਲ 'ਤੇ OTP ਭੇਜੋ
+              ਸਾਈਨ ਅੱਪ ਕਰੋ (Sign Up)
             </button>
-            <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
+            <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇൻ ਕਰੋ</button>
           </form>
         )}
 
-        {/* OTP Verification Form */}
-        {mode === "verifyOTP" && (
-          <form onSubmit={handleVerifyOTP} className="space-y-3">
-            <div className="text-center text-xs text-neutral-300 mb-2">
-              <Mail size={32} className="mx-auto text-amber-400 mb-1" />
-              ਆਪਣੀ ਜੀਮੇਲ ਚੈੱਕ ਕਰੋ ਅਤੇ 4-ਅੰਕਾਂ ਦਾ OTP ਕੋਡ ਇੱਥੇ ਭਰੋ।
+        {/* 3. Forgot Password Form (Send OTP to Mobile) */}
+        {mode === "forgot" && (
+          <form onSubmit={handleSendForgotOTP} className="space-y-3">
+            <div className="text-center text-xs text-neutral-300 mb-1">
+              <Smartphone size={32} className="mx-auto text-amber-400 mb-1" />
+              ਆਪਣਾ ਯੂਜ਼ਰਨੇਮ ਭਰੋ, ਅਸੀਂ ਤੁਹਾਡੇ ਰਜਿਸਟਰਡ ਮੋਬਾਈਲ ਨੰਬਰ 'ਤੇ OTP ਭੇਜਾਂਗੇ।
             </div>
             <input
-              value={inputOtp}
-              onChange={e => setInputOtp(e.target.value)}
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="ਯੂਜ਼ਰ ਨਾਮ (Username)"
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+            <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
+              ਮੋਬਾਈਲ 'ਤੇ OTP ਭੇਜੋ
+            </button>
+            <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਵਾਪਸ ਲੌਗ ਇਨ 'ਤੇ ਜਾਓ</button>
+          </form>
+        )}
+
+        {/* 4. Verify OTP & Reset Password */}
+        {mode === "verifyForgotOTP" && (
+          <form onSubmit={handleResetPassword} className="space-y-3">
+            <div className="text-center text-xs text-neutral-300 mb-1">
+              <ShieldCheck size={32} className="mx-auto text-amber-400 mb-1" />
+              ਮੋਬਾਈਲ 'ਤੇ ਆਇਆ OTP ਅਤੇ ਨਵਾਂ ਪਾਸਵਰਡ ਭਰੋ।
+            </div>
+            <input
+              value={forgotOtpInput}
+              onChange={e => setForgotOtpInput(e.target.value)}
               placeholder="4-ਅੰਕਾਂ ਦਾ OTP ਕੋਡ"
               required
               maxLength={4}
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-center text-sm text-white outline-none tracking-widest"
             />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="ਨਵਾਂ ਪਾਸਵਰਡ (New Password)"
+              required
+              minLength={4}
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
             <button className="w-full bg-amber-500 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-              ਵੈਰੀਫਾਈ ਕਰਕੇ ਅਕਾਊਂਟ ਬਣਾਓ
+              ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ
             </button>
           </form>
         )}
