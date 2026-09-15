@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, Home, Film, PlusSquare, User, LogOut, CheckCircle2 } from 'lucide-react';
+import { Heart, MessageCircle, Send, Bookmark, Home, Film, PlusSquare, User, LogOut, CheckCircle2, Globe } from 'lucide-react';
 
 const safeGet = (key, fallback) => {
   try {
@@ -18,48 +18,44 @@ const safeSet = (key, value) => {
   }
 };
 
-// Punjab Heritage Map & Emblem SVG (100% reliable, no broken links)
+// ਮਾਤਾ ਜੀ ਦੀ ਪਸੰਦ ਵਾਲਾ ਪੰਜਾਬ ਮੈਪ ਆਰਟਵਰਕ (100% In-Code Vector Art)
 const PunjabHeritageArt = ({ className = "w-full h-full" }) => (
   <svg viewBox="0 0 400 450" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <defs>
-      <linearGradient id="mapBg" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#d97706" stopOpacity="0.25" />
-        <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.15" />
-        <stop offset="100%" stopColor="#b45309" stopOpacity="0.3" />
-      </linearGradient>
-      <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#f97316" />
+      <linearGradient id="mapGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#d97706" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#78350f" stopOpacity="0.4" />
       </linearGradient>
     </defs>
 
-    {/* Map Border & Landmass */}
+    {/* ਪੰਜਾਬ ਦਾ ਨਕਸ਼ਾ ਬਾਰਡਰ */}
     <path 
       d="M210 30 C270 50, 310 90, 320 140 C330 180, 390 220, 370 280 C350 330, 310 360, 260 410 C210 430, 180 390, 150 330 C120 300, 40 270, 50 200 C60 140, 110 110, 140 80 Z" 
-      fill="url(#mapBg)" 
+      fill="url(#mapGradient)" 
       stroke="#f59e0b" 
       strokeWidth="4" 
       strokeDasharray="6 3"
     />
 
-    {/* Khanda Sahib Emblem at the top */}
-    <g transform="translate(260, 50) scale(0.65)">
+    {/* ਖੰਡਾ ਸਾਹਿਬ */}
+    <g transform="translate(255, 45) scale(0.65)">
       <circle cx="50" cy="50" r="32" stroke="#fbbf24" strokeWidth="6" fill="none" />
       <path d="M50 10 L50 90" stroke="#fbbf24" strokeWidth="8" strokeLinecap="round" />
       <path d="M25 40 Q50 90 50 90 Q50 90 75 40" stroke="#fbbf24" strokeWidth="6" fill="none" />
     </g>
 
-    {/* Wheat Stalks (ਕਣਕ ਦੀਆਂ ਬੱਲੀਆਂ) */}
-    <g transform="translate(90, 75) scale(0.7)">
+    {/* ਕਣਕ ਦੀਆਂ ਬੱਲੀਆਂ */}
+    <g transform="translate(90, 70) scale(0.75)">
       <path d="M40 90 Q30 50 10 20" stroke="#f59e0b" strokeWidth="4" fill="none" strokeLinecap="round" />
       <path d="M40 90 Q50 50 70 20" stroke="#f59e0b" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <circle cx="15" cy="25" r="7" fill="#fbbf24" />
-      <circle cx="30" cy="45" r="7" fill="#fbbf24" />
-      <circle cx="65" cy="25" r="7" fill="#fbbf24" />
-      <circle cx="50" cy="45" r="7" fill="#fbbf24" />
+      <circle cx="15" cy="25" r="6" fill="#fbbf24" />
+      <circle cx="28" cy="45" r="6" fill="#fbbf24" />
+      <circle cx="65" cy="25" r="6" fill="#fbbf24" />
+      <circle cx="52" cy="45" r="6" fill="#fbbf24" />
     </g>
 
-    {/* Central Gurmukhi Typography: ਪੰਜਾਬ */}
+    {/* ਵਿਚਕਾਰ ਸ਼ੁੱਧ ਪੰਜਾਬੀ ਵਿੱਚ: ਪੰਜਾਬ */}
     <text 
       x="200" 
       y="245" 
@@ -69,21 +65,21 @@ const PunjabHeritageArt = ({ className = "w-full h-full" }) => (
       fontWeight="900" 
       fontFamily="system-ui, -apple-system, sans-serif"
       letterSpacing="2"
-      filter="drop-shadow(0px 3px 6px rgba(0,0,0,0.8))"
+      filter="drop-shadow(0px 3px 6px rgba(0,0,0,0.9))"
     >
       ਪੰਜਾਬ
     </text>
 
-    {/* Heritage Tractor Motif */}
-    <g transform="translate(90, 275) scale(0.65)">
+    {/* ਦੇਸੀ ਟਰੈਕਟਰ */}
+    <g transform="translate(90, 280) scale(0.65)">
       <circle cx="35" cy="65" r="22" stroke="#fbbf24" strokeWidth="5" fill="#171717" />
       <circle cx="105" cy="72" r="15" stroke="#fbbf24" strokeWidth="5" fill="#171717" />
       <path d="M35 65 L80 65 L85 45 L50 45 L50 25 L105 25 L105 72" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <path d="M60 25 L60 10 L70 10" stroke="#f59e0b" strokeWidth="4" strokeLinecap="round" />
     </g>
 
-    {/* Dhol Motif */}
-    <g transform="translate(240, 280) scale(0.6)">
+    {/* ਢੋਲ */}
+    <g transform="translate(240, 285) scale(0.6)">
       <ellipse cx="60" cy="50" rx="30" ry="45" fill="#d97706" stroke="#fbbf24" strokeWidth="5" />
       <path d="M35 25 L85 75 M35 75 L85 25" stroke="#ffffff" strokeWidth="2.5" strokeOpacity="0.8" />
     </g>
@@ -94,7 +90,7 @@ const PunjabLogo = ({ size = "small" }) => {
   if (size === "large") {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-36 h-36 rounded-3xl overflow-hidden border border-amber-500/40 shadow-2xl bg-neutral-900/60 p-2 flex items-center justify-center backdrop-blur-md">
+        <div className="w-40 h-44 rounded-3xl overflow-hidden border border-amber-500/50 shadow-2xl bg-neutral-900/80 p-2 flex items-center justify-center backdrop-blur-md">
           <PunjabHeritageArt />
         </div>
         <span className="font-extrabold text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
@@ -106,7 +102,7 @@ const PunjabLogo = ({ size = "small" }) => {
 
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-500/40 bg-neutral-900 flex items-center justify-center p-1">
+      <div className="w-10 h-11 rounded-xl overflow-hidden border border-amber-500/40 bg-neutral-900 flex items-center justify-center p-0.5">
         <PunjabHeritageArt />
       </div>
       <span className="font-extrabold text-lg tracking-[0.2em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent">
@@ -117,8 +113,9 @@ const PunjabLogo = ({ size = "small" }) => {
 };
 
 export default function App() {
+  const [lang, setLang] = useState('en');
   const [currentUser, setCurrentUser] = useState(() => safeGet('punjab_user_session', null));
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup' | 'forgot'
+  const [authMode, setAuthMode] = useState('login');
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [newPasswordInput, setNewPasswordInput] = useState('');
@@ -128,6 +125,47 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('home');
   const [activeStory, setActiveStory] = useState(null);
+
+  const t = {
+    en: {
+      login: "Log In",
+      signup: "Sign Up",
+      forgot: "Forgot Password?",
+      resetPass: "Reset Password",
+      userId: "User ID / Username",
+      password: "Password",
+      newPass: "New Password",
+      fullName: "Full Name",
+      dontHave: "Don't have an account?",
+      alreadyHave: "Already have an account?",
+      logout: "Log Out",
+      sharePost: "Share Post",
+      newPost: "Create New Post",
+      imgUrl: "Image URL",
+      caption: "Caption",
+      likes: "likes",
+      close: "Close"
+    },
+    pa: {
+      login: "ਲਾਗ ਇਨ",
+      signup: "ਸਾਈਨ ਅੱਪ",
+      forgot: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?",
+      resetPass: "ਪਾਸਵਰਡ ਬਦਲੋ",
+      userId: "ਯੂਜ਼ਰ ਆਈਡੀ",
+      password: "ਪਾਸਵਰਡ",
+      newPass: "ਨਵਾਂ ਪਾਸਵਰਡ",
+      fullName: "ਪੂਰਾ ਨਾਮ",
+      dontHave: "ਖਾਤਾ ਨਹੀਂ ਹੈ?",
+      alreadyHave: "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ?",
+      logout: "ਲੌਗ ਆਉਟ",
+      sharePost: "ਸਾਂਝੀ ਕਰੋ",
+      newPost: "ਨਵੀਂ ਪੋਸਟ ਪਾਓ",
+      imgUrl: "ਤਸਵੀਰ ਦਾ ਲਿੰਕ",
+      caption: "ਕੈਪਸ਼ਨ",
+      likes: "ਪਸੰਦ",
+      close: "ਬੰਦ ਕਰੋ"
+    }
+  }[lang];
 
   const stories = [
     { id: 1, user: "amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=600&auto=format&fit=crop" },
@@ -162,7 +200,7 @@ export default function App() {
       authorName: "Virasat Punjab",
       location: "Sri Amritsar Sahib",
       image: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?auto=format&fit=crop&w=800&q=80",
-      caption: "Golden Temple Darshan ✨ #HarmandirSahib #Amritsar",
+      caption: "Golden Temple Darshan ✨ #HarmandirSahib",
       likes: 1240,
       isLiked: false
     },
@@ -172,7 +210,7 @@ export default function App() {
       authorName: "Punjab Fields",
       location: "Malwa, Punjab",
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
-      caption: "Lush green fields of Punjab 🌾 #Farmer #PunjabFields",
+      caption: "Lush green fields of Punjab 🌾 #Farmer",
       likes: 890,
       isLiked: false
     }
@@ -186,16 +224,16 @@ export default function App() {
     setAuthError('');
     setAuthSuccess('');
 
-    const users = safeGet('punjab_accounts_v4', []);
+    const users = safeGet('punjab_accounts_v6', []);
 
     if (authMode === 'signup') {
       if (!usernameInput.trim() || !passwordInput.trim()) {
-        setAuthError('Please fill in all fields');
+        setAuthError(lang === 'en' ? 'Please fill in all fields' : 'ਕਿਰਪਾ ਕਰਕੇ ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
         return;
       }
       const exists = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
       if (exists) {
-        setAuthError('User ID is already taken');
+        setAuthError(lang === 'en' ? 'User ID is already taken' : 'ਇਹ ਯੂਜ਼ਰ ਆਈਡੀ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਹੈ');
         return;
       }
       const newUser = {
@@ -204,18 +242,18 @@ export default function App() {
         password: passwordInput.trim()
       };
       users.push(newUser);
-      safeSet('punjab_accounts_v4', users);
+      safeSet('punjab_accounts_v6', users);
       safeSet('punjab_user_session', newUser);
       setCurrentUser(newUser);
     } 
     else if (authMode === 'login') {
       if (!usernameInput.trim() || !passwordInput.trim()) {
-        setAuthError('Please enter User ID and Password');
+        setAuthError(lang === 'en' ? 'Enter User ID and Password' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ');
         return;
       }
       const found = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase() && u.password === passwordInput.trim());
       if (!found) {
-        setAuthError('Invalid User ID or Password');
+        setAuthError(lang === 'en' ? 'Invalid User ID or Password' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਜਾਂ ਪਾਸਵਰਡ ਗਲਤ ਹੈ');
         return;
       }
       safeSet('punjab_user_session', found);
@@ -223,17 +261,17 @@ export default function App() {
     } 
     else if (authMode === 'forgot') {
       if (!usernameInput.trim() || !newPasswordInput.trim()) {
-        setAuthError('Please enter User ID and New Password');
+        setAuthError(lang === 'en' ? 'Enter User ID and New Password' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਅਤੇ ਨਵਾਂ ਪਾਸਵਰਡ ਭਰੋ');
         return;
       }
       const userIndex = users.findIndex(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
       if (userIndex === -1) {
-        setAuthError('User ID not found');
+        setAuthError(lang === 'en' ? 'User ID not found' : 'ਇਹ ਯੂਜ਼ਰ ਆਈਡੀ ਨਹੀਂ ਮਿਲੀ');
         return;
       }
       users[userIndex].password = newPasswordInput.trim();
-      safeSet('punjab_accounts_v4', users);
-      setAuthSuccess('Password updated successfully! Redirecting...');
+      safeSet('punjab_accounts_v6', users);
+      setAuthSuccess(lang === 'en' ? 'Password updated! Please login.' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ! ਹੁਣ ਲਾਗ ਇਨ ਕਰੋ।');
       setTimeout(() => {
         setAuthMode('login');
         setPasswordInput('');
@@ -271,7 +309,7 @@ export default function App() {
         return {
           ...reel,
           isLiked: !reel.isLiked,
-          likes: reel.isLiked ? reel.likes - 1 : reel.likes + 1
+          likes: reel.likes - 1 : reel.likes + 1
         };
       }
       return reel;
@@ -304,6 +342,18 @@ export default function App() {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-4 font-sans">
+        
+        {/* Language Switch Button */}
+        <div className="w-full max-w-sm flex justify-end mb-3">
+          <button
+            onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-semibold text-amber-400 hover:border-amber-500 transition"
+          >
+            <Globe size={14} />
+            <span>{lang === 'en' ? 'ਪੰਜਾਬੀ' : 'English'}</span>
+          </button>
+        </div>
+
         <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center">
           <PunjabLogo size="large" />
 
@@ -325,7 +375,7 @@ export default function App() {
               {authMode === 'signup' && (
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder={t.fullName}
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
@@ -334,7 +384,7 @@ export default function App() {
 
               <input
                 type="text"
-                placeholder="User ID / Username"
+                placeholder={t.userId}
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
                 className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
@@ -343,7 +393,7 @@ export default function App() {
               {authMode !== 'forgot' && (
                 <input
                   type="password"
-                  placeholder="Password"
+                  placeholder={t.password}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
@@ -353,7 +403,7 @@ export default function App() {
               {authMode === 'forgot' && (
                 <input
                   type="password"
-                  placeholder="New Password"
+                  placeholder={t.newPass}
                   value={newPasswordInput}
                   onChange={(e) => setNewPasswordInput(e.target.value)}
                   className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
@@ -367,7 +417,7 @@ export default function App() {
                     onClick={() => { setAuthMode('forgot'); setAuthError(''); setAuthSuccess(''); }}
                     className="text-xs text-amber-400 hover:underline"
                   >
-                    Forgot Password?
+                    {t.forgot}
                   </button>
                 </div>
               )}
@@ -376,33 +426,33 @@ export default function App() {
                 type="submit"
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-sm hover:opacity-95 transition mt-3"
               >
-                {authMode === 'login' && 'Log In'}
-                {authMode === 'signup' && 'Sign Up'}
-                {authMode === 'forgot' && 'Reset Password'}
+                {authMode === 'login' && t.login}
+                {authMode === 'signup' && t.signup}
+                {authMode === 'forgot' && t.resetPass}
               </button>
             </form>
 
             <div className="mt-6 text-center text-xs text-neutral-400">
               {authMode === 'login' && (
                 <p>
-                  Don't have an account?{' '}
+                  {t.dontHave}{' '}
                   <button
                     onClick={() => { setAuthMode('signup'); setAuthError(''); }}
                     className="text-amber-400 font-semibold hover:underline"
                   >
-                    Sign Up
+                    {t.signup}
                   </button>
                 </p>
               )}
 
               {(authMode === 'signup' || authMode === 'forgot') && (
                 <p>
-                  Already have an account?{' '}
+                  {t.alreadyHave}{' '}
                   <button
                     onClick={() => { setAuthMode('login'); setAuthError(''); }}
                     className="text-amber-400 font-semibold hover:underline"
                   >
-                    Log In
+                    {t.login}
                   </button>
                 </p>
               )}
@@ -418,37 +468,43 @@ export default function App() {
       <div className="w-full max-w-md border-x border-neutral-800 min-h-screen flex flex-col bg-neutral-950">
         
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2.5 flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2 flex items-center justify-between">
           <PunjabLogo size="small" />
-          <button 
-            onClick={handleLogout} 
-            className="flex items-center gap-1.5 text-xs text-neutral-300 hover:text-red-400 bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-lg transition"
-          >
-            <LogOut size={14} />
-            <span>Logout</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
+              className="px-2.5 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-[11px] font-semibold text-amber-400"
+            >
+              {lang === 'en' ? 'ਪੰ' : 'EN'}
+            </button>
+            <button 
+              onClick={handleLogout} 
+              className="flex items-center gap-1.5 text-xs text-neutral-300 hover:text-red-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-md transition"
+            >
+              <LogOut size={13} />
+              <span>{t.logout}</span>
+            </button>
+          </div>
         </header>
 
-        {/* Stories Viewer Modal */}
+        {/* Stories Modal */}
         {activeStory && (
           <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between p-4">
             <div className="flex items-center justify-between text-white pt-2">
-              <span className="font-bold text-sm">@{activeStory.user}'s story</span>
+              <span className="font-bold text-sm">@{activeStory.user}</span>
               <button onClick={() => setActiveStory(null)} className="text-white font-bold text-xl px-2">✕</button>
             </div>
             <div className="flex-1 flex items-center justify-center my-4">
               <img src={activeStory.img} alt="Story" className="max-h-[75vh] w-full object-cover rounded-2xl" />
             </div>
             <button onClick={() => setActiveStory(null)} className="py-2.5 bg-neutral-800 text-white rounded-lg text-xs font-semibold">
-              Close
+              {t.close}
             </button>
           </div>
         )}
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          
-          {/* Feed */}
           {activeTab === 'home' && (
             <div>
               <div className="flex gap-3 px-4 py-3 overflow-x-auto border-b border-neutral-800 no-scrollbar">
@@ -462,39 +518,3 @@ export default function App() {
                       <img src={story.img} alt={story.user} className="w-full h-full rounded-full object-cover border-2 border-black" />
                     </div>
                     <span className="text-[11px] text-neutral-300 truncate w-16 text-center">@{story.user}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="divide-y divide-neutral-800">
-                {posts.map(post => (
-                  <article key={post.id} className="pb-4">
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500/40 flex items-center justify-center text-xs font-bold text-amber-400">
-                        {post.authorName[0]}
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold">{post.authorName}</div>
-                        <div className="text-[10px] text-neutral-400">{post.location}</div>
-                      </div>
-                    </div>
-
-                    <img src={post.image} alt="Post" className="w-full aspect-square object-cover" />
-
-                    <div className="px-4 pt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-4">
-                          <button onClick={() => handleLikePost(post.id)}>
-                            <Heart size={22} className={post.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
-                          </button>
-                          <MessageCircle size={22} className="text-white" />
-                          <Send size={22} className="text-white" />
-                        </div>
-                        <Bookmark size={22} className="text-white" />
-                      </div>
-                      <div className="text-xs font-semibold mb-1">{post.likes.toLocaleString()} likes</div>
-                      <p className="text-xs text-neutral-200">
-                        <span className="font-bold mr-2">{post.author}</span>
-                        {post.caption}
-                      </p>
-                    </div>
