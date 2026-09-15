@@ -94,7 +94,7 @@ export default function App() {
       )}
 
       <main className={screen === "reels" ? "" : "pb-16"}>
-        {screen === "home" && <HomeScreen posts={posts} profile={profile} reload={loadPosts} setScreen={setScreen} />}
+        {screen === "home" && <HomeScreen posts={posts} profile={profile} setScreen={setScreen} />}
         {screen === "search" && <SearchScreen posts={posts} />}
         {screen === "create" && <CreateScreen profile={profile} reload={loadPosts} setScreen={setScreen} />}
         {screen === "reels" && <ReelsScreen posts={posts} setScreen={setScreen} />}
@@ -173,7 +173,6 @@ function HomeScreen({ posts, profile, setScreen }) {
   const [likes, setLikes] = useState({});
   const [saved, setSaved] = useState({});
   const [showComments, setShowComments] = useState({});
-  const [commentText, setCommentText] = useState("");
 
   async function toggleLike(post) {
     if (!profile) return;
@@ -253,22 +252,6 @@ function HomeScreen({ posts, profile, setScreen }) {
                   <span className="font-bold mr-2 text-amber-400">@{post.profiles?.username}</span>
                   {post.caption}
                 </p>
-              )}
-
-              {showComments[post.id] && (
-                <div className="mt-3 pt-3 border-t border-neutral-900 space-y-2">
-                  <div className="text-[11px] text-neutral-400">ਕਮੈਂਟ (Comments)</div>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="ਕਮੈਂਟ ਲਿਖੋ..." 
-                      value={commentText} 
-                      onChange={e => setCommentText(e.target.value)}
-                      className="w-full bg-neutral-900 border border-neutral-800 p-2 rounded-lg text-xs text-white outline-none focus:border-amber-500"
-                    />
-                    <button onClick={() => { alert("Comment posted!"); setCommentText(""); }} className="bg-amber-500 text-black px-3 py-1 rounded-lg text-xs font-bold">ਭੇਜੋ</button>
-                  </div>
-                </div>
               )}
             </div>
           </article>
@@ -413,7 +396,7 @@ function SearchScreen({ posts }) {
         <Search className="absolute left-3 top-2.5 text-neutral-500" size={16} />
         <input 
           type="text" 
-          placeholder="ਖੋਜੋ (Search users or captions)..." 
+          placeholder="ਖੋਜੋ (Search)..." 
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="w-full bg-neutral-900 border border-neutral-800 pl-9 pr-3 py-2 rounded-xl text-xs text-white outline-none focus:border-amber-500"
@@ -434,6 +417,30 @@ function SearchScreen({ posts }) {
 function ProfileScreen({ profile, posts, reload }) {
   const myPosts = posts.filter(p => p.user_id === profile?.id);
 
-  async function deletePost(postId) {
-    if (!confirm("ਕੀ ਤੁਸੀਂ ਇਸ ਪੋਸਟ ਨੂੰ ਡਿਲੀਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?")) return;
-    await supabase.from("posts").dele
+  async function deletePost(id) {
+    if (!confirm("ڈਿਲੀਟ ਕਰਨਾ ਹੈ?")) return;
+    await supabase.from("posts").delete().eq("id", id);
+    reload();
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex justify-between items-start border-b border-neutral-900 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 rounded-full bg-neutral-900 border-2 border-amber-500 flex items-center justify-center font-bold text-lg text-amber-400">
+            {(profile?.username || "P")[0].toUpperCase()}
+          </div>
+          <div>
+            <h2 className="font-bold text-sm">@{profile?.username}</h2>
+            <p className="text-xs text-neutral-400">{profile?.full_name}</p>
+          </div>
+        </div>
+        <button onClick={() => supabase.auth.signOut()} className="border border-neutral-800 p-2 rounded-lg text-red-400 bg-neutral-900">
+          <LogOut size={16} />
+        </button>
+      </div>
+
+      <div className="text-xs text-neutral-400 font-bold">ਮੇريਆਂ ਪੋਸਟਾਂ ({myPosts.length})</div>
+
+      <div className="grid grid-cols-3 gap-1">
+        {myPosts.map(p => (
