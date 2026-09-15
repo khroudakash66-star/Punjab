@@ -37,7 +37,7 @@ export default function App() {
   const [bio, setBio] = useState(() => localStorage.getItem("punjab_app_bio") || "ਸੋਹਣਾ ਪੰਜਾਬ • ਪੰਜਾਬੀ ਕ੍ਰਿਏਟਰ 🌾");
   const [avatar, setAvatar] = useState(() => localStorage.getItem("punjab_app_avatar") || "");
   const [isPrivate, setIsPrivate] = useState(() => localStorage.getItem("punjab_app_private") === "true");
-  const [wallet, setWallet] = useState(() => Number(localStorage.getItem("punjab_app_wallet")) || 250); // Monetization Earnings
+  const [wallet, setWallet] = useState(() => Number(localStorage.getItem("punjab_app_wallet")) || 250);
   const [tab, setTab] = useState("home");
   
   const [posts, setPosts] = useState(() => {
@@ -99,7 +99,7 @@ export default function App() {
           </div>
         </div>
         <h1 className="text-xl font-black tracking-widest text-white mt-4">PUNJAB</h1>
-        <p className="text-[10px] text-neutral-500 mt-2 tracking-widest uppercase">ਪੰਜਾਬ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ</p>
+        <p className="text-[10px] text-neutral-500 mt-2 tracking-widest uppercase">ਅਸਲੀ ਪੰਜਾਬੀ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ</p>
       </div>
     );
   }
@@ -756,11 +756,10 @@ function ExploreScreen({ posts }) {
   );
 }
 
-function NotificationsScreen({ notifications, setTab }) {
+function NotificationsScreen({ notifications }) {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
-        <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
         <h2 className="text-sm font-bold">Activity Feed</h2>
       </div>
       <div className="space-y-3 text-xs">
@@ -770,7 +769,7 @@ function NotificationsScreen({ notifications, setTab }) {
   );
 }
 
-function MessagesScreen({ setTab, currentUser, notes, setNotes }) {
+function MessagesScreen({ currentUser, notes, setNotes }) {
   const [msg, setMsg] = useState("");
   const [newNote, setNewNote] = useState("");
   const [chats, setChats] = useState([]);
@@ -792,7 +791,6 @@ function MessagesScreen({ setTab, currentUser, notes, setNotes }) {
   return (
     <div className="p-4 space-y-4 flex flex-col h-[85vh]">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
-        <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
         <h2 className="text-sm font-bold">Direct Messages & Notes</h2>
       </div>
 
@@ -828,7 +826,6 @@ function MessagesScreen({ setTab, currentUser, notes, setNotes }) {
   );
 }
 
-// Monetization Dashboard Feature
 function MonetizationScreen({ setTab, wallet }) {
   return (
     <div className="p-4 space-y-4">
@@ -848,7 +845,6 @@ function MonetizationScreen({ setTab, wallet }) {
   );
 }
 
-// AI Features Screen
 function AIToolsScreen({ setTab }) {
   const [topic, setTopic] = useState("");
   const [aiCaption, setAiCaption] = useState("");
