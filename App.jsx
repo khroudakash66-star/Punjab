@@ -21,7 +21,7 @@ import {
   Video,
   Radio,
   Image as ImageIcon,
-  Check,
+  Share2,
 } from "lucide-react";
 
 export default function App() {
@@ -36,13 +36,14 @@ export default function App() {
         caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
         image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
         location: "Amritsar, Punjab",
-        likes: 24,
+        likes: [],
+        comments: [],
         type: "post"
       }
     ];
   });
   const [savedPosts, setSavedPosts] = useState([]);
-  const [following, setFollowing] = useState(["jassu_082"]);
+  const [following, setFollowing] = useState([]);
 
   useEffect(() => {
     localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
@@ -71,14 +72,14 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="pb-12">
-        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} currentUser={user} following={following} setFollowing={setFollowing} savedPosts={savedPosts} setSavedPosts={setSavedPosts} />}
+        {tab === "home" && <HomeScreen posts={posts} setPosts={setPosts} setTab={setTab} currentUser={user} following={following} setFollowing={setFollowing} savedPosts={savedPosts} setSavedPosts={setSavedPosts} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
         {tab === "create-menu" && <CreateMenuScreen setTab={setTab} />}
         {tab === "create-post" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="post" />}
         {tab === "create-reel" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="reel" />}
         {tab === "camera" && <CameraScreen user={user} setTab={setTab} setPosts={setPosts} />}
         {tab === "live" && <LiveScreen setTab={setTab} user={user} />}
-        {tab === "reels" && <ReelsScreen posts={posts} currentUser={user} following={following} setFollowing={setFollowing} />}
+        {tab === "reels" && <ReelsScreen posts={posts} setPosts={setPosts} currentUser={user} following={following} setFollowing={setFollowing} />}
         {tab === "profile" && <ProfileScreen user={user} posts={posts} savedPosts={savedPosts} setUser={setUser} setTab={setTab} followingCount={following.length} />}
         {tab === "settings" && <SettingsScreen setTab={setTab} setUser={setUser} />}
         {tab === "notifications" && <NotificationsScreen setTab={setTab} />}
@@ -198,7 +199,7 @@ function CreateMenuScreen({ setTab }) {
   );
 }
 
-function HomeScreen({ posts, setTab, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
+function HomeScreen({ posts, setPosts, setTab, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
   const stories = [
     { name: currentUser, active: true },
     { name: "jassu_082" },
@@ -234,6 +235,7 @@ function HomeScreen({ posts, setTab, currentUser, following, setFollowing, saved
           <PostCard
             key={p.id}
             post={p}
+            setPosts={setPosts}
             currentUser={currentUser}
             following={following}
             setFollowing={setFollowing}
@@ -246,22 +248,25 @@ function HomeScreen({ posts, setTab, currentUser, following, setFollowing, saved
   );
 }
 
-function PostCard({ post, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes || 14);
-  const [isSaved, setIsSaved] = useState(savedPosts.some(s => s.id === post.id));
-  const [comment, setComment] = useState("");
-  const [commentsList, setCommentsList] = useState([]);
+function PostCard({ post, setPosts, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
+  const isLiked = post.likes?.includes(currentUser);
+  const isSaved = savedPosts.some(s => s.id === post.id);
+  const [commentText, setCommentText] = useState("");
   const isFollowing = following.includes(post.author);
 
   function handleLike() {
-    if (!liked) {
-      setLiked(true);
-      setLikesCount(prev => prev + 1);
-    } else {
-      setLiked(false);
-      setLikesCount(prev => prev - 1);
-    }
+    setPosts(prevPosts =>
+      prevPosts.map(p => {
+        if (p.id === post.id) {
+          const currentLikes = p.likes || [];
+          const updatedLikes = isLiked
+            ? currentLikes.filter(user => user !== currentUser)
+            : [...currentLikes, currentUser];
+          return { ...p, likes: updatedLikes };
+        }
+        return p;
+      })
+    );
   }
 
   function toggleFollow() {
@@ -274,19 +279,42 @@ function PostCard({ post, currentUser, following, setFollowing, savedPosts, setS
 
   function toggleSave() {
     if (isSaved) {
-      setIsSaved(false);
       setSavedPosts(savedPosts.filter(s => s.id !== post.id));
     } else {
-      setIsSaved(true);
       setSavedPosts([...savedPosts, post]);
+    }
+  }
+
+  function handleShare() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Punjab App Post',
+        text: post.caption,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("ਪੋਸਟ ਦਾ ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ!");
     }
   }
 
   function handleAddComment(e) {
     e.preventDefault();
-    if (!comment.trim()) return;
-    setCommentsList([...commentsList, { user: currentUser, text: comment }]);
-    setComment("");
+    if (!commentText.trim()) return;
+
+    setPosts(prevPosts =>
+      prevPosts.map(p => {
+        if (p.id === post.id) {
+          const currentComments = p.comments || [];
+          return {
+            ...p,
+            comments: [...currentComments, { user: currentUser, text: commentText.trim() }]
+          };
+        }
+        return p;
+      })
+    );
+    setCommentText("");
   }
 
   return (
@@ -319,17 +347,17 @@ function PostCard({ post, currentUser, following, setFollowing, savedPosts, setS
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={handleLike} className="transition transform active:scale-125">
-              <Heart size={24} fill={liked ? "#ef4444" : "none"} stroke={liked ? "#ef4444" : "currentColor"} />
+              <Heart size={24} fill={isLiked ? "#ef4444" : "none"} stroke={isLiked ? "#ef4444" : "currentColor"} />
             </button>
             <MessageCircle size={24} />
-            <Send size={24} />
+            <button onClick={handleShare}><Share2 size={22} /></button>
           </div>
           <button onClick={toggleSave}>
             <Bookmark size={24} fill={isSaved ? "#f59e0b" : "none"} stroke={isSaved ? "#f59e0b" : "currentColor"} />
           </button>
         </div>
 
-        <div className="text-xs font-bold text-white">{likesCount} likes</div>
+        <div className="text-xs font-bold text-white">{post.likes?.length || 0} likes</div>
 
         {post.caption && (
           <p className="text-xs text-neutral-200">
@@ -338,9 +366,9 @@ function PostCard({ post, currentUser, following, setFollowing, savedPosts, setS
           </p>
         )}
 
-        {commentsList.length > 0 && (
+        {post.comments && post.comments.length > 0 && (
           <div className="space-y-1 pt-1">
-            {commentsList.map((c, idx) => (
+            {post.comments.map((c, idx) => (
               <p key={idx} className="text-[11px] text-neutral-300">
                 <span className="font-bold text-amber-300 mr-2">@{c.user}</span>
                 {c.text}
@@ -351,12 +379,12 @@ function PostCard({ post, currentUser, following, setFollowing, savedPosts, setS
 
         <form onSubmit={handleAddComment} className="flex gap-2 pt-1">
           <input
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
             placeholder="Add a comment..."
             className="w-full bg-transparent text-xs text-white outline-none placeholder:text-neutral-600"
           />
-          {comment && <button type="submit" className="text-xs font-bold text-amber-400">Post</button>}
+          {commentText && <button type="submit" className="text-xs font-bold text-amber-400">Post</button>}
         </form>
       </div>
     </article>
@@ -399,7 +427,8 @@ function CreateScreen({ user, setTab, setPosts, type }) {
       caption: caption + (type === 'reel' ? ' #Reels' : ''),
       image: preview,
       location: "Punjab, India",
-      likes: 1,
+      likes: [],
+      comments: [],
       type: type
     };
 
@@ -478,7 +507,8 @@ function CameraScreen({ user, setTab, setPosts }) {
       caption: caption || "Captured live via Punjab App 📸",
       image: capturedImage,
       location: "Punjab, India",
-      likes: 1,
+      likes: [],
+      comments: [],
       type: "post"
     };
     setPosts(prev => [newPost, ...prev]);
@@ -549,6 +579,15 @@ function ReelsScreen({ posts, currentUser, following, setFollowing }) {
   const reelPosts = posts.filter(p => p.type === 'reel' || p.caption?.includes('#Reels'));
   const displayPosts = reelPosts.length > 0 ? reelPosts : posts;
 
+  function handleShare(p) {
+    if (navigator.share) {
+      navigator.share({ title: 'Punjab Reel', text: p.caption, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("ਰੀਲ ਦਾ ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ ਹੈ!");
+    }
+  }
+
   return (
     <div className="space-y-4 pb-10">
       <div className="p-3 font-bold text-sm border-b border-neutral-900 flex justify-between items-center sticky top-12 bg-black/95 z-40 backdrop-blur">
@@ -565,14 +604,17 @@ function ReelsScreen({ posts, currentUser, following, setFollowing }) {
                 <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
                 <p className="text-neutral-200 mt-1">{p.caption}</p>
               </div>
-              {p.author !== currentUser && (
-                <button onClick={() => {
-                  if (isFollowing) setFollowing(following.filter(f => f !== p.author));
-                  else setFollowing([...following, p.author]);
-                }} className={`px-3 py-1 rounded-lg text-xs font-bold ${isFollowing ? 'bg-neutral-800 text-neutral-300' : 'bg-amber-500 text-black'}`}>
-                  {isFollowing ? 'Following' : 'Follow'}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                <button onClick={() => handleShare(p)}><Share2 size={20} className="text-white" /></button>
+                {p.author !== currentUser && (
+                  <button onClick={() => {
+                    if (isFollowing) setFollowing(following.filter(f => f !== p.author));
+                    else setFollowing([...following, p.author]);
+                  }} className={`px-3 py-1 rounded-lg text-xs font-bold ${isFollowing ? 'bg-neutral-800 text-neutral-300' : 'bg-amber-500 text-black'}`}>
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -582,7 +624,7 @@ function ReelsScreen({ posts, currentUser, following, setFollowing }) {
 }
 
 function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCount }) {
-  const [profileTab, setProfileTab] = useState("posts"); // posts, reels, saved
+  const [profileTab, setProfileTab] = useState("posts");
   const myPosts = posts.filter((p) => p.author === user && p.type !== 'reel');
   const myReels = posts.filter((p) => p.author === user && (p.type === 'reel' || p.caption?.includes('#Reels')));
 
@@ -610,7 +652,6 @@ function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCoun
         </div>
       </div>
 
-      {/* Stats bar */}
       <div className="flex justify-around py-2 border-b border-neutral-900 text-center text-xs">
         <div>
           <span className="font-bold block text-sm">{posts.filter(p => p.author === user).length}</span>
@@ -626,7 +667,6 @@ function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCoun
         </div>
       </div>
 
-      {/* Profile Tabs */}
       <div className="flex justify-around border-b border-neutral-900 text-xs font-bold text-neutral-400">
         <button onClick={() => setProfileTab("posts")} className={`py-2 border-b-2 ${profileTab === 'posts' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Grid size={18} /></button>
         <button onClick={() => setProfileTab("reels")} className={`py-2 border-b-2 ${profileTab === 'reels' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Film size={18} /></button>
