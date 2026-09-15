@@ -13,68 +13,41 @@ import {
   LogOut,
   MapPin,
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
 const SUPABASE_KEY = "Sb_publishable_B7kdNhTOAplbatGO9Ez1qA_VPD2UEBR";
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(() => localStorage.getItem('punjab_user') || '');
   const [profile, setProfile] = useState(null);
   const [screen, setScreen] = useState("home");
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        loadProfile(session.user.id);
-        loadPosts();
-      }
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        loadProfile(session.user.id);
-        loadPosts();
-      } else {
-        setProfile(null);
-        setPosts([]);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  async function loadProfile(userId) {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
-    if (data) setProfile(data);
-  }
+    if (user) {
+      setProfile({ username: user, full_name: user, id: user });
+      loadPosts();
+    }
+  }, [user]);
 
   async function loadPosts() {
-    const { data } = await supabase
-      .from("posts")
-      .select(`*, profiles:user_id (username, full_name)`)
-      .order("created_at", { ascending: false });
-    if (data) setPosts(data);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?select=*&order=created_at.desc`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
-        <div className="text-center">
-          <div className="text-4xl font-black tracking-widest bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent">PUNJAB</div>
-          <div className="text-xs mt-1 text-amber-200/60 font-serif tracking-widest">ਸਾਡਾ ਪੰਜਾਬ</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) return <AuthScreen />;
+  if (!user) return <AuthScreen setUser={setUser} />;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900">
@@ -85,17 +58,17 @@ export default function App() {
           </span>
           <span className="text-[9px] text-amber-300 font-serif tracking-widest">ਸਾਡਾ ਪੰਜਾਬ</span>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setScreen("messages")} className="text-white hover:text-amber-400 transition"><Send size={20} /></button>
-        </div>
+        <button onClick={() => { localStorage.removeItem('punjab_user'); setUser(''); }} className="text-xs text-red-400 hover:text-red-300">
+          ਲੌਗ ਆਉਟ
+        </button>
       </header>
 
       <main className="pb-16">
         {screen === "home" && <HomeScreen posts={posts} profile={profile} reload={loadPosts} setScreen={setScreen} />}
         {screen === "search" && <SearchScreen />}
-        {screen === "create" && <CreateScreen profile={profile} reload={loadPosts} setScreen={setScreen} />}
+        {screen === "create" && <CreateScreen user={user} reload={loadPosts} setScreen={setScreen} />}
         {screen === "reels" && <ReelsScreen posts={posts} />}
-        {screen === "profile" && <ProfileScreen profile={profile} posts={posts} />}
+        {screen === "profile" && <ProfileScreen user={user} posts={posts} />}
         {screen === "messages" && <MessagesScreen setScreen={setScreen} />}
       </main>
 
@@ -110,30 +83,14 @@ export default function App() {
   );
 }
 
-function AuthScreen() {
-  const [mode, setMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+function AuthScreen({ setUser }) {
+  const [name, setName] = useState("");
 
-  async function submit(e) {
+  function login(e) {
     e.preventDefault();
-    setError("");
-    setBusy(true);
-
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email, password, options: { data: { username, full_name: username } }
-      });
-      if (error) setError(error.message);
-      else setError("Account created! You can now log in.");
-    }
-    setBusy(false);
+    if (!name.trim()) return;
+    localStorage.setItem('punjab_user', name.trim());
+    setUser(name.trim());
   }
 
   return (
@@ -147,22 +104,12 @@ function AuthScreen() {
         <h1 className="text-2xl font-black tracking-[0.2em] bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">PUNJAB</h1>
         <p className="text-xs text-amber-200/70 mb-6 font-serif">ਸਾਡਾ ਪੰਜਾਬ - ਸੋਸ਼ਲ ਮੀਡੀਆ</p>
 
-        <form onSubmit={submit} className="space-y-3">
-          {mode === "signup" && (
-            <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username (ਆਈਡੀ)" required className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
-          )}
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required minLength={6} className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
-          <button disabled={busy} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-            {busy ? "ਕਿਰਪਾ ਕਰੋ..." : mode === "login" ? "ਲੌਗ ਇਨ (Log In)" : "ਸਾਈਨ ਅੱਪ (Sign Up)"}
+        <form onSubmit={login} className="space-y-3">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="ਆਪਣਾ ਯੂਜ਼ਰ ਨਾਮ / ID ਲਿਖੋ..." required className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
+          <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
+            ਸ਼ੁਰੂ ਕਰੋ (Enter)
           </button>
         </form>
-
-        {error && <p className="text-xs text-amber-300 mt-3 bg-amber-500/10 p-2 rounded-lg">{error}</p>}
-
-        <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }} className="w-full mt-6 text-xs text-neutral-400 hover:text-amber-400 transition">
-          {mode === "login" ? "ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ" : "ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ"}
-        </button>
       </div>
     </div>
   );
@@ -171,18 +118,6 @@ function AuthScreen() {
 function HomeScreen({ posts, profile, reload, setScreen }) {
   const [likes, setLikes] = useState({});
   const [saved, setSaved] = useState({});
-
-  async function toggleLike(post) {
-    if (!profile) return;
-    const isLiked = likes[post.id];
-    if (isLiked) {
-      await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", profile.id);
-      setLikes(l => ({ ...l, [post.id]: false }));
-    } else {
-      await supabase.from("post_likes").insert({ post_id: post.id, user_id: profile.id });
-      setLikes(l => ({ ...l, [post.id]: true }));
-    }
-  }
 
   return (
     <div className="space-y-4">
@@ -197,22 +132,21 @@ function HomeScreen({ posts, profile, reload, setScreen }) {
             <div className="flex items-center justify-between p-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500 flex items-center justify-center text-xs font-bold text-amber-400">
-                  {(post.profiles?.username || "P")[0].toUpperCase()}
+                  {(post.author || "P")[0].toUpperCase()}
                 </div>
                 <div>
-                  <div className="text-xs font-bold">@{post.profiles?.username || "user"}</div>
+                  <div className="text-xs font-bold">@{post.author}</div>
                   <div className="text-[10px] text-neutral-500 flex items-center gap-0.5"><MapPin size={9} /> Punjab</div>
                 </div>
               </div>
             </div>
 
-            {post.image_url && <img src={post.image_url} alt="" className="w-full aspect-square object-cover bg-neutral-900" />}
-            {post.video_url && <video src={post.video_url} controls className="w-full max-h-[500px] bg-black" />}
+            {post.image && <img src={post.image} alt="" className="w-full aspect-square object-cover bg-neutral-900" />}
 
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => toggleLike(post)}>
+                  <button onClick={() => setLikes(l => ({ ...l, [post.id]: !l[post.id] }))}>
                     <Heart size={23} fill={likes[post.id] ? "#ef4444" : "none"} stroke={likes[post.id] ? "#ef4444" : "currentColor"} />
                   </button>
                   <MessageCircle size={23} />
@@ -225,7 +159,7 @@ function HomeScreen({ posts, profile, reload, setScreen }) {
 
               {post.caption && (
                 <p className="text-xs text-neutral-200">
-                  <span className="font-bold mr-2 text-amber-400">@{post.profiles?.username}</span>
+                  <span className="font-bold mr-2 text-amber-400">@{post.author}</span>
                   {post.caption}
                 </p>
               )}
@@ -237,7 +171,7 @@ function HomeScreen({ posts, profile, reload, setScreen }) {
   );
 }
 
-function CreateScreen({ profile, reload, setScreen }) {
+function CreateScreen({ user, reload, setScreen }) {
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState("");
   const [busy, setBusy] = useState(false);
@@ -266,7 +200,7 @@ function CreateScreen({ profile, reload, setScreen }) {
 
   async function publish(e) {
     e.preventDefault();
-    if (!preview || !profile || busy) return;
+    if (!preview || busy) return;
     setBusy(true);
 
     try {
@@ -279,9 +213,9 @@ function CreateScreen({ profile, reload, setScreen }) {
           'Prefer': 'return=representation'
         },
         body: JSON.stringify({
-          user_id: profile.id,
+          author: user,
           caption: caption,
-          image_url: preview,
+          image: preview,
           location: "Punjab"
         })
       });
@@ -335,8 +269,8 @@ function ReelsScreen({ posts }) {
       <div className="p-3 font-bold text-sm border-b border-neutral-900">Reels</div>
       {posts.map(p => (
         <div key={p.id} className="bg-black border-b border-neutral-900">
-          {p.image_url && <img src={p.image_url} alt="" className="w-full aspect-square object-cover" />}
-          <div className="p-3 text-xs"><span className="font-bold text-amber-400 mr-2">@{p.profiles?.username}</span>{p.caption}</div>
+          {p.image && <img src={p.image} alt="" className="w-full aspect-square object-cover" />}
+          <div className="p-3 text-xs"><span className="font-bold text-amber-400 mr-2">@{p.author}</span>{p.caption}</div>
         </div>
       ))}
     </div>
@@ -351,30 +285,27 @@ function SearchScreen() {
   );
 }
 
-function ProfileScreen({ profile, posts }) {
-  const myPosts = posts.filter(p => p.user_id === profile?.id);
+function ProfileScreen({ user, posts }) {
+  const myPosts = posts.filter(p => p.author === user);
 
   return (
     <div className="p-4 space-y-4">
       <div className="flex justify-between items-start border-b border-neutral-900 pb-4">
         <div className="flex items-center gap-3">
           <div className="w-16 h-16 rounded-full bg-neutral-900 border-2 border-amber-500 flex items-center justify-center font-bold text-lg text-amber-400">
-            {(profile?.username || "P")[0].toUpperCase()}
+            {user[0]?.toUpperCase()}
           </div>
           <div>
-            <h2 className="font-bold text-sm">@{profile?.username}</h2>
-            <p className="text-xs text-neutral-400">{profile?.full_name}</p>
+            <h2 className="font-bold text-sm">@{user}</h2>
+            <p className="text-xs text-neutral-400">ਪੰਜਾਬ ਯੂਜ਼ਰ</p>
           </div>
         </div>
-        <button onClick={() => supabase.auth.signOut()} className="border border-neutral-800 p-2 rounded-lg text-red-400 bg-neutral-900">
-          <LogOut size={16} />
-        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-1">
         {myPosts.map(p => (
           <div key={p.id} className="aspect-square bg-neutral-900">
-            <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+            <img src={p.image} alt="" className="w-full h-full object-cover" />
           </div>
         ))}
       </div>
