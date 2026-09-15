@@ -25,8 +25,7 @@ import {
   CheckCircle,
   Eye,
   Pin,
-  Archive,
-  Folder
+  Archive
 } from "lucide-react";
 
 export default function App() {
@@ -67,7 +66,6 @@ export default function App() {
     }
   });
 
-  const [archivedPosts, setArchivedPosts] = useState([]);
   const [following, setFollowing] = useState(["randeep_pb"]);
   const [notes, setNotes] = useState([
     { user: "jassu_082", note: "ਚੜ੍ਹਦੀ ਕਲਾ! ⚔️" },
@@ -102,7 +100,7 @@ export default function App() {
           </div>
         </div>
         <h1 className="text-xl font-black tracking-widest text-white mt-4">PUNJAB</h1>
-        <p className="text-[10px] text-neutral-500 mt-2 tracking-widest uppercase">Advanced Instagram Style Punjabi App</p>
+        <p className="text-[10px] text-neutral-500 mt-2 tracking-widest uppercase">ਪੰਜਾਬ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ</p>
       </div>
     );
   }
@@ -141,7 +139,7 @@ export default function App() {
         {tab === "camera" && <CameraScreen user={user} setTab={setTab} setPosts={setPosts} />}
         {tab === "live" && <LiveScreen setTab={setTab} user={user} />}
         {tab === "reels" && <ReelsScreen currentUser={user} following={following} setFollowing={setFollowing} />}
-        {tab === "profile" && <ProfileScreen user={user} bio={bio} avatar={avatar} posts={posts} savedPosts={savedPosts} archivedPosts={archivedPosts} setPosts={setPosts} setArchivedPosts={setArchivedPosts} setUser={setUser} setTab={setTab} followingCount={following.length} />}
+        {tab === "profile" && <ProfileScreen user={user} bio={bio} avatar={avatar} posts={posts} savedPosts={savedPosts} setPosts={setPosts} setUser={setUser} setTab={setTab} followingCount={following.length} />}
         {tab === "settings" && <SettingsScreen setTab={setTab} user={user} setUser={setUser} setBio={setBio} setAvatar={setAvatar} />}
         {tab === "notifications" && <NotificationsScreen notifications={notifications} setTab={setTab} />}
         {tab === "messages" && <MessagesScreen setTab={setTab} currentUser={user} notes={notes} setNotes={setNotes} />}
@@ -594,8 +592,7 @@ function LiveScreen({ setTab, user }) {
   );
 }
 
-// (Advanced Profile with Pinned Posts, Reels, Saved Collections & Archive)
-function ProfileScreen({ user, bio, avatar, posts, savedPosts, archivedPosts, setPosts, setArchivedPosts, setUser, setTab, followingCount }) {
+function ProfileScreen({ user, bio, avatar, posts, savedPosts, setPosts, setUser, setTab, followingCount }) {
   const [profileTab, setProfileTab] = useState("posts");
   
   const myPosts = posts.filter(p => p.author === user && !p.archived && p.type !== 'reel');
@@ -645,7 +642,6 @@ function ProfileScreen({ user, bio, avatar, posts, savedPosts, archivedPosts, se
         <div><span className="font-bold block text-sm">{followingCount}</span><span className="text-neutral-500">Following</span></div>
       </div>
 
-      {/* Profile Navigation Tabs (Posts, Reels, Saved, Archive) */}
       <div className="flex justify-around border-b border-neutral-900 text-xs font-bold text-neutral-400">
         <button onClick={() => setProfileTab("posts")} className={`py-2 border-b-2 ${profileTab === 'posts' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Grid size={18} /></button>
         <button onClick={() => setProfileTab("reels")} className={`py-2 border-b-2 ${profileTab === 'reels' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Film size={18} /></button>
@@ -729,7 +725,7 @@ function SettingsScreen({ setTab, user, setUser, setBio, setAvatar }) {
       <div className="bg-neutral-900 p-4 rounded-2xl border border-neutral-800 text-center space-y-3">
         <input type="file" accept="image/*" ref={fileRef} onChange={handleAvatarChange} className="hidden" />
         <button onClick={() => fileRef.current?.click()} className="bg-amber-500 text-black font-bold text-xs px-4 py-2 rounded-xl shadow">
-          ਪ੍ਰੋਫਾਈਲ ਫੋਟੋ (DP) ਬਦلو
+          ਪ੍ਰੋਫਾਈਲ ਫੋਟੋ (DP) ਬਦਲੋ
         </button>
       </div>
       
@@ -804,7 +800,6 @@ function NotificationsScreen({ notifications, setTab }) {
   );
 }
 
-// (Advanced DMs with Instagram Style Notes)
 function MessagesScreen({ setTab, currentUser, notes, setNotes }) {
   const [msg, setMsg] = useState("");
   const [newNote, setNewNote] = useState("");
@@ -834,7 +829,6 @@ function MessagesScreen({ setTab, currentUser, notes, setNotes }) {
         <h2 className="text-sm font-bold">Direct Messages & Notes</h2>
       </div>
 
-      {/* Notes Tray */}
       <div className="flex gap-4 overflow-x-auto pb-2 border-b border-neutral-900">
         {notes.map((n, i) => (
           <div key={i} className="flex flex-col items-center shrink-0">
