@@ -14,45 +14,71 @@ import {
   Camera,
   LogOut,
   Sparkles,
-  Lock,
-  Mail,
   ArrowLeft,
 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneWxhY25xcnhlemp4cWpvZXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzE3NDAsImV4cCI6MjA1NzgwNjc0MH0";
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [user, setUser] = useState(() => localStorage.getItem("punjab_user") || "");
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [tab, setTab] = useState("home");
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadPosts();
-      const interval = setInterval(loadPosts, 4000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  async function loadPosts() {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?select=*&order=created_at.desc`, {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(data || []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        loadProfile(session.user.id);
+        loadPosts();
       }
-    } catch (e) {
-      console.error(e);
-    }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        loadProfile(session.user.id);
+        loadPosts();
+      } else {
+        setProfile(null);
+        setPosts([]);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function loadProfile(userId) {
+    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
+    if (data) setProfile(data);
   }
 
-  if (!user) return <AuthScreen setUser={setUser} />;
+  async function loadPosts() {
+    const { data } = await supabase
+      .from("posts")
+      .select(`*, profiles:user_id (username, full_name)`)
+      .order("created_at", { ascending: false });
+    if (data) setPosts(data);
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
+        <div className="text-center">
+          <div className="text-3xl font-black tracking-widest text-amber-400">PUNJAB</div>
+          <div className="text-xs mt-1 text-neutral-500">ਸਾਡਾ ਪੰਜਾਬ</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return <AuthScreen />;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 select-none">
@@ -75,11 +101,11 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="pb-12">
-        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} reload={loadPosts} currentUser={user} />}
+        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} reload={loadPosts} profile={profile} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
-        {tab === "create" && <CreateScreen user={user} setTab={setTab} reload={loadPosts} />}
+        {tab === "create" && <CreateScreen profile={profile} setTab={setTab} reload={loadPosts} />}
         {tab === "reels" && <ReelsScreen posts={posts} />}
-        {tab === "profile" && <ProfileScreen user={user} posts={posts} setUser={setUser} />}
+        {tab === "profile" && <ProfileScreen profile={profile} posts={posts} />}
       </main>
 
       {/* Bottom Navigation */}
@@ -94,23 +120,38 @@ export default function App() {
   );
 }
 
-function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login"); // login, signup, forgot
-  const [username, setUsername] = useState("");
+function AuthScreen() {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!username.trim()) return;
+    setError("");
+    setMessage("");
+    setBusy(true);
 
-    if (mode === "forgot") {
-      setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਤੁਹਾਡੀ ਈਮੇਲ ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
-      return;
+    if (mode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+    } else if (mode === "signup") {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username, full_name: username } },
+      });
+      if (error) setError(error.message);
+      else setMessage("ਸਾਈਨ ਅੱਪ ਸਫ਼ਲ ਰਿਹਾ! ਹੁਣ ਤੁਸੀਂ ਲੌਗਇਨ ਕਰ ਸਕਦੇ ਹੋ।");
+    } else if (mode === "forgot") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) setError(error.message);
+      else setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਲਿੰਕ ਤੁਹਾਡੀ ਈਮੇਲ ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
     }
-
-    localStorage.setItem("punjab_user", username.trim());
-    setUser(username.trim());
+    setBusy(false);
   }
 
   return (
@@ -125,10 +166,21 @@ function AuthScreen({ setUser }) {
         <p className="text-xs text-neutral-400 mb-6 font-serif">Connect • Share • Punjab</p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          {mode === "signup" && (
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="ਯੂਜ਼ਰ ਨਾਮ (Username)"
+              required
+              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+            />
+          )}
+
           <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder={mode === "forgot" ? "ਆਪਣੀ ਈਮੇਲ ਲਿਖੋ..." : "ਯੂਜ਼ਰ ਨਾਮ / ID (Username)"}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ਈਮੇਲ (Email)"
             required
             className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
           />
@@ -140,31 +192,32 @@ function AuthScreen({ setUser }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="ਪਾਸਵਰਡ (Password)"
               required
-              minLength={4}
+              minLength={6}
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
           )}
 
-          <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-            {mode === "login" ? "ਲੌਗ ਇನ್ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
+          <button disabled={busy} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg disabled:opacity-50">
+            {busy ? "ਕਿਰਪਾ ਕਰੋ..." : mode === "login" ? "ਲੌਗ ਇನ್ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
           </button>
         </form>
 
+        {error && <p className="text-xs text-red-400 mt-3 bg-red-500/10 p-2 rounded-lg">{error}</p>}
         {message && <p className="text-xs text-amber-300 mt-3 bg-amber-500/10 p-2 rounded-lg">{message}</p>}
 
         {mode === "login" && (
           <div className="mt-5 space-y-2">
-            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">
+            <button onClick={() => { setMode("forgot"); setError(""); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">
               ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ? (Forgot Password)
             </button>
-            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">
+            <button onClick={() => { setMode("signup"); setError(""); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">
               ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ
             </button>
           </div>
         )}
 
         {(mode === "signup" || mode === "forgot") && (
-          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">
+          <button onClick={() => { setMode("login"); setError(""); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">
             ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ
           </button>
         )}
@@ -173,9 +226,9 @@ function AuthScreen({ setUser }) {
   );
 }
 
-function HomeScreen({ posts, setTab, reload, currentUser }) {
+function HomeScreen({ posts, setTab, reload, profile }) {
   const stories = [
-    { name: currentUser, active: true },
+    { name: profile?.username || "You", active: true },
     { name: "jassu_082" },
     { name: "randeep_pb" },
     { name: "simran.kaur" },
@@ -209,13 +262,13 @@ function HomeScreen({ posts, setTab, reload, currentUser }) {
           </button>
         </div>
       ) : (
-        posts.map((p) => <PostCard key={p.id} post={p} currentUser={currentUser} />)
+        posts.map((p) => <PostCard key={p.id} post={p} profile={profile} />)
       )}
     </div>
   );
 }
 
-function PostCard({ post, currentUser }) {
+function PostCard({ post, profile }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes || 12);
   const [saved, setSaved] = useState(false);
@@ -235,7 +288,7 @@ function PostCard({ post, currentUser }) {
   function handleAddComment(e) {
     e.preventDefault();
     if (!comment.trim()) return;
-    setCommentsList([...commentsList, { user: currentUser, text: comment }]);
+    setCommentsList([...commentsList, { user: profile?.username || "user", text: comment }]);
     setComment("");
   }
 
@@ -245,18 +298,18 @@ function PostCard({ post, currentUser }) {
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 p-0.5">
             <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-xs font-bold text-amber-400">
-              {(post.author || "P")[0].toUpperCase()}
+              {(post.profiles?.username || "P")[0].toUpperCase()}
             </div>
           </div>
           <div>
-            <div className="text-xs font-bold">@{post.author}</div>
+            <div className="text-xs font-bold">@{post.profiles?.username || "user"}</div>
             <div className="text-[10px] text-neutral-400">{post.location || "Punjab, India"}</div>
           </div>
         </div>
         <MoreHorizontal size={18} className="text-neutral-400" />
       </div>
 
-      {post.image && <img src={post.image} alt="" className="w-full aspect-square object-cover bg-neutral-900" />}
+      {post.image_url && <img src={post.image_url} alt="" className="w-full aspect-square object-cover bg-neutral-900" />}
 
       <div className="px-3 py-2.5 space-y-2">
         <div className="flex items-center justify-between">
@@ -276,7 +329,7 @@ function PostCard({ post, currentUser }) {
 
         {post.caption && (
           <p className="text-xs text-neutral-200">
-            <span className="font-bold mr-2 text-amber-400">@{post.author}</span>
+            <span className="font-bold mr-2 text-amber-400">@{post.profiles?.username}</span>
             {post.caption}
           </p>
         )}
@@ -316,7 +369,7 @@ function ExploreScreen({ posts }) {
       <div className="grid grid-cols-3 gap-1">
         {posts.map((p) => (
           <div key={p.id} className="aspect-square bg-neutral-900 relative group">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
+            <img src={p.image_url} alt="" className="w-full h-full object-cover" />
           </div>
         ))}
       </div>
@@ -324,7 +377,7 @@ function ExploreScreen({ posts }) {
   );
 }
 
-function CreateScreen({ user, setTab, reload }) {
+function CreateScreen({ profile, setTab, reload }) {
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState("");
   const [busy, setBusy] = useState(false);
@@ -353,32 +406,22 @@ function CreateScreen({ user, setTab, reload }) {
 
   async function handlePublish(e) {
     e.preventDefault();
-    if (!preview || busy) return;
+    if (!preview || !profile || busy) return;
     setBusy(true);
 
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify({
-          author: user,
-          caption: caption,
-          image: preview,
-          location: "Punjab, India",
-        }),
+      const { error } = await supabase.from("posts").insert({
+        user_id: profile.id,
+        caption: caption,
+        image_url: preview,
+        location: "Punjab, India",
       });
 
-      if (res.ok) {
+      if (!error) {
         await reload();
         setTab("home");
       } else {
-        const errText = await res.text();
-        alert("Upload failed: " + errText);
+        alert("Upload failed: " + error.message);
       }
     } catch (err) {
       alert("Error: " + err.message);
@@ -430,9 +473,9 @@ function ReelsScreen({ posts }) {
       </div>
       {posts.map((p) => (
         <div key={p.id} className="bg-black border-b border-neutral-900 relative">
-          {p.image && <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
+          {p.image_url && <img src={p.image_url} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
           <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl">
-            <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
+            <span className="font-bold text-amber-400 mr-2 text-sm">@{p.profiles?.username}</span>
             <p className="text-neutral-200 mt-1">{p.caption}</p>
           </div>
         </div>
@@ -441,8 +484,8 @@ function ReelsScreen({ posts }) {
   );
 }
 
-function ProfileScreen({ user, posts, setUser }) {
-  const myPosts = posts.filter((p) => p.author === user);
+function ProfileScreen({ profile, posts }) {
+  const myPosts = posts.filter((p) => p.user_id === profile?.id);
 
   return (
     <div className="p-4 space-y-4">
@@ -450,15 +493,15 @@ function ProfileScreen({ user, posts, setUser }) {
         <div className="flex items-center gap-3">
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 p-0.5">
             <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-lg font-bold text-amber-400">
-              {user[0]?.toUpperCase()}
+              {(profile?.username || "P")[0].toUpperCase()}
             </div>
           </div>
           <div>
-            <h2 className="font-bold text-sm">@{user}</h2>
-            <p className="text-xs text-neutral-400">Punjab Creator</p>
+            <h2 className="font-bold text-sm">@{profile?.username}</h2>
+            <p className="text-xs text-neutral-400">{profile?.full_name || "Punjab Creator"}</p>
           </div>
         </div>
-        <button onClick={() => { localStorage.removeItem("punjab_user"); setUser(""); }} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900">
+        <button onClick={() => supabase.auth.signOut()} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900">
           <LogOut size={16} />
         </button>
       </div>
@@ -466,7 +509,7 @@ function ProfileScreen({ user, posts, setUser }) {
       <div className="grid grid-cols-3 gap-1">
         {myPosts.map((p) => (
           <div key={p.id} className="aspect-square bg-neutral-900">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
+            <img src={p.image_url} alt="" className="w-full h-full object-cover" />
           </div>
         ))}
       </div>
