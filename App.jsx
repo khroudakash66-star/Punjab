@@ -163,9 +163,8 @@ export default function App() {
   );
 }
 
-// ਮੋਬਾਈਲ ਨੰਬਰ ਸਾਈਨ-ਅੱਪ, ਸਹੀ ਪਾਸਵਰਡ ਮੈਚਿੰਗ ਅਤੇ ਮੋਬਾਈਲ OTP ਫੋਰਗੈਟ ਸਿਸਟਮ
 function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login"); // "login", "signup", "forgot", "verifyForgotOTP"
+  const [mode, setMode] = useState("login");
   const [mobile, setMobile] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -174,18 +173,14 @@ function AuthScreen({ setUser }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // 1. ਸਾਈਨ ਅੱਪ (ਮੋਬਾਈਲ ਨੰਬਰ ਨਾਲ)
   function handleSignUp(e) {
     e.preventDefault();
     if (mobile.length < 10 || !username.trim() || !password.trim()) {
       setErrorMsg("ਸਹੀ 10-ਅੰਕਾਂ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ, ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ!");
       return;
     }
-
-    // ਲੋਕਲ ਸਟੋਰੇਜ ਵਿੱਚ ਸੇਵ ਕਰੋ
     localStorage.setItem(`pwd_${username.trim()}`, password);
     localStorage.setItem(`mobile_${username.trim()}`, mobile.trim());
-
     setSuccessMsg("ਖਾਤਾ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ! ਹੁਣ ਆਪਣੇ ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਨਾਲ ਲੌਗ ਇਨ ਕਰੋ।");
     setErrorMsg("");
     setTimeout(() => {
@@ -194,7 +189,6 @@ function AuthScreen({ setUser }) {
     }, 2000);
   }
 
-  // 2. ਲੌਗ ਇਨ (ਸਿਰਫ਼ ਸਹੀ ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਨਾਲ)
   function handleLogin(e) {
     e.preventDefault();
     const cleanUser = username.trim();
@@ -215,7 +209,6 @@ function AuthScreen({ setUser }) {
     setUser(cleanUser);
   }
 
-  // 3. ਫੋਰਗੈਟ ਪਾਸਵਰਡ (ਮੋਬਾਈਲ ਨੰਬਰ 'ਤੇ OTP ਭੇਜਣਾ)
   function handleSendForgotOTP(e) {
     e.preventDefault();
     const cleanUser = username.trim();
@@ -226,7 +219,6 @@ function AuthScreen({ setUser }) {
       return;
     }
 
-    // 4 ਅੰਕਾਂ ਦਾ ਓਟੀਪੀ ਮੋਬਾਈਲ ਨੰਬਰ ਲਈ ਬਣਾਓ
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedForgotOtp(otp);
 
@@ -235,7 +227,6 @@ function AuthScreen({ setUser }) {
     setMode("verifyForgotOTP");
   }
 
-  // 4. OTP ਵੈਰੀਫਾਈ ਕਰਕੇ ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨਾ
   function handleResetPassword(e) {
     e.preventDefault();
     if (forgotOtpInput !== generatedForgotOtp) {
@@ -244,7 +235,7 @@ function AuthScreen({ setUser }) {
     }
 
     localStorage.setItem(`pwd_${username.trim()}`, password.trim());
-    setSuccessMsg("ਪਾਸਵਰਡ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਦਲ ਗਿਆ ਹੈ! ਹੁਣ ਨਵੇਂ ਪਾਸਵਰਡ ਨਾਲ ਲੌਗ ਇನ್ ਕਰੋ।");
+    setSuccessMsg("ਪਾਸਵਰਡ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਦਲ ਗਿਆ ਹੈ! ਹੁਣ ਨਵੇਂ ਪਾਸਵਰਡ ਨਾਲ ਲੌਗ ਇਨ ਕਰੋ।");
     setErrorMsg("");
     setTimeout(() => {
       setMode("login");
@@ -258,7 +249,7 @@ function AuthScreen({ setUser }) {
       <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 p-8 rounded-3xl text-center shadow-2xl">
         <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-500 p-1 shadow-xl">
           <div className="w-full h-full bg-black rounded-[18px] flex items-center justify-center">
-            <span className="text-4xl font-black text-amber-400">ਪੰ</span>
+            <span className="text-2xl font-black text-amber-400">ਪੰ</span>
           </div>
         </div>
         <h1 className="text-2xl font-black tracking-wider text-amber-400 mb-1">PUNJAB</h1>
@@ -267,7 +258,6 @@ function AuthScreen({ setUser }) {
         {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-xl mb-3">{errorMsg}</p>}
         {successMsg && <p className="text-xs text-amber-300 bg-amber-500/10 p-2.5 rounded-xl mb-3 leading-relaxed">{successMsg}</p>}
 
-        {/* 1. Login Form */}
         {mode === "login" && (
           <form onSubmit={handleLogin} className="space-y-3">
             <input
@@ -295,7 +285,6 @@ function AuthScreen({ setUser }) {
           </form>
         )}
 
-        {/* 2. Sign Up Form with Mobile Number */}
         {mode === "signup" && (
           <form onSubmit={handleSignUp} className="space-y-3">
             <input
@@ -330,7 +319,6 @@ function AuthScreen({ setUser }) {
           </form>
         )}
 
-        {/* 3. Forgot Password Form (Send OTP to Mobile) */}
         {mode === "forgot" && (
           <form onSubmit={handleSendForgotOTP} className="space-y-3">
             <div className="text-center text-xs text-neutral-300 mb-1">
@@ -351,7 +339,6 @@ function AuthScreen({ setUser }) {
           </form>
         )}
 
-        {/* 4. Verify OTP & Reset Password */}
         {mode === "verifyForgotOTP" && (
           <form onSubmit={handleResetPassword} className="space-y-3">
             <div className="text-center text-xs text-neutral-300 mb-1">
@@ -385,7 +372,6 @@ function AuthScreen({ setUser }) {
   );
 }
 
-// (ਬਾਕੀ ਸਾਰੇ ਪੰਜਾਬ ਐਪ ਦੇ ਕੰਪੋਨੈਂਟਸ ਪਹਿਲਾਂ ਵਾਂਗ ਸੁਰੱਖਿਅਤ ਹਨ)
 function CreateMenuScreen({ setTab }) {
   return (
     <div className="p-5 space-y-4 max-w-sm mx-auto">
