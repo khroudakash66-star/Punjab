@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, Home, Film, PlusSquare, User, LogOut, CheckCircle2, Globe } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { 
+  Heart, MessageCircle, Send, Bookmark, Home, Film, PlusSquare, 
+  User, LogOut, CheckCircle2, Globe, Camera, Grid, BookmarkCheck, X 
+} from 'lucide-react';
 
 const safeGet = (key, fallback) => {
   try {
@@ -18,20 +21,35 @@ const safeSet = (key, value) => {
   }
 };
 
-const PunjabLogo = ({ size = "small" }) => {
+// ਨਵਾਂ ਕੈਲੀਗ੍ਰਾਫੀ ਪੰਜਾਬ ਲੋਗੋ ਕੰਪੋਨੈਂਟ
+const PunjabCanvasLogo = ({ size = "small" }) => {
   if (size === "large") {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-36 h-36 rounded-3xl border-2 border-amber-500/60 bg-gradient-to-b from-amber-950/40 to-neutral-900 flex flex-col items-center justify-center shadow-2xl p-2 relative">
-          <span className="text-4xl select-none">🌾</span>
-          <span className="font-black text-2xl text-amber-400 mt-1 select-none tracking-wide">
-            ਪੰਜਾਬ
-          </span>
-          <span className="text-[10px] tracking-widest text-amber-200/60 uppercase font-semibold mt-0.5">
-            Heritage
-          </span>
+        <div className="w-36 h-36 rounded-3xl overflow-hidden border-2 border-amber-500/60 shadow-2xl p-0.5 bg-gradient-to-br from-red-600 via-yellow-600 to-teal-800 flex items-center justify-center">
+          <svg viewBox="0 0 300 300" className="w-full h-full rounded-2xl">
+            <defs>
+              <linearGradient id="artBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#7f1d1d" />
+                <stop offset="35%" stopColor="#991b1b" />
+                <stop offset="65%" stopColor="#d97706" />
+                <stop offset="100%" stopColor="#115e59" />
+              </linearGradient>
+              <filter id="canvasTexture">
+                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" />
+                <feBlend mode="multiply" in="SourceGraphic" in2="noise" />
+              </filter>
+            </defs>
+            <rect width="300" height="300" fill="url(#artBg)" filter="url(#canvasTexture)" />
+            <text x="150" y="170" textAnchor="middle" fill="#ffffff" stroke="#1c1917" strokeWidth="4" fontSize="82" fontWeight="900" fontFamily="sans-serif">
+              ਪੰਜਾਬ
+            </text>
+            <text x="150" y="215" textAnchor="middle" fill="#ffffff" stroke="#1c1917" strokeWidth="1.5" fontSize="30" fontStyle="italic" fontFamily="cursive, serif">
+              Panjaab
+            </text>
+          </svg>
         </div>
-        <span className="font-black text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
+        <span className="font-extrabold text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
           PUNJAB
         </span>
       </div>
@@ -40,15 +58,19 @@ const PunjabLogo = ({ size = "small" }) => {
 
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-10 h-10 rounded-xl border border-amber-500/50 bg-neutral-900 flex items-center justify-center text-xl shadow-md">
-        🌾
+      <div className="w-10 h-10 rounded-xl overflow-hidden border border-amber-500/50 shadow-md flex items-center justify-center bg-gradient-to-br from-red-700 via-amber-600 to-teal-800">
+        <svg viewBox="0 0 300 300" className="w-full h-full">
+          <text x="150" y="175" textAnchor="middle" fill="#ffffff" stroke="#000" strokeWidth="6" fontSize="100" fontWeight="900">
+            ਪੰ
+          </text>
+        </svg>
       </div>
       <div className="flex flex-col">
         <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent leading-none">
           PUNJAB
         </span>
         <span className="text-[10px] tracking-widest text-amber-300/80 font-medium">
-          ਪੰਜਾਬ
+          Panjaab
         </span>
       </div>
     </div>
@@ -67,61 +89,26 @@ export default function App() {
   const [authSuccess, setAuthSuccess] = useState('');
 
   const [activeTab, setActiveTab] = useState('home');
+  const [profileSubTab, setProfileSubTab] = useState('posts'); // 'posts' | 'saved'
   const [activeStory, setActiveStory] = useState(null);
+  const [storyLiked, setStoryLiked] = useState(false);
 
-  const t = {
-    en: {
-      login: "Log In",
-      signup: "Sign Up",
-      forgot: "Forgot Password?",
-      resetPass: "Reset Password",
-      userId: "User ID / Username",
-      password: "Password",
-      newPass: "New Password",
-      fullName: "Full Name",
-      dontHave: "Don't have an account?",
-      alreadyHave: "Already have an account?",
-      logout: "Log Out",
-      sharePost: "Share Post",
-      newPost: "Create New Post",
-      imgUrl: "Image URL",
-      caption: "Caption",
-      likes: "likes",
-      close: "Close"
-    },
-    pa: {
-      login: "ਲਾਗ ਇਨ",
-      signup: "ਸਾਈਨ ਅੱਪ",
-      forgot: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?",
-      resetPass: "ਪਾਸਵਰਡ ਬਦਲੋ",
-      userId: "ਯੂਜ਼ਰ ਆਈਡੀ",
-      password: "ਪਾਸਵਰਡ",
-      newPass: "ਨਵਾਂ ਪਾਸਵਰਡ",
-      fullName: "ਪੂਰਾ ਨਾਮ",
-      dontHave: "ਖਾਤਾ ਨਹੀਂ ਹੈ?",
-      alreadyHave: "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ?",
-      logout: "ਲੌਗ ਆਉਟ",
-      sharePost: "ਸਾਂਝੀ ਕਰੋ",
-      newPost: "ਨਵੀਂ ਪੋਸਟ ਪਾਓ",
-      imgUrl: "ਤਸਵੀਰ ਦਾ ਲਿੰਕ",
-      caption: "ਕੈਪਸ਼ਨ",
-      likes: "ਪਸੰਦ",
-      close: "ਬੰਦ ਕਰੋ"
-    }
-  }[lang];
+  const fileInputRef = useRef(null);
+  const [selectedFileImage, setSelectedFileImage] = useState(null);
+  const [newCaption, setNewCaption] = useState('');
 
-  const stories = [
-    { id: 1, user: "amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=600&auto=format&fit=crop" },
-    { id: 2, user: "heritage", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop" },
-    { id: 3, user: "fields", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&auto=format&fit=crop" },
-    { id: 4, user: "culture", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&auto=format&fit=crop" }
-  ];
+  const [stories, setStories] = useState([
+    { id: 1, user: "amritsar", name: "ਸ੍ਰੀ ਅੰਮ੍ਰਿਤਸਰ", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=800&auto=format&fit=crop" },
+    { id: 2, user: "virasat", name: "ਵਿਰਾਸਤ", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop" },
+    { id: 3, user: "kisaan", name: "ਖੇਤ ਪੰਜਾਬ ਦੇ", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop" },
+    { id: 4, user: "pendu", name: "ਪਿੰਡ", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&auto=format&fit=crop" }
+  ]);
 
   const [reels, setReels] = useState([
     {
       id: 101,
       author: "virasat_punjab",
-      desc: "Virasat-E-Punjab #Punjab #Reels",
+      desc: "Rangla Punjab 🌾✨ #Punjab #Virasat #Reels",
       videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4",
       likes: 3420,
       isLiked: false
@@ -129,23 +116,24 @@ export default function App() {
     {
       id: 102,
       author: "kisaan_jatt",
-      desc: "Fields of Punjab #Kisaan #DesiPunjab",
+      desc: "Desi Khet Te Thandi Hava 🚜❤️ #Kisaan",
       videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-countryside-road-between-fields-41315-large.mp4",
       likes: 5120,
       isLiked: false
     }
   ]);
 
-  const [posts, setPosts] = useState(() => safeGet('punjab_feed_posts', [
+  const [posts, setPosts] = useState(() => safeGet('punjab_feed_posts_v2', [
     {
       id: 1,
       author: "virasat_punjab",
       authorName: "Virasat Punjab",
       location: "Sri Amritsar Sahib",
       image: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?auto=format&fit=crop&w=800&q=80",
-      caption: "Golden Temple Darshan",
+      caption: "Golden Temple Darshan ✨ #HarmandirSahib",
       likes: 1240,
-      isLiked: false
+      isLiked: false,
+      isSaved: false
     },
     {
       id: 2,
@@ -153,134 +141,150 @@ export default function App() {
       authorName: "Punjab Fields",
       location: "Malwa, Punjab",
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
-      caption: "Lush green fields of Punjab",
+      caption: "Lush green fields of Punjab 🌾 #Farmer",
       likes: 890,
-      isLiked: false
+      isLiked: false,
+      isSaved: false
     }
   ]));
 
-  const [newCaption, setNewCaption] = useState('');
-  const [newImage, setNewImage] = useState('');
+  const t = {
+    en: {
+      login: "Log In", signup: "Sign Up", forgot: "Forgot Password?",
+      userId: "User ID / Username", password: "Password", newPass: "New Password",
+      fullName: "Full Name", dontHave: "Don't have an account?", alreadyHave: "Already have an account?",
+      logout: "Log Out", sharePost: "Share Post", newPost: "New Post",
+      choosePhoto: "Select from Camera / Gallery", changePhoto: "Choose Different Photo",
+      captionPlaceholder: "Write a caption...", likes: "likes", close: "Close",
+      posts: "Posts", followers: "Followers", following: "Following", saved: "Saved"
+    },
+    pa: {
+      login: "ਲਾਗ ਇਨ", signup: "ਸਾਈਨ ਅੱਪ", forgot: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?",
+      userId: "ਯੂਜ਼ਰ ਆਈਡੀ", password: "ਪਾਸਵਰਡ", newPass: "ਨਵਾਂ ਪਾਸਵਰਡ",
+      fullName: "ਪੂਰਾ ਨਾਮ", dontHave: "ਖਾਤਾ ਨਹੀਂ ਹੈ?", alreadyHave: "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ?",
+      logout: "ਲੌਗ ਆਉਟ", sharePost: "ਪੋਸਟ ਕਰੋ", newPost: "ਨਵੀਂ ਪੋਸਟ",
+      choosePhoto: "ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ 'ਚੋਂ ਫੋਟੋ ਚੁਣੋ", changePhoto: "ਹੋਰ ਫੋਟੋ ਚੁਣੋ",
+      captionPlaceholder: "ਕੁਝ ਲਿਖੋ...", likes: "ਪਸੰਦ", close: "ਬੰਦ ਕਰੋ",
+      posts: "ਪੋਸਟਾਂ", followers: "ਫੋਲੋਅਰਜ਼", following: "ਫੋਲੋਇੰਗ", saved: "ਸੇਵ ਕੀਤੀਆਂ"
+    }
+  }[lang];
 
   const handleAuth = (e) => {
     e.preventDefault();
     setAuthError('');
     setAuthSuccess('');
 
-    const users = safeGet('punjab_accounts_v7', []);
+    const users = safeGet('punjab_users_db', []);
 
     if (authMode === 'signup') {
       if (!usernameInput.trim() || !passwordInput.trim()) {
-        setAuthError(lang === 'en' ? 'Please fill in all fields' : 'ਕਿਰਪਾ ਕਰਕੇ ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
+        setAuthError(lang === 'en' ? 'Please fill in all fields' : 'ਸਾਰੇ ਖਾਨੇ ਭਰੋ');
         return;
       }
       const exists = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
       if (exists) {
-        setAuthError(lang === 'en' ? 'User ID is already taken' : 'ਇਹ ਯੂਜ਼ਰ ਆਈਡੀ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਹੈ');
+        setAuthError(lang === 'en' ? 'Username already taken' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ');
         return;
       }
       const newUser = {
         username: usernameInput.trim(),
         name: nameInput.trim() || usernameInput.trim(),
-        password: passwordInput.trim()
+        password: passwordInput.trim(),
+        followers: 128,
+        following: 95
       };
       users.push(newUser);
-      safeSet('punjab_accounts_v7', users);
+      safeSet('punjab_users_db', users);
       safeSet('punjab_user_session', newUser);
       setCurrentUser(newUser);
-    } 
-    else if (authMode === 'login') {
-      if (!usernameInput.trim() || !passwordInput.trim()) {
-        setAuthError(lang === 'en' ? 'Enter User ID and Password' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ');
-        return;
-      }
+    } else if (authMode === 'login') {
       const found = users.find(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase() && u.password === passwordInput.trim());
       if (!found) {
-        setAuthError(lang === 'en' ? 'Invalid User ID or Password' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਜਾਂ ਪਾਸਵਰਡ ਗਲਤ ਹੈ');
+        setAuthError(lang === 'en' ? 'Invalid credentials' : 'ਗਲਤ ਆਈਡੀ ਜਾਂ ਪਾਸਵਰਡ');
         return;
       }
       safeSet('punjab_user_session', found);
       setCurrentUser(found);
-    } 
-    else if (authMode === 'forgot') {
-      if (!usernameInput.trim() || !newPasswordInput.trim()) {
-        setAuthError(lang === 'en' ? 'Enter User ID and New Password' : 'ਯੂਜ਼ਰ ਆਈਡੀ ਅਤੇ ਨਵਾਂ ਪਾਸਵਰਡ ਭਰੋ');
+    } else if (authMode === 'forgot') {
+      const idx = users.findIndex(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
+      if (idx === -1) {
+        setAuthError(lang === 'en' ? 'User not found' : 'ਯੂਜ਼ਰ ਨਹੀਂ ਮਿਲਿਆ');
         return;
       }
-      const userIndex = users.findIndex(u => u.username.toLowerCase() === usernameInput.trim().toLowerCase());
-      if (userIndex === -1) {
-        setAuthError(lang === 'en' ? 'User ID not found' : 'ਇਹ ਯੂਜ਼ਰ ਆਈਡੀ ਨਹੀਂ ਮਿਲੀ');
-        return;
-      }
-      users[userIndex].password = newPasswordInput.trim();
-      safeSet('punjab_accounts_v7', users);
-      setAuthSuccess(lang === 'en' ? 'Password updated successfully' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ');
+      users[idx].password = newPasswordInput.trim();
+      safeSet('punjab_users_db', users);
+      setAuthSuccess(lang === 'en' ? 'Password reset successfully!' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ!');
       setTimeout(() => {
         setAuthMode('login');
-        setPasswordInput('');
-        setNewPasswordInput('');
         setAuthSuccess('');
-      }, 1400);
+      }, 1200);
     }
   };
 
   const handleLogout = () => {
     safeSet('punjab_user_session', null);
     setCurrentUser(null);
-    setUsernameInput('');
-    setPasswordInput('');
   };
 
-  const handleLikePost = (id) => {
-    const updated = posts.map(post => {
-      if (post.id === id) {
-        return {
-          ...post,
-          isLiked: !post.isLiked,
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1
-        };
-      }
-      return post;
-    });
-    setPosts(updated);
-    safeSet('punjab_feed_posts', updated);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedFileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleLikeReel = (id) => {
-    setReels(reels.map(reel => {
-      if (reel.id === id) {
-        return {
-          ...reel,
-          isLiked: !reel.isLiked,
-          likes: reel.isLiked ? reel.likes - 1 : reel.likes + 1
-        };
-      }
-      return reel;
-    }));
-  };
-
-  const handleCreatePost = (e) => {
+  const handlePublishPost = (e) => {
     e.preventDefault();
-    if (!newImage.trim()) return;
+    if (!selectedFileImage) return;
 
-    const newPostObj = {
+    const newPost = {
       id: Date.now(),
       author: currentUser.username,
       authorName: currentUser.name,
       location: "Punjab",
-      image: newImage,
+      image: selectedFileImage,
       caption: newCaption,
       likes: 0,
-      isLiked: false
+      isLiked: false,
+      isSaved: false
     };
 
-    const updated = [newPostObj, ...posts];
+    const updated = [newPost, ...posts];
     setPosts(updated);
-    safeSet('punjab_feed_posts', updated);
-    setNewImage('');
+    safeSet('punjab_feed_posts_v2', updated);
+    setSelectedFileImage(null);
     setNewCaption('');
     setActiveTab('home');
   };
+
+  const handleLikePost = (id) => {
+    const updated = posts.map(p => {
+      if (p.id === id) {
+        return { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 };
+      }
+      return p;
+    });
+    setPosts(updated);
+    safeSet('punjab_feed_posts_v2', updated);
+  };
+
+  const handleSavePost = (id) => {
+    const updated = posts.map(p => {
+      if (p.id === id) {
+        return { ...p, isSaved: !p.isSaved };
+      }
+      return p;
+    });
+    setPosts(updated);
+    safeSet('punjab_feed_posts_v2', updated);
+  };
+
+  const myPosts = posts.filter(p => p.author === currentUser?.username);
+  const savedPosts = posts.filter(p => p.isSaved);
 
   if (!currentUser) {
     return (
@@ -288,15 +292,15 @@ export default function App() {
         <div className="w-full max-w-sm flex justify-end mb-3">
           <button
             onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-semibold text-amber-400 hover:border-amber-500 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-semibold text-amber-400"
           >
             <Globe size={14} />
             <span>{lang === 'en' ? 'ਪੰਜਾਬੀ' : 'English'}</span>
           </button>
         </div>
 
-        <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-8 rounded-3xl shadow-2xl backdrop-blur-md flex flex-col items-center">
-          <PunjabLogo size="large" />
+        <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-8 rounded-3xl shadow-2xl flex flex-col items-center">
+          <PunjabCanvasLogo size="large" />
 
           <div className="w-full mt-6">
             {authError && (
@@ -304,10 +308,8 @@ export default function App() {
                 {authError}
               </div>
             )}
-
             {authSuccess && (
-              <div className="w-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs py-2 px-3 rounded-lg mb-4 flex items-center justify-center gap-1.5 text-center">
-                <CheckCircle2 size={14} />
+              <div className="w-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs py-2 px-3 rounded-lg mb-4 text-center">
                 {authSuccess}
               </div>
             )}
@@ -319,7 +321,7 @@ export default function App() {
                   placeholder={t.fullName}
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
+                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
                 />
               )}
 
@@ -328,7 +330,7 @@ export default function App() {
                 placeholder={t.userId}
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
-                className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
               />
 
               {authMode !== 'forgot' && (
@@ -337,7 +339,7 @@ export default function App() {
                   placeholder={t.password}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
+                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
                 />
               )}
 
@@ -347,15 +349,15 @@ export default function App() {
                   placeholder={t.newPass}
                   value={newPasswordInput}
                   onChange={(e) => setNewPasswordInput(e.target.value)}
-                  className="w-full bg-neutral-800/80 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white placeholder-neutral-500"
+                  className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-white"
                 />
               )}
 
               {authMode === 'login' && (
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => { setAuthMode('forgot'); setAuthError(''); setAuthSuccess(''); }}
+                    onClick={() => setAuthMode('forgot')}
                     className="text-xs text-amber-400 hover:underline"
                   >
                     {t.forgot}
@@ -365,34 +367,26 @@ export default function App() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-sm hover:opacity-95 transition mt-3"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-sm hover:opacity-95 transition"
               >
                 {authMode === 'login' && t.login}
                 {authMode === 'signup' && t.signup}
-                {authMode === 'forgot' && t.resetPass}
+                {authMode === 'forgot' && 'Reset'}
               </button>
             </form>
 
-            <div className="mt-6 text-center text-xs text-neutral-400">
-              {authMode === 'login' && (
+            <div className="mt-5 text-center text-xs text-neutral-400">
+              {authMode === 'login' ? (
                 <p>
                   {t.dontHave}{' '}
-                  <button
-                    onClick={() => { setAuthMode('signup'); setAuthError(''); }}
-                    className="text-amber-400 font-semibold hover:underline"
-                  >
+                  <button onClick={() => setAuthMode('signup')} className="text-amber-400 font-semibold hover:underline">
                     {t.signup}
                   </button>
                 </p>
-              )}
-
-              {(authMode === 'signup' || authMode === 'forgot') && (
+              ) : (
                 <p>
                   {t.alreadyHave}{' '}
-                  <button
-                    onClick={() => { setAuthMode('login'); setAuthError(''); }}
-                    className="text-amber-400 font-semibold hover:underline"
-                  >
+                  <button onClick={() => setAuthMode('login')} className="text-amber-400 font-semibold hover:underline">
                     {t.login}
                   </button>
                 </p>
@@ -407,8 +401,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black text-white flex justify-center pb-16 font-sans">
       <div className="w-full max-w-md border-x border-neutral-800 min-h-screen flex flex-col bg-neutral-950">
+        
+        {/* Top Header */}
         <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2 flex items-center justify-between">
-          <PunjabLogo size="small" />
+          <PunjabCanvasLogo size="small" />
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
@@ -426,180 +422,66 @@ export default function App() {
           </div>
         </header>
 
+        {/* Real Instagram-Style Story Modal */}
         {activeStory && (
-          <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between p-4">
-            <div className="flex items-center justify-between text-white pt-2">
-              <span className="font-bold text-sm">@{activeStory.user}</span>
-              <button onClick={() => setActiveStory(null)} className="text-white font-bold text-xl px-2">✕</button>
+          <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between">
+            {/* Top Bar with Progress */}
+            <div className="p-3 z-10 bg-gradient-to-b from-black/80 to-transparent">
+              <div className="w-full h-1 bg-neutral-700 rounded-full overflow-hidden mb-2">
+                <div className="h-full bg-white animate-[pulse_5s_ease-in-out]" style={{ width: '100%' }} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full border border-amber-500 overflow-hidden">
+                    <img src={activeStory.img} alt={activeStory.user} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="font-bold text-xs">{activeStory.name}</span>
+                </div>
+                <button onClick={() => setActiveStory(null)} className="p-1 text-white">
+                  <X size={24} />
+                </button>
+              </div>
             </div>
-            <div className="flex-1 flex items-center justify-center my-4">
-              <img src={activeStory.img} alt="Story" className="max-h-[75vh] w-full object-cover rounded-2xl" />
+
+            {/* Story Image */}
+            <div className="flex-1 flex items-center justify-center p-2">
+              <img src={activeStory.img} alt="Story" className="max-h-[75vh] w-full object-contain rounded-2xl" />
             </div>
-            <button onClick={() => setActiveStory(null)} className="py-2.5 bg-neutral-800 text-white rounded-lg text-xs font-semibold">
-              {t.close}
-            </button>
+
+            {/* Bottom Story Interaction (Like & Reply) */}
+            <div className="p-4 bg-gradient-to-t from-black via-black/80 to-transparent flex items-center gap-3">
+              <input 
+                type="text" 
+                placeholder={`Reply to @${activeStory.user}...`}
+                className="flex-1 bg-transparent border border-white/40 rounded-full px-4 py-2.5 text-xs text-white placeholder-white/60 focus:outline-none focus:border-white"
+              />
+              <button 
+                onClick={() => setStoryLiked(!storyLiked)} 
+                className="p-1 transition active:scale-125"
+              >
+                <Heart size={26} className={storyLiked ? "fill-red-500 text-red-500" : "text-white"} />
+              </button>
+              <button className="p-1 text-white">
+                <Send size={24} />
+              </button>
+            </div>
           </div>
         )}
 
         <main className="flex-1 overflow-y-auto">
+          
+          {/* HOME FEED */}
           {activeTab === 'home' && (
             <div>
+              {/* Instagram Stories Carousel */}
               <div className="flex gap-3 px-4 py-3 overflow-x-auto border-b border-neutral-800 no-scrollbar">
                 {stories.map(story => (
                   <div
                     key={story.id}
-                    onClick={() => setActiveStory(story)}
+                    onClick={() => { setActiveStory(story); setStoryLiked(false); }}
                     className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer"
                   >
-                    <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-orange-500 to-yellow-300">
+                    <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-300">
                       <img src={story.img} alt={story.user} className="w-full h-full rounded-full object-cover border-2 border-black" />
                     </div>
-                    <span className="text-[11px] text-neutral-300 truncate w-16 text-center">@{story.user}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="divide-y divide-neutral-800">
-                {posts.map(post => (
-                  <article key={post.id} className="pb-4">
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500/40 flex items-center justify-center text-xs font-bold text-amber-400">
-                        {post.authorName[0]}
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold">{post.authorName}</div>
-                        <div className="text-[10px] text-neutral-400">{post.location}</div>
-                      </div>
-                    </div>
-
-                    <img src={post.image} alt="Post" className="w-full aspect-square object-cover" />
-
-                    <div className="px-4 pt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-4">
-                          <button onClick={() => handleLikePost(post.id)}>
-                            <Heart size={22} className={post.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
-                          </button>
-                          <MessageCircle size={22} className="text-white" />
-                          <Send size={22} className="text-white" />
-                        </div>
-                        <Bookmark size={22} className="text-white" />
-                      </div>
-                      <div className="text-xs font-semibold mb-1">{post.likes.toLocaleString()} {t.likes}</div>
-                      <p className="text-xs text-neutral-200">
-                        <span className="font-bold mr-2">{post.author}</span>
-                        {post.caption}
-                      </p>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'reels' && (
-            <div className="h-[calc(100vh-125px)] overflow-y-scroll snap-y snap-mandatory">
-              {reels.map(reel => (
-                <div key={reel.id} className="relative h-full w-full snap-start bg-black flex items-center justify-center">
-                  <video
-                    src={reel.videoUrl}
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                  />
-                  <div className="absolute right-4 bottom-16 flex flex-col items-center gap-5">
-                    <button onClick={() => handleLikeReel(reel.id)} className="flex flex-col items-center">
-                      <Heart size={28} className={reel.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
-                      <span className="text-[11px] mt-1 font-semibold">{reel.likes}</span>
-                    </button>
-                    <button className="flex flex-col items-center">
-                      <MessageCircle size={28} className="text-white" />
-                      <span className="text-[11px] mt-1 font-semibold">45</span>
-                    </button>
-                    <button className="flex flex-col items-center">
-                      <Send size={26} className="text-white" />
-                      <span className="text-[11px] mt-1 font-semibold">Share</span>
-                    </button>
-                  </div>
-
-                  <div className="absolute left-4 bottom-6 right-16">
-                    <div className="font-bold text-sm text-amber-400 mb-1">@{reel.author}</div>
-                    <div className="text-xs text-neutral-200 line-clamp-2">{reel.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'create' && (
-            <div className="p-4">
-              <h2 className="text-base font-bold mb-4">{t.newPost}</h2>
-              <form onSubmit={handleCreatePost} className="space-y-4">
-                <div>
-                  <label className="text-xs text-neutral-400 block mb-1">{t.imgUrl}</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newImage}
-                    onChange={(e) => setNewImage(e.target.value)}
-                    required
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-xs focus:outline-none focus:border-amber-500 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-neutral-400 block mb-1">{t.caption}</label>
-                  <textarea
-                    rows={3}
-                    value={newCaption}
-                    onChange={(e) => setNewCaption(e.target.value)}
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-xs focus:outline-none focus:border-amber-500 text-white"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-lg bg-amber-500 text-black font-bold text-xs hover:bg-amber-400 transition"
-                >
-                  {t.sharePost}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {activeTab === 'profile' && (
-            <div className="p-4 flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-neutral-800 border-2 border-amber-500 flex items-center justify-center text-2xl font-bold text-amber-400 mt-4 mb-3">
-                {currentUser.name[0]?.toUpperCase()}
-              </div>
-              <h3 className="text-base font-bold">{currentUser.name}</h3>
-              <p className="text-xs text-neutral-400 mb-6">@{currentUser.username}</p>
-
-              <button
-                onClick={handleLogout}
-                className="w-full max-w-xs py-2.5 rounded-lg bg-red-950/40 border border-red-800/50 text-red-400 text-xs font-semibold hover:bg-red-900/40 transition"
-              >
-                {t.logout}
-              </button>
-            </div>
-          )}
-        </main>
-
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 border-t border-neutral-800 flex justify-around py-3 z-30">
-          <button onClick={() => setActiveTab('home')} className={activeTab === 'home' ? "text-amber-500" : "text-neutral-400"}>
-            <Home size={22} />
-          </button>
-          <button onClick={() => setActiveTab('reels')} className={activeTab === 'reels' ? "text-amber-500" : "text-neutral-400"}>
-            <Film size={22} />
-          </button>
-          <button onClick={() => setActiveTab('create')} className={activeTab === 'create' ? "text-amber-500" : "text-neutral-400"}>
-            <PlusSquare size={22} />
-          </button>
-          <button onClick={() => setActiveTab('profile')} className={activeTab === 'profile' ? "text-amber-500" : "text-neutral-400"}>
-            <User size={22} />
-          </button>
-        </nav>
-      </div>
-    </div>
-  );
-}
+                    <span cla
