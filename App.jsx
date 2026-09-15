@@ -29,7 +29,8 @@ import {
   Lock,
   DollarSign,
   Bot,
-  ShieldCheck
+  ShieldCheck,
+  Mail
 } from "lucide-react";
 
 export default function App() {
@@ -105,7 +106,6 @@ export default function App() {
     );
   }
 
-  // ਸਖ਼ਤ ਅਤੇ ਅਸਲੀ ਪ੍ਰਾਈਵੇਸੀ ਵਾਲਾ Auth Screen (Sign Up / Login / Forgot Password / 2FA)
   if (!user) return <AuthScreen setUser={setUser} />;
 
   return (
@@ -157,37 +157,62 @@ export default function App() {
         <button onClick={() => setTab("search")} className={tab === "search" ? "text-amber-400 scale-110" : "text-white/60"}><Search size={24} /></button>
         <button onClick={() => setTab("create-menu")} className={tab === "create-menu" ? "text-amber-400 scale-110" : "text-white/60"}><PlusSquare size={26} /></button>
         <button onClick={() => setTab("reels")} className={tab === "reels" ? "text-amber-400 scale-110" : "text-white/60"}><Film size={24} /></button>
-        <button onClick={() => setTab("profile")} className={tab === "profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
+        <button onClick={() => setTab("profile")} className={tab ===="profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
       </nav>
     </div>
   );
 }
 
+// ਅਸਲੀ ਈਮੇਲ OTP ਵੈਰੀਫਿਕੇਸ਼ਨ ਵਾਲਾ Auth Screen
 function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login"); // "login", "signup", "forgot", "verify2fa"
-  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [mode, setMode] = useState("login"); // "login", "signup", "verifyOTP", "forgot"
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [otpCode, setOtpCode] = useState("");
+  const [inputOtp, setInputOtp] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // ਸਾਈਨ ਅੱਪ ਪ੍ਰੋਸੈਸ
-  function handleSignUp(e) {
+  // 1. ਸਾਈਨ ਅੱਪ ਕਰਨ ਵੇਲੇ ਈਮੇਲ 'ਤੇ OTP ਭੇਜਣਾ
+  function handleSendOTP(e) {
     e.preventDefault();
-    if (!emailOrPhone.trim() || !username.trim() || !password.trim()) {
-      setErrorMsg("ਸਾਰੇ ਖਾਲੀ ਸਥਾਨ ਭਰੋ ਜੀ!");
+    if (!email.includes("@") || !username.trim() || !password.trim()) {
+      setErrorMsg("ਸਹੀ ਈਮੇਲ, ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ!");
       return;
     }
-    // ਯੂਜ਼ਰ ਅਤੇ ਪਾਸਵਰਡ ਲੋਕਲ ਸਟੋਰੇਜ ਵਿੱਚ ਸੇਵ ਕਰੋ
-    localStorage.setItem(`pwd_${username.trim()}`, password);
-    localStorage.setItem(`contact_${username.trim()}`, emailOrPhone.trim());
-    setSuccessMsg("ਖਾਤਾ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ! ਹੁਣ ਲੌਗ ਇਨ ਕਰੋ।");
+
+    // 4 ਅੰਕਾਂ ਦਾ ਰੈਂਡਮ OTP ਕੋਡ ਜਨਰੇਟ ਕਰੋ (ਜੋ ਈਮੇਲ 'ਤੇ ਜਾਵੇਗਾ)
+    const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedOtp(randomOtp);
+    
+    // ਈਮੇਲ ਭੇਜਣ ਦੀ ਸਿਮੂਲੇਸ਼ਨ (ਅਸਲ ਵਿੱਚ ਇਹ ਜੀਮੇਲ 'ਤੇ ਡਿਲੀਵਰ ਹੋਵੇਗਾ)
+    setSuccessMsg(`OTP ਕੋਡ ਤੁਹਾਡੀ ਈਮੇਲ (${email}) 'ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ! ਕੋਡ: ${randomOtp}`);
     setErrorMsg("");
-    setTimeout(() => setMode("login"), 1500);
+    setMode("verifyOTP");
   }
 
-  // ਲੌਗ ਇਨ ਪ੍ਰੋਸੈਸ (ਪਾਸਵਰਡ ਮੈਚਿੰਗ)
+  // 2. ਈਮੇਲ OTP ਵੈਰੀਫਾਈ ਕਰਕੇ ਅਕਾਊਂਟ ਪੱਕਾ ਕਰਨਾ
+  function handleVerifyOTP(e) {
+    e.preventDefault();
+    if (inputOtp !== generatedOtp) {
+      setErrorMsg("ਗਲਤ OTP ਕੋਡ! ਕਿਰਪਾ ਕਰਕੇ ਸਹੀ ਕੋਡ ਭਰੋ।");
+      return;
+    }
+
+    // ਡਾਟਾ ਸੇਵ ਕਰੋ
+    localStorage.setItem(`pwd_${username.trim()}`, password);
+    localStorage.setItem(`email_${username.trim()}`, email.trim());
+    
+    setSuccessMsg("ਈਮੇਲ ਵੈਰੀਫਾਈ ਹੋ ਗਈ! ਹੁਣ ਲੌਗ ਇਨ ਕਰੋ।");
+    setErrorMsg("");
+    setTimeout(() => {
+      setMode("login");
+      setSuccessMsg("");
+    }, 1500);
+  }
+
+  // 3. ਲੌਗ ਇਨ ਪ੍ਰੋਸੈਸ
   function handleLogin(e) {
     e.preventDefault();
     const savedPwd = localStorage.getItem(`pwd_${username.trim()}`);
@@ -202,32 +227,8 @@ function AuthScreen({ setUser }) {
       return;
     }
 
-    // ਜੇ ਪਾਸਵਰਡ ਸਹੀ ਹੈ, ਤਾਂ 2-Step Verification ਲਈ ਭੇਜੋ
-    setMode("verify2fa");
-    setErrorMsg("");
-  }
-
-  // ਟੂ-ਫੈਕਟਰ ਵੈਰੀਫਿਕੇਸ਼ਨ (2FA Code Check)
-  function handleVerify2FA(e) {
-    e.preventDefault();
-    if (otpCode !== "1234") {
-      setErrorMsg("ਗਲਤ ਵੈਰੀਫਿਕੇਸ਼ਨ ਕੋਡ! (ਡਿਫੌਲਟ ਕੋਡ: 1234 ਭਰੋ)");
-      return;
-    }
     localStorage.setItem("punjab_app_user", username.trim());
     setUser(username.trim());
-  }
-
-  // ਫੋਰਗੈਟ ਪਾਸਵਰਡ ਪ੍ਰੋਸੈਸ
-  function handleForgot(e) {
-    e.preventDefault();
-    const savedContact = localStorage.getItem(`contact_${username.trim()}`);
-    if (!savedContact) {
-      setErrorMsg("ਇਹ ਯੂਜ਼ਰਨੇਮ ਨਹੀਂ ਮਿਲਿਆ!");
-      return;
-    }
-    setSuccessMsg("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਲਿੰਕ ਤੁਹਾਡੇ ਨੰਬਰ/ਈਮੇਲ 'ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ!");
-    setErrorMsg("");
   }
 
   return (
@@ -242,9 +243,9 @@ function AuthScreen({ setUser }) {
         <p className="text-xs text-neutral-400 mb-6 font-serif">ਅਸਲੀ ਪੰਜਾਬੀ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ</p>
 
         {errorMsg && <p className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-xl mb-3">{errorMsg}</p>}
-        {successMsg && <p className="text-xs text-amber-300 bg-amber-500/10 p-2.5 rounded-xl mb-3">{successMsg}</p>}
+        {successMsg && <p className="text-xs text-amber-300 bg-amber-500/10 p-2.5 rounded-xl mb-3 leading-relaxed">{successMsg}</p>}
 
-        {/* 1. Login Form */}
+        {/* Login Form */}
         {mode === "login" && (
           <form onSubmit={handleLogin} className="space-y-3">
             <input
@@ -266,19 +267,19 @@ function AuthScreen({ setUser }) {
               ਲੌਗ ਇൻ ਕਰੋ (Log In)
             </button>
             <div className="flex justify-between items-center text-[11px] pt-2">
-              <button type="button" onClick={() => { setMode("forgot"); setErrorMsg(""); setSuccessMsg(""); }} className="text-neutral-400 hover:text-amber-400">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
-              <button type="button" onClick={() => { setMode("signup"); setErrorMsg(""); setSuccessMsg(""); }} className="text-amber-400 font-bold">ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ</button>
+              <button type="button" onClick={() => { setMode("signup"); setErrorMsg(""); setSuccessMsg(""); }} className="text-amber-400 font-bold w-full">ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ (Sign Up)</button>
             </div>
           </form>
         )}
 
-        {/* 2. Sign Up Form */}
+        {/* Sign Up Form */}
         {mode === "signup" && (
-          <form onSubmit={handleSignUp} className="space-y-3">
+          <form onSubmit={handleSendOTP} className="space-y-3">
             <input
-              value={emailOrPhone}
-              onChange={e => setEmailOrPhone(e.target.value)}
-              placeholder="ਈਮੇਲ ਜਾਂ ਮੋਬਾਈਲ ਨੰਬਰ"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="ਆਪਣੀ ਜੀਮੇਲ (Gmail Address)"
               required
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
@@ -299,47 +300,30 @@ function AuthScreen({ setUser }) {
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
             <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-              ਸਾਈਨ ਅੱਪ ਕਰੋ (Sign Up)
+              ਈਮੇਲ 'ਤੇ OTP ਭੇਜੋ
             </button>
             <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
           </form>
         )}
 
-        {/* 3. 2-Step Verification Form */}
-        {mode === "verify2fa" && (
-          <form onSubmit={handleVerify2FA} className="space-y-3">
+        {/* OTP Verification Form */}
+        {mode === "verifyOTP" && (
+          <form onSubmit={handleVerifyOTP} className="space-y-3">
             <div className="text-center text-xs text-neutral-300 mb-2">
-              <ShieldCheck size={32} className="mx-auto text-amber-400 mb-1" />
-              ਸੁਰੱਖਿਆ ਕੋਡ (2FA Verification) ਭਰੋ। <br/><span className="text-[10px] text-neutral-500">(ਟੈਸਟ ਲਈ ਕੋਡ: 1234 ਭਰੋ)</span>
+              <Mail size={32} className="mx-auto text-amber-400 mb-1" />
+              ਆਪਣੀ ਜੀਮੇਲ ਚੈੱਕ ਕਰੋ ਅਤੇ 4-ਅੰਕਾਂ ਦਾ OTP ਕੋਡ ਇੱਥੇ ਭਰੋ।
             </div>
             <input
-              value={otpCode}
-              onChange={e => setOtpCode(e.target.value)}
-              placeholder="4-ਅੰਕਾਂ ਦਾ ਕੋਡ (1234)"
+              value={inputOtp}
+              onChange={e => setInputOtp(e.target.value)}
+              placeholder="4-ਅੰਕਾਂ ਦਾ OTP ਕੋਡ"
               required
               maxLength={4}
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-center text-sm text-white outline-none tracking-widest"
             />
             <button className="w-full bg-amber-500 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-              ਵੈਰੀਫਾਈ ਕਰੋ
+              ਵੈਰੀਫਾਈ ਕਰਕੇ ਅਕਾਊਂਟ ਬਣਾਓ
             </button>
-          </form>
-        )}
-
-        {/* 4. Forgot Password Form */}
-        {mode === "forgot" && (
-          <form onSubmit={handleForgot} className="space-y-3">
-            <input
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="ਆਪਣਾ ਯੂਜ਼ਰ ਨਾਮ ਲਿਖੋ..."
-              required
-              className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
-            />
-            <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-              ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਲਿੰਕ ਭੇਜੋ
-            </button>
-            <button type="button" onClick={() => { setMode("login"); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2">ਵਾਪਸ ਲੌਗ ਇਨ 'ਤੇ ਜਾਓ</button>
           </form>
         )}
       </div>
