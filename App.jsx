@@ -15,40 +15,32 @@ import {
   LogOut,
   Sparkles,
   ArrowLeft,
+  Video,
+  Radio,
+  Image as ImageIcon,
 } from "lucide-react";
-
-const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdneWxhY25xcnhlemp4cWpvZXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzE3NDAsImV4cCI6MjA1NzgwNjc0MH0";
 
 export default function App() {
   const [user, setUser] = useState(() => localStorage.getItem("punjab_user") || "");
   const [tab, setTab] = useState("home");
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(() => {
+    const saved = localStorage.getItem("punjab_posts_db");
+    return saved ? JSON.parse(saved) : [
+      {
+        id: 1,
+        author: "jassu_082",
+        caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
+        image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
+        location: "Amritsar, Punjab",
+        likes: 24,
+        type: "post"
+      }
+    ];
+  });
 
   useEffect(() => {
-    if (user) {
-      loadPosts();
-      const interval = setInterval(loadPosts, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  async function loadPosts() {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?select=*&order=created_at.desc`, {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(data || []);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }
+    localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
+  }, [posts]);
 
   if (!user) return <AuthScreen setUser={setUser} />;
 
@@ -65,7 +57,7 @@ export default function App() {
           </span>
         </div>
         <div className="flex items-center gap-4 text-white">
-          <button onClick={() => setTab("create")} className="hover:text-amber-400 transition"><PlusSquare size={22} /></button>
+          <button onClick={() => setTab("create-menu")} className="hover:text-amber-400 transition"><PlusSquare size={22} /></button>
           <button onClick={() => setTab("notifications")} className="hover:text-amber-400 transition"><Heart size={22} /></button>
           <button onClick={() => setTab("messages")} className="hover:text-amber-400 transition"><Send size={22} /></button>
         </div>
@@ -75,7 +67,11 @@ export default function App() {
       <main className="pb-12">
         {tab === "home" && <HomeScreen posts={posts} setTab={setTab} currentUser={user} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
-        {tab === "create" && <CreateScreen user={user} setTab={setTab} reload={loadPosts} />}
+        {tab === "create-menu" && <CreateMenuScreen setTab={setTab} />}
+        {tab === "create-post" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="post" />}
+        {tab === "create-reel" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="reel" />}
+        {tab === "camera" && <CameraScreen user={user} setTab={setTab} setPosts={setPosts} />}
+        {tab === "live" && <LiveScreen setTab={setTab} user={user} />}
         {tab === "reels" && <ReelsScreen posts={posts} />}
         {tab === "profile" && <ProfileScreen user={user} posts={posts} setUser={setUser} />}
         {tab === "notifications" && <NotificationsScreen setTab={setTab} />}
@@ -87,7 +83,7 @@ export default function App() {
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/95 backdrop-blur border-t border-neutral-900 flex justify-around items-center h-14 z-50">
         <button onClick={() => setTab("home")} className={tab === "home" ? "text-amber-400 scale-110" : "text-white/60"}><Home size={24} /></button>
         <button onClick={() => setTab("search")} className={tab === "search" ? "text-amber-400 scale-110" : "text-white/60"}><Search size={24} /></button>
-        <button onClick={() => setTab("create")} className={tab === "create" ? "text-amber-400 scale-110" : "text-white/60"}><PlusSquare size={26} /></button>
+        <button onClick={() => setTab("create-menu")} className={tab === "create-menu" ? "text-amber-400 scale-110" : "text-white/60"}><PlusSquare size={26} /></button>
         <button onClick={() => setTab("reels")} className={tab === "reels" ? "text-amber-400 scale-110" : "text-white/60"}><Film size={24} /></button>
         <button onClick={() => setTab("profile")} className={tab === "profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
       </nav>
@@ -104,18 +100,15 @@ function AuthScreen({ setUser }) {
   function handleSubmit(e) {
     e.preventDefault();
     if (!username.trim()) return;
-
     if (mode === "forgot") {
-      setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਤੁਹਾਡੀ ਈਮੇਲ ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
+      setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
       return;
     }
-
     if (mode === "signup") {
-      setMessage("ਸਾਈਨ ਅੱਪ ਸਫ਼ਲ ਰਿਹਾ! ਹੁਣ ਤੁਸੀਂ ਲੌਗਇਨ ਕਰ ਸਕਦੇ ਹੋ।");
+      setMessage("ਸਾਈਨ ਅੱਪ ਸਫ਼ਲ ਰਿਹਾ! ਲੌਗਇਨ ਕਰੋ।");
       setMode("login");
       return;
     }
-
     localStorage.setItem("punjab_user", username.trim());
     setUser(username.trim());
   }
@@ -139,7 +132,6 @@ function AuthScreen({ setUser }) {
             required
             className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
           />
-
           {mode !== "forgot" && (
             <input
               type="password"
@@ -151,30 +143,49 @@ function AuthScreen({ setUser }) {
               className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500"
             />
           )}
-
           <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
             {mode === "login" ? "ਲੌਗ ਇൻ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
           </button>
         </form>
-
         {message && <p className="text-xs text-amber-300 mt-3 bg-amber-500/10 p-2 rounded-lg">{message}</p>}
-
         {mode === "login" && (
           <div className="mt-5 space-y-2">
-            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">
-              ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ? (Forgot Password)
-            </button>
-            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">
-              ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ
-            </button>
+            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
+            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ</button>
           </div>
         )}
-
         {(mode === "signup" || mode === "forgot") && (
-          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">
-            ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇન ਕਰੋ
-          </button>
+          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
         )}
+      </div>
+    </div>
+  );
+}
+
+function CreateMenuScreen({ setTab }) {
+  return (
+    <div className="p-5 space-y-4 max-w-sm mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-bold text-amber-400">ਕੀ ਬਣਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</h2>
+        <button onClick={() => setTab("home")}><X size={22} /></button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => setTab("create-post")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
+          <ImageIcon size={32} className="text-amber-400" />
+          <span className="text-xs font-bold">ਨਵੀਂ ਪੋਸਟ (Post)</span>
+        </button>
+        <button onClick={() => setTab("create-reel")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
+          <Film size={32} className="text-orange-500" />
+          <span className="text-xs font-bold">ਰੀਲ (Reel)</span>
+        </button>
+        <button onClick={() => setTab("camera")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
+          <Camera size={32} className="text-yellow-400" />
+          <span className="text-xs font-bold">ਕੈਮਰਾ (Camera)</span>
+        </button>
+        <button onClick={() => setTab("live")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
+          <Radio size={32} className="text-red-500 animate-pulse" />
+          <span className="text-xs font-bold">ਲਾਈਵ (Go Live)</span>
+        </button>
       </div>
     </div>
   );
@@ -191,7 +202,6 @@ function HomeScreen({ posts, setTab, currentUser }) {
 
   return (
     <div className="space-y-3">
-      {/* Stories Row */}
       <div className="flex gap-3 overflow-x-auto px-3 py-2 scrollbar-none border-b border-neutral-900">
         {stories.map((s, i) => (
           <div key={i} onClick={() => setTab("story")} className="flex flex-col items-center shrink-0 cursor-pointer">
@@ -207,13 +217,10 @@ function HomeScreen({ posts, setTab, currentUser }) {
         ))}
       </div>
 
-      {/* Feed Posts */}
       {posts.length === 0 ? (
         <div className="text-center py-20 px-4">
           <p className="text-neutral-500 text-xs mb-3">ਅਜੇ ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਹੈ!</p>
-          <button onClick={() => setTab("create")} className="bg-amber-500 text-black font-bold text-xs px-4 py-2 rounded-xl">
-            ਪਹਿਲੀ ਪੋਸਟ ਪਾਓ
-          </button>
+          <button onClick={() => setTab("create-menu")} className="bg-amber-500 text-black font-bold text-xs px-4 py-2 rounded-xl">ਪਹਿਲੀ ਪੋਸਟ ਪਾਓ</button>
         </div>
       ) : (
         posts.map((p) => <PostCard key={p.id} post={p} currentUser={currentUser} />)
@@ -313,6 +320,211 @@ function PostCard({ post, currentUser }) {
   );
 }
 
+function CreateScreen({ user, setTab, setPosts, type }) {
+  const [caption, setCaption] = useState("");
+  const [preview, setPreview] = useState("");
+  const fileRef = useRef(null);
+
+  function handleFile(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX = 600;
+        const scale = MAX / img.width;
+        canvas.width = MAX;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setPreview(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(f);
+  }
+
+  function handlePublish(e) {
+    e.preventDefault();
+    if (!preview) return;
+
+    const newPost = {
+      id: Date.now(),
+      author: user,
+      caption: caption + (type === 'reel' ? ' #Reels' : ''),
+      image: preview,
+      location: "Punjab, India",
+      likes: 1,
+      type: type
+    };
+
+    setPosts(prev => [newPost, ...prev]);
+    setTab("home");
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold">{type === 'reel' ? 'ਨਵੀਂ ਰੀਲ ਬਣਾਓ' : 'ਨਵੀਂ ਪੋਸਟ ਪਾਓ'}</h2>
+        <button onClick={() => setTab("home")}><X size={20} /></button>
+      </div>
+
+      <input type="file" accept="image/*" ref={fileRef} onChange={handleFile} className="hidden" />
+
+      {!preview ? (
+        <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-neutral-700 rounded-3xl p-16 text-center cursor-pointer bg-neutral-900/50">
+          <Camera className="mx-auto text-amber-500 mb-2" size={40} />
+          <p className="text-xs text-neutral-300 font-medium">ਫ਼ੋਟੋ ਜਾਂ ਵੀਡੀਓ ਚੁਣਨ ਲਈ ਕਲਿੱਕ ਕਰੋ</p>
+        </div>
+      ) : (
+        <div className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-800">
+          <img src={preview} alt="" className="w-full h-full object-cover" />
+          <button onClick={() => setPreview("")} className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full text-xs">✕</button>
+        </div>
+      )}
+
+      <textarea
+        value={caption}
+        onChange={(e) => setCaption(e.target.value)}
+        placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ (#Punjab, #DesiVibes)..."
+        className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500 min-h-24"
+      />
+
+      <button onClick={handlePublish} disabled={!preview} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold p-3.5 rounded-xl text-xs shadow-lg">
+        ਸ਼ੇਅਰ ਕਰੋ (Share)
+      </button>
+    </div>
+  );
+}
+
+function CameraScreen({ user, setTab, setPosts }) {
+  const videoRef = useRef(null);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [caption, setCaption] = useState("");
+
+  useEffect(() => {
+    navigator.mediaDevices?.getUserMedia({ video: true })
+      .then(stream => { if (videoRef.current) videoRef.current.srcObject = stream; })
+      .catch(() => alert("Camera access denied or unavailable"));
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
+
+  function capturePhoto() {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 600;
+    canvas.height = video.videoHeight || 600;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setCapturedImage(canvas.toDataURL("image/jpeg", 0.8));
+  }
+
+  function publishCaptured(e) {
+    e.preventDefault();
+    if (!capturedImage) return;
+    const newPost = {
+      id: Date.now(),
+      author: user,
+      caption: caption || "Captured live via Punjab App 📸",
+      image: capturedImage,
+      location: "Punjab, India",
+      likes: 1,
+      type: "post"
+    };
+    setPosts(prev => [newPost, ...prev]);
+    setTab("home");
+  }
+
+  return (
+    <div className="p-4 space-y-4 text-center">
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
+        <h2 className="text-sm font-bold">ਲਾਈਵ ਕੈਮਰਾ</h2>
+        <div className="w-5"></div>
+      </div>
+      {!capturedImage ? (
+        <div className="space-y-4">
+          <div className="relative aspect-square rounded-3xl overflow-hidden bg-neutral-900 border border-neutral-800">
+            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+          </div>
+          <button onClick={capturePhoto} className="w-16 h-16 rounded-full bg-white mx-auto border-4 border-amber-500 shadow-xl active:scale-95 transition"></button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-800">
+            <img src={capturedImage} alt="" className="w-full h-full object-cover" />
+            <button onClick={() => setCapturedImage(null)} className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full text-xs">✕</button>
+          </div>
+          <textarea value={caption} onChange={e => setCaption(e.target.value)} placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ..." className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none" />
+          <button onClick={publishCaptured} className="w-full bg-amber-500 text-black font-bold p-3 rounded-xl text-xs">ਸ਼ੇਅਰ ਕਰੋ</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LiveScreen({ setTab, user }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    navigator.mediaDevices?.getUserMedia({ video: true, audio: true })
+      .then(stream => { if (videoRef.current) videoRef.current.srcObject = stream; })
+      .catch(() => {});
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative min-h-[85vh] bg-black flex flex-col justify-between p-4">
+      <div className="flex items-center justify-between z-10">
+        <div className="flex items-center gap-2 bg-red-600/80 px-3 py-1 rounded-full text-xs font-bold text-white">
+          <span className="w-2 h-2 rounded-full bg-white animate-ping"></span> LIVE
+        </div>
+        <button onClick={() => setTab("home")} className="bg-black/60 p-2 rounded-full"><X size={20} /></button>
+      </div>
+      <div className="absolute inset-0 z-0">
+        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-80" />
+      </div>
+      <div className="z-10 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
+        <p className="text-xs text-amber-300 font-bold">@{user} is live from Punjab!</p>
+      </div>
+    </div>
+  );
+}
+
+function ReelsScreen({ posts }) {
+  const reelPosts = posts.filter(p => p.type === 'reel' || p.caption?.includes('#Reels'));
+  const displayPosts = reelPosts.length > 0 ? reelPosts : posts;
+
+  return (
+    <div className="space-y-4 pb-10">
+      <div className="p-3 font-bold text-sm border-b border-neutral-900 flex justify-between items-center sticky top-12 bg-black/95 z-40 backdrop-blur">
+        <span>Reels</span>
+        <Sparkles size={18} className="text-amber-400" />
+      </div>
+      {displayPosts.map((p) => (
+        <div key={p.id} className="bg-black border-b border-neutral-900 relative">
+          {p.image && <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
+          <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl">
+            <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
+            <p className="text-neutral-200 mt-1">{p.caption}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ExploreScreen({ posts }) {
   const [searchQuery, setSearchQuery] = useState("");
   const filteredPosts = posts.filter(p => p.caption?.toLowerCase().includes(searchQuery.toLowerCase()) || p.author?.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -339,123 +551,6 @@ function ExploreScreen({ posts }) {
   );
 }
 
-function CreateScreen({ user, setTab, reload }) {
-  const [caption, setCaption] = useState("");
-  const [preview, setPreview] = useState("");
-  const [busy, setBusy] = useState(false);
-  const fileRef = useRef(null);
-
-  function handleFile(e) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX = 600;
-        const scale = MAX / img.width;
-        canvas.width = MAX;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        setPreview(canvas.toDataURL("image/jpeg", 0.7));
-      };
-      img.src = ev.target.result;
-    };
-    r.readAsDataURL(f);
-  }
-
-  async function handlePublish(e) {
-    e.preventDefault();
-    if (!preview || busy) return;
-    setBusy(true);
-
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify({
-          author: user,
-          caption: caption,
-          image: preview,
-          location: "Punjab, India",
-        }),
-      });
-
-      if (res.ok) {
-        await reload();
-        setTab("home");
-      } else {
-        const errText = await res.text();
-        alert("Upload failed: " + errText);
-      }
-    } catch (err) {
-      alert("Error: " + err.message);
-    }
-    setBusy(false);
-  }
-
-  return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold">ਨਵੀਂ ਪੋਸਟ ਬਣਾਓ</h2>
-        <button onClick={() => setTab("home")}><X size={20} /></button>
-      </div>
-
-      <input type="file" accept="image/*" ref={fileRef} onChange={handleFile} className="hidden" />
-
-      {!preview ? (
-        <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-neutral-700 rounded-3xl p-16 text-center cursor-pointer bg-neutral-900/50">
-          <Camera className="mx-auto text-amber-500 mb-2" size={40} />
-          <p className="text-xs text-neutral-300 font-medium">ਫ਼ੋਟੋ ਚੁਣਨ ਲਈ ਇੱਥੇ ਕਲਿੱਕ ਕਰੋ</p>
-        </div>
-      ) : (
-        <div className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-800">
-          <img src={preview} alt="" className="w-full h-full object-cover" />
-          <button onClick={() => setPreview("")} className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full text-xs">✕</button>
-        </div>
-      )}
-
-      <textarea
-        value={caption}
-        onChange={(e) => setCaption(e.target.value)}
-        placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ (#Punjab, #DesiVibes)..."
-        className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500 min-h-24"
-      />
-
-      <button onClick={handlePublish} disabled={!preview || busy} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold p-3.5 rounded-xl text-xs disabled:opacity-40 shadow-lg">
-        {busy ? "ਅਪਲੋਡ ਹੋ ਰਿਹਾ ਹੈ..." : "ਸ਼ੇਅਰ ਕਰੋ (Share)"}
-      </button>
-    </div>
-  );
-}
-
-function ReelsScreen({ posts }) {
-  return (
-    <div className="space-y-4 pb-10">
-      <div className="p-3 font-bold text-sm border-b border-neutral-900 flex justify-between items-center sticky top-12 bg-black/95 z-40 backdrop-blur">
-        <span>Reels</span>
-        <Sparkles size={18} className="text-amber-400" />
-      </div>
-      {posts.map((p) => (
-        <div key={p.id} className="bg-black border-b border-neutral-900 relative">
-          {p.image && <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
-          <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl">
-            <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
-            <p className="text-neutral-200 mt-1">{p.caption}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function NotificationsScreen({ setTab }) {
   return (
     <div className="p-4 space-y-4">
@@ -469,11 +564,6 @@ function NotificationsScreen({ setTab }) {
           <div><span className="font-bold text-amber-400">@jassu_082</span> liked your post.</div>
           <div className="ml-auto text-[10px] text-neutral-500">2h ago</div>
         </div>
-        <div className="flex items-center gap-3 p-2 bg-neutral-900/50 rounded-xl">
-          <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center font-bold text-black">R</div>
-          <div><span className="font-bold text-amber-400">@randeep_pb</span> started following you.</div>
-          <div className="ml-auto text-[10px] text-neutral-500">5h ago</div>
-        </div>
       </div>
     </div>
   );
@@ -482,8 +572,7 @@ function NotificationsScreen({ setTab }) {
 function MessagesScreen({ setTab, currentUser }) {
   const [msg, setMsg] = useState("");
   const [chats, setChats] = useState([
-    { sender: "jassu_082", text: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਵੀਰ ਜੀ! ਪੋਸਟ ਬਹੁਤ ਵਧੀਆ ਹੈ।" },
-    { sender: "randeep_pb", text: "ਕੁਝ ਨਵਾਂ ਅਪਡੇਟ ਕਰੋ ਭਾਜੀ।" }
+    { sender: "jassu_082", text: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਵੀਰ ਜੀ!" }
   ]);
 
   function sendChat(e) {
@@ -497,7 +586,7 @@ function MessagesScreen({ setTab, currentUser }) {
     <div className="p-4 space-y-4 flex flex-col h-[80vh]">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
         <button onClick={() => setTab("home")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">Direct Messages (DM)</h2>
+        <h2 className="text-sm font-bold">Direct Messages</h2>
       </div>
       <div className="flex-1 overflow-y-auto space-y-2 text-xs">
         {chats.map((c, i) => (
@@ -531,7 +620,7 @@ function StoryViewScreen({ setTab }) {
           <p className="text-[11px] text-neutral-400 mt-1">Live Story View</p>
         </div>
       </div>
-      <div className="z-10 text-center text-xs text-neutral-400">Swipe up or tap X to close</div>
+      <div className="z-10 text-center text-xs text-neutral-400">Tap X to close</div>
     </div>
   );
 }
