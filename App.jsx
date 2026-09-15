@@ -1,408 +1,689 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
+import {
+  Home,
+  Search,
+  Plus,
+  Play,
+  User,
+  Heart,
+  MessageCircle,
+  Bookmark,
+  Bell,
+  Send,
+  ArrowLeft,
+  LogOut,
+  MapPin,
+} from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 
-const URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
-const KEY = "Sb_publishable_B7kdNhTOApIbatGO9Ez1qA_VPD2UEBR";
-
-// Icons
-const IconHome = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-const IconFilm = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="20" height="20" x="2" y="2" rx="2.18"/><line x1="7" x2="7" y1="2" y2="22"/><line x1="17" x2="17" y1="2" y2="22"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="2" x2="7" y1="7" y2="7"/><line x1="2" x2="7" y1="17" y2="17"/><line x1="17" x2="22" y1="17" y2="17"/><line x1="17" x2="22" y1="7" y2="7"/></svg>;
-const IconPlus = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="18" height="18" x="3" y="3" rx="2"/><line x1="12" x2="12" y1="8" y2="16"/><line x1="8" x2="16" y1="12" y2="12"/></svg>;
-const IconUser = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
-const IconHeart = ({ filled }) => <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "#ef4444" : "none"} stroke={filled ? "#ef4444" : "currentColor"} strokeWidth="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
-const IconMessage = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>;
-const IconSend = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
-const IconBookmark = ({ filled }) => <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "#f59e0b" : "none"} stroke={filled ? "#f59e0b" : "currentColor"} strokeWidth="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>;
-const IconGrid = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect width="7" height="7" x="3" y="3"/><rect width="7" height="7" x="14" y="3"/><rect width="7" height="7" x="14" y="14"/><rect width="7" height="7" x="3" y="14"/></svg>;
+const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
+const SUPABASE_KEY = "Sb_publishable_B7kdNhTOAplbatGO9Ez1qA_VPD2UEBR";
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [user, setUser] = useState(() => localStorage.getItem('punjab_user') || '');
-  const [nameInput, setNameInput] = useState('');
-  const [tab, setTab] = useState('home');
-  const [profileTab, setProfileTab] = useState('posts');
-  const [story, setStory] = useState(null);
-  const [storyLiked, setStoryLiked] = useState(false);
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [screen, setScreen] = useState("home");
   const [posts, setPosts] = useState([]);
-  const [postImg, setPostImg] = useState(null);
-  const [caption, setCaption] = useState('');
-  const [loading, setLoading] = useState(false);
-  const fileRef = useRef(null);
-
-  const stories = [
-    { id: 1, u: "amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=600&auto=format&fit=crop" },
-    { id: 2, u: "virasat", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop" },
-    { id: 3, u: "kisaan", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&auto=format&fit=crop" },
-    { id: 4, u: "pendu", img: "https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=600&auto=format&fit=crop" }
-  ];
-
-  const reels = [
-    { id: 101, u: "virasat_punjab", desc: "Rangla Punjab 🌾✨ #Punjab #Reels", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop", likes: 3420 },
-    { id: 102, u: "kisaan_jatt", desc: "Fields of Punjab 🚜❤️ #PindLife", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop", likes: 5120 }
-  ];
-
-  const loadFeed = async () => {
-    try {
-      const res = await fetch(`${URL}/rest/v1/posts?select=*&order=created_at.desc`, {
-        headers: { 'apikey': KEY, 'Authorization': `Bearer ${KEY}` }
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setPosts(d || []);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadFeed();
+    loadSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+
+      if (newSession?.user) {
+        loadProfile(newSession.user.id);
+        loadPosts();
+      } else {
+        setProfile(null);
+        setPosts([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const loginUser = (e) => {
-    e.preventDefault();
-    if (!nameInput.trim()) return;
-    localStorage.setItem('punjab_user', nameInput.trim());
-    setUser(nameInput.trim());
-  };
+  async function loadSession() {
+    const { data } = await supabase.auth.getSession();
+    setSession(data.session);
 
-  const pickImage = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setPostImg(reader.result);
-    reader.readAsDataURL(file);
-  };
-
-  const publishPost = async (e) => {
-    e.preventDefault();
-    if (!postImg || loading) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${URL}/rest/v1/posts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': KEY,
-          'Authorization': `Bearer ${KEY}`,
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({
-          author: user,
-          location: "Punjab",
-          image: postImg,
-          caption: caption,
-          likes: 0
-        })
-      });
-      if (res.ok) {
-        setPostImg(null);
-        setCaption('');
-        setTab('home');
-        loadFeed();
-      } else {
-        alert("Upload error.");
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (data.session?.user) {
+      await loadProfile(data.session.user.id);
+      await loadPosts();
     }
-  };
 
-  const toggleLike = (id) => {
-    setPosts(posts.map(p => p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? (p.likes || 1) - 1 : (p.likes || 0) + 1 } : p));
-  };
+    setLoading(false);
+  }
 
-  const toggleSave = (id) => {
-    setPosts(posts.map(p => p.id === id ? { ...p, saved: !p.saved } : p));
-  };
+  async function loadProfile(userId) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-  const myPosts = posts.filter(p => p.author === user);
-  const savedPosts = posts.filter(p => p.saved);
+    if (!error) setProfile(data);
+  }
 
-  // Login Screen
-  if (!user) {
+  async function loadPosts() {
+    const { data, error } = await supabase
+      .from("posts")
+      .select(`
+        *,
+        profiles:user_id (
+          username,
+          full_name,
+          avatar_url
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (!error) setPosts(data || []);
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    setScreen("home");
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-4 font-sans">
-        <div className="w-full max-w-sm bg-neutral-900/95 border border-neutral-800 p-8 rounded-3xl shadow-2xl flex flex-col items-center">
-          <div className="w-28 h-28 rounded-2xl border-2 border-amber-500/70 shadow-2xl p-2 bg-gradient-to-br from-red-800 via-amber-700 to-teal-900 flex flex-col items-center justify-center text-center mb-4">
-            <span className="text-3xl mb-1">🌾</span>
-            <span className="font-black text-2xl text-white tracking-wide">ਪੰਜਾਬ</span>
-            <span className="text-[10px] italic text-amber-200 font-serif tracking-widest">Panjaab</span>
-          </div>
-          <span className="font-black text-xl tracking-[0.2em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mb-6">
-            PUNJAB
-          </span>
-          <form onSubmit={loginUser} className="w-full space-y-3">
-            <input
-              type="text"
-              placeholder="ਆਪਣਾ ਯੂਜ਼ਰ ਨਾਮ / ID ਲਿਖੋ..."
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500"
-            />
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold text-sm hover:opacity-95 shadow-lg"
-            >
-              ਸ਼ੁਰੂ ਕਰੋ (Enter)
-            </button>
-          </form>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
+        <div className="text-center">
+          <div className="text-4xl font-black tracking-widest text-amber-400">PUNJAB</div>
+          <div className="text-sm mt-2 opacity-60">ਸਾਡਾ ਪੰਜਾਬ</div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white flex justify-center pb-16 font-sans">
-      <div className="w-full max-w-md border-x border-neutral-800 min-h-screen flex flex-col bg-neutral-950">
-        
-        {/* Header */}
-        <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg border border-amber-500/60 bg-gradient-to-br from-red-800 via-amber-600 to-teal-900 flex items-center justify-center shadow">
-              <span className="font-black text-white text-xs">ਪੰ</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-extrabold text-sm tracking-wider bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent leading-none">
-                PUNJAB
-              </span>
-              <span className="text-[9px] text-amber-300 font-medium">Panjaab</span>
-            </div>
-          </div>
-          <button
-            onClick={() => { localStorage.removeItem('punjab_user'); setUser(''); }}
-            className="text-xs text-neutral-300 hover:text-red-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded"
-          >
-            ਲੌਗ ਆਉਟ
-          </button>
-        </header>
+  if (!session) {
+    return <AuthScreen />;
+  }
 
-        {/* Story Modal */}
-        {story && (
-          <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between p-3">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-neutral-200">@{story.u}</span>
-              <button onClick={() => setStory(null)} className="text-white p-1 text-xl font-bold">✕</button>
-            </div>
-            <div className="flex-1 flex items-center justify-center">
-              <img src={story.img} alt="Story" className="max-h-[70vh] w-full object-contain rounded-2xl" />
-            </div>
-            <div className="flex items-center gap-3 p-2">
-              <input type="text" placeholder={`Reply to @${story.u}...`} className="flex-1 bg-neutral-900 border border-neutral-800 rounded-full px-4 py-2 text-xs text-white focus:outline-none" />
-              <button onClick={() => setStoryLiked(!storyLiked)}>
-                <IconHeart filled={storyLiked} />
-              </button>
-            </div>
+  return (
+    <div className="min-h-screen bg-black text-white font-sans">
+      <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <button
+            onClick={() => setScreen("home")}
+            className="text-xl font-black tracking-[0.2em] text-amber-400"
+          >
+            PUNJAB
+          </button>
+
+          <div className="flex items-center gap-5">
+            <button onClick={() => setScreen("notifications")}>
+              <Bell size={21} />
+            </button>
+
+            <button onClick={() => setScreen("messages")}>
+              <Send size={21} />
+            </button>
           </div>
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto pb-24">
+        {screen === "home" && (
+          <HomeScreen
+            posts={posts}
+            profile={profile}
+            reload={loadPosts}
+            setScreen={setScreen}
+          />
         )}
 
-        <main className="flex-1 overflow-y-auto">
-          {tab === 'home' && (
-            <div>
-              {/* Stories Bar */}
-              <div className="flex gap-3 px-4 py-3 overflow-x-auto border-b border-neutral-800 no-scrollbar">
-                {stories.map(s => (
-                  <div key={s.id} onClick={() => { setStory(s); setStoryLiked(false); }} className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer">
-                    <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-300">
-                      <img src={s.img} alt={s.u} className="w-full h-full rounded-full object-cover border-2 border-black" />
-                    </div>
-                    <span className="text-[10px] text-neutral-400">@{s.u}</span>
-                  </div>
-                ))}
-              </div>
+        {screen === "search" && (
+          <SearchScreen
+            search={search}
+            setSearch={setSearch}
+          />
+        )}
 
-              {/* Feed */}
-              <div className="divide-y divide-neutral-800">
-                {posts.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-neutral-500">
-                    ਅਜੇ ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਹੈ। ਹੇਠਾਂ ਦਿੱਤੇ (➕) ਬਟਨ ਤੋਂ ਪਹਿਲੀ ਫ਼ੋਟੋ ਅਪਲੋਡ ਕਰੋ!
-                  </div>
-                ) : (
-                  posts.map(p => (
-                    <article key={p.id} className="pb-3">
-                      <div className="flex items-center gap-2.5 px-4 py-2.5">
-                        <div className="w-7 h-7 rounded-full bg-neutral-800 border border-amber-500 flex items-center justify-center text-xs font-bold text-amber-400">
-                          {p.author ? p.author[0].toUpperCase() : 'P'}
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold">@{p.author}</div>
-                          <div className="text-[10px] text-neutral-400">{p.location || 'Punjab'}</div>
-                        </div>
-                      </div>
-                      <img src={p.image} alt="Post" className="w-full aspect-square object-cover" />
-                      <div className="px-4 pt-2.5">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => toggleLike(p.id)}>
-                              <IconHeart filled={p.liked} />
-                            </button>
-                            <IconMessage />
-                            <IconSend />
-                          </div>
-                          <button onClick={() => toggleSave(p.id)}>
-                            <IconBookmark filled={p.saved} />
-                          </button>
-                        </div>
-                        <div className="text-xs font-semibold mb-1">{p.likes || 0} ਪਸੰਦ</div>
-                        <p className="text-xs text-neutral-200">
-                          <span className="font-bold mr-1.5 text-amber-400">@{p.author}</span>
-                          {p.caption}
-                        </p>
-                      </div>
-                    </article>
-                  ))
-                )}
-              </div>
-            </div>
+        {screen === "create" && (
+          <CreateScreen
+            profile={profile}
+            reload={loadPosts}
+            setScreen={setScreen}
+          />
+        )}
+
+        {screen === "reels" && (
+          <ReelsScreen />
+        )}
+
+        {screen === "profile" && (
+          <ProfileScreen
+            profile={profile}
+            posts={posts}
+            logout={logout}
+          />
+        )}
+
+        {screen === "notifications" && (
+          <NotificationsScreen setScreen={setScreen} />
+        )}
+
+        {screen === "messages" && (
+          <MessagesScreen />
+        )}
+
+        {screen === "memories" && (
+          <MemoriesScreen
+            posts={posts}
+            setScreen={setScreen}
+          />
+        )}
+      </main>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-t border-white/10">
+        <div className="max-w-2xl mx-auto h-16 flex items-center justify-around">
+          <NavButton
+            icon={<Home size={23} />}
+            active={screen === "home"}
+            onClick={() => setScreen("home")}
+          />
+
+          <NavButton
+            icon={<Search size={23} />}
+            active={screen === "search"}
+            onClick={() => setScreen("search")}
+          />
+
+          <NavButton
+            icon={<Plus size={25} />}
+            active={screen === "create"}
+            onClick={() => setScreen("create")}
+          />
+
+          <NavButton
+            icon={<Play size={23} />}
+            active={screen === "reels"}
+            onClick={() => setScreen("reels")}
+          />
+
+          <NavButton
+            icon={<User size={23} />}
+            active={screen === "profile"}
+            onClick={() => setScreen("profile")}
+          />
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+function NavButton({ icon, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-3 transition ${
+        active ? "text-amber-400 scale-110" : "text-white/50"
+      }`}
+    >
+      {icon}
+    </button>
+  );
+}
+
+function AuthScreen() {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setError("");
+    setBusy(true);
+
+    if (mode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) setError(error.message);
+    } else {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            full_name: fullName,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setError("Account created successfully. You can now log in.");
+      }
+    }
+
+    setBusy(false);
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center px-5 font-sans">
+      <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 p-8 rounded-3xl shadow-2xl">
+        <div className="text-center mb-8">
+          <div className="text-4xl font-black tracking-[0.18em] text-amber-400">
+            PUNJAB
+          </div>
+
+          <div className="mt-2 text-sm text-amber-200/70">
+            ਸਾਡਾ ਪੰਜਾਬ
+          </div>
+
+          <div className="mt-5 mx-auto w-16 h-16 border-2 border-amber-500 rounded-2xl bg-gradient-to-br from-red-800 via-amber-700 to-teal-900 flex items-center justify-center text-xl font-bold shadow-lg">
+            ਪੰ
+          </div>
+        </div>
+
+        <form onSubmit={submit} className="space-y-3">
+          {mode === "signup" && (
+            <>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
+                required
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:border-amber-500 text-sm"
+              />
+
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Full name"
+                required
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:border-amber-500 text-sm"
+              />
+            </>
           )}
 
-          {tab === 'reels' && (
-            <div className="h-[calc(100vh-125px)] overflow-y-scroll snap-y snap-mandatory">
-              {reels.map(r => (
-                <div key={r.id} className="relative h-full w-full snap-start bg-black flex items-center justify-center">
-                  <img src={r.img} alt="Reel" className="w-full h-full object-cover" />
-                  <div className="absolute right-4 bottom-16 flex flex-col items-center gap-4">
-                    <IconHeart filled={true} />
-                    <span className="text-[11px]">{r.likes}</span>
-                    <IconMessage />
-                    <IconSend />
-                  </div>
-                  <div className="absolute left-4 bottom-6 right-16 bg-black/50 p-2.5 rounded-xl backdrop-blur-sm">
-                    <div className="font-bold text-xs text-amber-400">@{r.u}</div>
-                    <div className="text-xs text-neutral-200">{r.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:border-amber-500 text-sm"
+          />
 
-          {tab === 'create' && (
-            <div className="p-4">
-              <h2 className="text-sm font-bold mb-3">ਨਵੀਂ ਪੋਸਟ ਪਾਓ</h2>
-              <form onSubmit={publishPost} className="space-y-4">
-                <input type="file" accept="image/*" ref={fileRef} onChange={pickImage} className="hidden" />
-                {!postImg ? (
-                  <div
-                    onClick={() => fileRef.current?.click()}
-                    className="border-2 border-dashed border-neutral-700 hover:border-amber-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-2 cursor-pointer bg-neutral-900/50"
-                  >
-                    <span className="text-3xl">📷</span>
-                    <span className="text-xs text-neutral-300 font-medium">ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਚੋਂ ਫ਼ੋਟੋ ਚੁਣੋ</span>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="relative rounded-2xl overflow-hidden aspect-square border border-neutral-800">
-                      <img src={postImg} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setPostImg(null)}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-black/70 text-white font-bold text-xs"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => fileRef.current?.click()}
-                      className="text-xs text-amber-400 hover:underline"
-                    >
-                      ਹੋਰ ਫ਼ੋਟੋ ਚੁਣੋ
-                    </button>
-                  </div>
-                )}
-                <textarea
-                  rows={3}
-                  placeholder="ਕੁਝ ਲਿਖੋ..."
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500"
-                />
-                <button
-                  type="submit"
-                  disabled={!postImg || loading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-xs disabled:opacity-40 transition"
-                >
-                  {loading ? "ਕਲਾਊਡ ਵਿੱਚ ਅਪਲੋਡ ਹੋ ਰਿਹਾ ਹੈ..." : "ਪੋਸਟ ਕਰੋ"}
-                </button>
-              </form>
-            </div>
-          )}
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            minLength={6}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:border-amber-500 text-sm"
+          />
 
-          {tab === 'profile' && (
-            <div>
-              <div className="p-4 border-b border-neutral-800">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-16 h-16 rounded-full border-2 border-amber-500 bg-neutral-800 flex items-center justify-center text-xl font-bold text-amber-400">
-                    {user[0]?.toUpperCase()}
-                  </div>
-                  <div className="flex gap-6 text-center pr-2">
-                    <div>
-                      <div className="font-bold text-sm">{myPosts.length}</div>
-                      <div className="text-[10px] text-neutral-400">ਪੋਸਟਾਂ</div>
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm">240</div>
-                      <div className="text-[10px] text-neutral-400">ਫੋਲੋਅਰਜ਼</div>
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm">115</div>
-                      <div className="text-[10px] text-neutral-400">ਫੋਲੋਇੰਗ</div>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm">{user}</h3>
-                <p className="text-xs text-neutral-400 mb-3">@{user.toLowerCase()}</p>
-                <button
-                  onClick={() => { localStorage.removeItem('punjab_user'); setUser(''); }}
-                  className="w-full py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-red-400"
-                >
-                  ਲੌਗ ਆਉਟ
-                </button>
-              </div>
-
-              <div className="flex border-b border-neutral-800">
-                <button
-                  onClick={() => setProfileTab('posts')}
-                  className={`flex-1 py-2.5 flex justify-center border-b-2 ${profileTab === 'posts' ? 'border-amber-500 text-amber-500' : 'border-transparent text-neutral-500'}`}
-                >
-                  <IconGrid />
-                </button>
-                <button
-                  onClick={() => setProfileTab('saved')}
-                  className={`flex-1 py-2.5 flex justify-center border-b-2 ${profileTab === 'saved' ? 'border-amber-500 text-amber-500' : 'border-transparent text-neutral-500'}`}
-                >
-                  <IconBookmark filled={false} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1 p-1">
-                {(profileTab === 'posts' ? myPosts : savedPosts).map(item => (
-                  <div key={item.id} className="aspect-square bg-neutral-900">
-                    <img src={item.image} alt="post" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </main>
-
-        {/* Bottom Nav */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 border-t border-neutral-800 flex justify-around py-3 z-30">
-          <button onClick={() => { setTab('home'); loadFeed(); }} className={tab === 'home' ? "text-amber-500" : "text-neutral-400"}>
-            <IconHome />
+          <button
+            disabled={busy}
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold py-3 rounded-xl text-sm shadow-lg"
+          >
+            {busy
+              ? "Please wait..."
+              : mode === "login"
+              ? "Log in"
+              : "Create account"}
           </button>
-          <button onClick={() => setTab('reels')} className={tab === 'reels' ? "text-amber-500" : "text-neutral-400"}>
-            <IconFilm />
-          </button>
-          <button onClick={() => setTab('create')} className={tab === 'create' ? "text-amber-500" : "text-neutral-400"}>
-            <IconPlus />
-          </button>
-          <button onClick={() => setTab('profile')} className={tab === 'profile' ? "text-amber-500" : "text-neutral-400"}>
-            <IconUser />
-          </button>
-        </nav>
+        </form>
 
+        {error && (
+          <p className="text-xs text-amber-300 mt-4 text-center bg-amber-500/10 p-2 rounded-lg">
+            {error}
+          </p>
+        )}
+
+        <button
+          onClick={() => {
+            setMode(mode === "login" ? "signup" : "login");
+            setError("");
+          }}
+          className="w-full mt-6 text-xs text-neutral-400 hover:text-amber-400 transition"
+        >
+          {mode === "login"
+            ? "Don't have an account? Sign up"
+            : "Already have an account? Log in"}
+        </button>
       </div>
     </div>
   );
 }
+
+function HomeScreen({ posts, profile, reload, setScreen }) {
+  const [liked, setLiked] = useState({});
+  const [saved, setSaved] = useState({});
+
+  async function toggleLike(post) {
+    if (!profile) return;
+
+    if (liked[post.id]) {
+      await supabase
+        .from("post_likes")
+        .delete()
+        .eq("post_id", post.id)
+        .eq("user_id", profile.id);
+
+      setLiked((x) => ({ ...x, [post.id]: false }));
+    } else {
+      const { error } = await supabase
+        .from("post_likes")
+        .insert({
+          post_id: post.id,
+          user_id: profile.id,
+        });
+
+      if (!error) {
+        setLiked((x) => ({ ...x, [post.id]: true }));
+      }
+    }
+    reload();
+  }
+
+  async function toggleSave(post) {
+    if (!profile) return;
+
+    if (saved[post.id]) {
+      await supabase
+        .from("saved_posts")
+        .delete()
+        .eq("post_id", post.id)
+        .eq("user_id", profile.id);
+
+      setSaved((x) => ({ ...x, [post.id]: false }));
+    } else {
+      const { error } = await supabase
+        .from("saved_posts")
+        .insert({
+          post_id: post.id,
+          user_id: profile.id,
+        });
+
+      if (!error) {
+        setSaved((x) => ({ ...x, [post.id]: true }));
+      }
+    }
+  }
+
+  return (
+    <div>
+      <div className="px-4 py-5 flex items-center justify-between border-b border-white/10">
+        <div>
+          <h1 className="text-xl font-bold">Home Feed</h1>
+          <p className="text-white/50 text-xs">Welcome to Punjab Social</p>
+        </div>
+
+        <button
+          onClick={() => setScreen("memories")}
+          className="border border-amber-500/50 bg-amber-500/10 text-amber-400 rounded-full px-4 py-1.5 text-xs font-semibold"
+        >
+          ਪੰਜਾਬ ਦੀਆਂ ਯਾਦਾਂ
+        </button>
+      </div>
+
+      <div className="px-4 space-y-6 mt-4">
+        {posts.length === 0 ? (
+          <div className="border border-white/10 rounded-2xl p-10 text-center bg-neutral-900/50">
+            <p className="text-white/60 text-sm">No posts yet.</p>
+            <button
+              onClick={() => setScreen("create")}
+              className="mt-4 bg-amber-500 text-black px-5 py-2 rounded-xl text-xs font-bold"
+            >
+              Create first post
+            </button>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              liked={!!liked[post.id]}
+              saved={!!saved[post.id]}
+              onLike={() => toggleLike(post)}
+              onSave={() => toggleSave(post)}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PostCard({ post, liked, saved, onLike, onSave }) {
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+  const author = post.profiles || {};
+
+  async function loadComments() {
+    const { data } = await supabase
+      .from("comments")
+      .select(`
+        *,
+        profiles:user_id (
+          username,
+          full_name
+        )
+      `)
+      .eq("post_id", post.id)
+      .order("created_at", { ascending: true });
+
+    setComments(data || []);
+  }
+
+  async function addComment() {
+    if (!comment.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase.from("comments").insert({
+      post_id: post.id,
+      user_id: user.id,
+      content: comment.trim(),
+    });
+
+    if (!error) {
+      setComment("");
+      loadComments();
+    }
+  }
+
+  useEffect(() => {
+    loadComments();
+  }, [post.id]);
+
+  return (
+    <article className="border border-neutral-800 rounded-2xl overflow-hidden bg-neutral-950 shadow-xl">
+      <div className="flex items-center justify-between p-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full border border-amber-500 bg-neutral-800 flex items-center justify-center text-xs font-bold text-amber-400">
+            {(author.username || "P").charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div className="text-xs font-bold">@{author.username || "Punjab User"}</div>
+            <div className="text-[10px] text-white/40 flex items-center gap-1">
+              <MapPin size={10} />
+              {post.location || "Punjab"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {post.image_url && (
+        <img src={post.image_url} alt="" className="w-full aspect-square object-cover bg-neutral-900" />
+      )}
+
+      {post.video_url && (
+        <video src={post.video_url} controls className="w-full max-h-[600px] bg-black" />
+      )}
+
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4">
+            <button onClick={onLike}>
+              <Heart size={22} fill={liked ? "#ef4444" : "none"} stroke={liked ? "#ef4444" : "currentColor"} />
+            </button>
+            <button>
+              <MessageCircle size={22} />
+            </button>
+            <button>
+              <Send size={21} />
+            </button>
+          </div>
+          <button onClick={onSave}>
+            <Bookmark size={22} fill={saved ? "#f59e0b" : "none"} stroke={saved ? "#f59e0b" : "currentColor"} />
+          </button>
+        </div>
+
+        <div className="mt-2.5 text-xs font-semibold">{post.likes_count || 0} likes</div>
+
+        {post.caption && (
+          <p className="mt-1.5 text-xs text-white/90">
+            <span className="font-bold mr-2 text-amber-400">@{author.username || "user"}</span>
+            {post.caption}
+          </p>
+        )}
+
+        <div className="mt-3 space-y-1.5">
+          {comments.map((item) => (
+            <div key={item.id} className="text-xs">
+              <span className="font-bold mr-2 text-amber-300">@{item.profiles?.username || "user"}</span>
+              <span className="text-neutral-300">{item.content}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2 mt-3 pt-2 border-t border-neutral-900">
+          <input
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") addComment(); }}
+            placeholder="Add a comment..."
+            className="flex-1 bg-transparent text-xs py-1.5 outline-none text-white placeholder:text-neutral-500"
+          />
+          <button onClick={addComment} className="text-xs font-bold text-amber-400">
+            Post
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function CreateScreen({ profile, reload, setScreen }) {
+  const [caption, setCaption] = useState("");
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [isMemory, setIsMemory] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef(null);
+
+  function chooseFile(e) {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected));
+  }
+
+  async function publish() {
+    if (!file || !profile || busy) return;
+    setBusy(true);
+
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${profile.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
+      if (uploadError) {
+        console.warn("Storage upload note:", uploadError.message);
+      }
+
+      let publicUrl = "";
+      try {
+        const { data: urlData } = supabase.storage.from("media").getPublicUrl(path);
+        publicUrl = urlData?.publicUrl || "";
+      } catch (e) {
+        publicUrl = preview;
+      }
+
+      const isVideo = file.type.startsWith("video/");
+
+      const { error } = await supabase.from("posts").insert({
+        user_id: profile.id,
+        caption: caption.trim(),
+        image_url: isVideo ? null : publicUrl,
+        video_url: isVideo ? publicUrl : null,
+        is_memory: isMemory,
+        memory_tag: isMemory ? "Punjab Memory" : null,
+        location: "Punjab",
+      });
+
+      if (error) throw error;
+
+      setCaption("");
+      setFile(null);
+      setPreview("");
+      setIsMemory(false);
+      await reload();
+      setScreen("home");
+    } catch (err) {
+      alert(err.message || "Upload failed");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="px-4 py-6">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => setScreen("home")}>
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="text-xl font-bold">New Post / Reel</h1>
+      </div>
+
+      <input type="file" accept="image/*,video/*" ref={fileRef} onChange={chooseFile} className="hidden" />
+
+      {!preview ? (
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="border-2 border-dashed border-neutral-700 rounded-2xl p-10 text-center cursor-pointer bg-neutral-900/50"
+        >
+          <Plus className="mx-auto text-amber-500 mb-2" size={36} />
+          <p className="text-xs text-neutral-300 font-medium">ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਚੋਂ ਫ਼ੋਟੋ/ਵੀਡੀਓ ਚੁਣੋ</p>
+        </div>
+      ) : (
+        <div className="relative rounded-2xl overflow-hidden aspect-square border border-neutral-800 bg-neutral-900">
+          {file?.type.startsWith("video/") ? (
+            <video src={preview} controls className="w-full h-full object-cover" />
+          ) : (
+            <img src={preview} alt="" className="w-full h-full object-cover" />
+          )}
+          <button
+            onClick={() => { setFile(null); setPreview(""); }}
+            className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded-full text-xs font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <textarea
+        value={caption}
+        onChange={(e) => setCaption(e.target.value)}
+        placeholder="ਕੁਝ ਲਿਖੋ ਪੰਜਾਬ ਬਾਰੇ..."
+        className="w-full mt-4 bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white ou
