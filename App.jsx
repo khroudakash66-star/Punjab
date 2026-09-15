@@ -12,115 +12,203 @@ import {
   ArrowLeft,
   LogOut,
   MapPin,
+  MoreHorizontal,
+  Share2,
+  Trash2
 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
 const SUPABASE_KEY = "Sb_publishable_B7kdNhTOAplbatGO9Ez1qA_VPD2UEBR";
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [user, setUser] = useState(() => localStorage.getItem('punjab_user') || '');
+  const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [screen, setScreen] = useState("home");
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      setProfile({ username: user, full_name: user, id: user });
-      loadPosts();
-    }
-  }, [user]);
-
-  async function loadPosts() {
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?select=*&order=created_at.desc`, {
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(data || []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        loadProfile(session.user.id);
+        loadPosts();
       }
-    } catch (e) {
-      console.error(e);
-    }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        loadProfile(session.user.id);
+        loadPosts();
+      } else {
+        setProfile(null);
+        setPosts([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function loadProfile(userId) {
+    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
+    if (data) setProfile(data);
   }
 
-  if (!user) return <AuthScreen setUser={setUser} />;
+  async function loadPosts() {
+    const { data } = await supabase
+      .from("posts")
+      .select(`*, profiles:user_id (username, full_name)`)
+      .order("created_at", { ascending: false });
+    if (data) setPosts(data);
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
+        <div className="text-center">
+          <div className="text-3xl font-black tracking-widest text-amber-400">PUNJAB</div>
+          <div className="text-xs mt-1 text-neutral-500">Instagram Style</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return <AuthScreen />;
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900">
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-neutral-800 px-4 h-14 flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-lg font-black tracking-[0.2em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent leading-none">
+    <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 shadow-2xl">
+      {screen !== "reels" && (
+        <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-neutral-800 px-4 h-12 flex items-center justify-between">
+          <span className="text-lg font-black tracking-widest bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
             PUNJAB
           </span>
-          <span className="text-[9px] text-amber-300 font-serif tracking-widest">ਸਾਡਾ ਪੰਜਾਬ</span>
-        </div>
-        <button onClick={() => { localStorage.removeItem('punjab_user'); setUser(''); }} className="text-xs text-red-400 hover:text-red-300">
-          ਲੌਗ ਆਉਟ
-        </button>
-      </header>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setScreen("create")} className="text-white hover:text-amber-400"><Plus size={22} /></button>
+            <button onClick={() => setScreen("messages")} className="text-white hover:text-amber-400"><Send size={20} /></button>
+          </div>
+        </header>
+      )}
 
-      <main className="pb-16">
+      <main className={screen === "reels" ? "" : "pb-16"}>
         {screen === "home" && <HomeScreen posts={posts} profile={profile} reload={loadPosts} setScreen={setScreen} />}
-        {screen === "search" && <SearchScreen />}
-        {screen === "create" && <CreateScreen user={user} reload={loadPosts} setScreen={setScreen} />}
-        {screen === "reels" && <ReelsScreen posts={posts} />}
-        {screen === "profile" && <ProfileScreen user={user} posts={posts} />}
+        {screen === "search" && <SearchScreen posts={posts} />}
+        {screen === "create" && <CreateScreen profile={profile} reload={loadPosts} setScreen={setScreen} />}
+        {screen === "reels" && <ReelsScreen posts={posts} setScreen={setScreen} />}
+        {screen === "profile" && <ProfileScreen profile={profile} posts={posts} reload={loadPosts} />}
         {screen === "messages" && <MessagesScreen setScreen={setScreen} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/95 border-t border-neutral-800 flex justify-around py-3 z-50">
-        <button onClick={() => setScreen("home")} className={screen === "home" ? "text-amber-400 scale-110" : "text-white/60"}><Home size={24} /></button>
-        <button onClick={() => setScreen("search")} className={screen === "search" ? "text-amber-400 scale-110" : "text-white/60"}><Search size={24} /></button>
-        <button onClick={() => setScreen("create")} className={screen === "create" ? "text-amber-400 scale-110" : "text-white/60"}><Plus size={26} /></button>
-        <button onClick={() => setScreen("reels")} className={screen === "reels" ? "text-amber-400 scale-110" : "text-white/60"}><Play size={24} /></button>
-        <button onClick={() => setScreen("profile")} className={screen === "profile" ? "text-amber-400 scale-110" : "text-white/60"}><User size={24} /></button>
+        <button onClick={() => setScreen("home")} className={screen === "home" ? "text-amber-400" : "text-white/60"}><Home size={24} /></button>
+        <button onClick={() => setScreen("search")} className={screen === "search" ? "text-amber-400" : "text-white/60"}><Search size={24} /></button>
+        <button onClick={() => setScreen("create")} className={screen === "create" ? "text-amber-400" : "text-white/60"}><Plus size={26} /></button>
+        <button onClick={() => setScreen("reels")} className={screen === "reels" ? "text-amber-400" : "text-white/60"}><Play size={24} /></button>
+        <button onClick={() => setScreen("profile")} className={screen === "profile" ? "text-amber-400" : "text-white/60"}><User size={24} /></button>
       </nav>
     </div>
   );
 }
 
-function AuthScreen({ setUser }) {
-  const [name, setName] = useState("");
+function AuthScreen() {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function login(e) {
+  async function submit(e) {
     e.preventDefault();
-    if (!name.trim()) return;
-    localStorage.setItem('punjab_user', name.trim());
-    setUser(name.trim());
+    setError("");
+    setBusy(true);
+
+    if (mode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setError(error.message);
+    } else {
+      const { error } = await supabase.auth.signUp({
+        email, password, options: { data: { username, full_name: username } }
+      });
+      if (error) setError(error.message);
+      else setError("Account created! You can now log in.");
+    }
+    setBusy(false);
   }
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-5 font-sans">
       <div className="w-full max-w-sm bg-neutral-900/90 border border-neutral-800 p-8 rounded-3xl shadow-2xl text-center">
-        <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-500 via-red-600 to-teal-800 p-0.5 flex items-center justify-center shadow-2xl">
-          <div className="w-full h-full bg-black rounded-2xl flex flex-col items-center justify-center">
-            <span className="text-2xl font-black text-amber-400">ਪੰ</span>
-          </div>
+        <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-400 p-0.5 flex items-center justify-center shadow-lg">
+          <div className="w-full h-full bg-black rounded-2xl flex items-center justify-center text-xl font-black text-amber-400">ਪੰ</div>
         </div>
-        <h1 className="text-2xl font-black tracking-[0.2em] bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent mb-1">PUNJAB</h1>
-        <p className="text-xs text-amber-200/70 mb-6 font-serif">ਸਾਡਾ ਪੰਜਾਬ - ਸੋਸ਼ਲ ਮੀਡੀਆ</p>
+        <h1 className="text-2xl font-black text-amber-400 tracking-wider mb-1">PUNJAB</h1>
+        <p className="text-xs text-neutral-400 mb-6">ਸਾਡਾ ਪੰਜਾਬ - ਸੋਸ਼ਲ ਮੀਡੀਆ</p>
 
-        <form onSubmit={login} className="space-y-3">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="ਆਪਣਾ ਯੂਜ਼ਰ ਨਾਮ / ID ਲਿਖੋ..." required className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
-          <button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-lg">
-            ਸ਼ੁਰੂ ਕਰੋ (Enter)
+        <form onSubmit={submit} className="space-y-3">
+          {mode === "signup" && (
+            <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username (ਆਈਡੀ)" required className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
+          )}
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required minLength={6} className="w-full bg-neutral-800 border border-neutral-700 p-3 rounded-xl text-xs outline-none text-white focus:border-amber-500" />
+          <button disabled={busy} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-extrabold p-3 rounded-xl text-xs shadow-md">
+            {busy ? "ਕਿਰਪਾ ਕਰੋ..." : mode === "login" ? "ਲੌਗ ਇਨ (Log In)" : "ਸਾਈਨ ਅੱਪ (Sign Up)"}
           </button>
         </form>
+
+        {error && <p className="text-xs text-amber-300 mt-3 bg-amber-500/10 p-2 rounded-lg">{error}</p>}
+
+        <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }} className="w-full mt-6 text-xs text-neutral-400 hover:text-amber-400">
+          {mode === "login" ? "ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ" : "ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ"}
+        </button>
       </div>
     </div>
   );
 }
 
-function HomeScreen({ posts, profile, reload, setScreen }) {
+function HomeScreen({ posts, profile, setScreen }) {
   const [likes, setLikes] = useState({});
   const [saved, setSaved] = useState({});
+  const [showComments, setShowComments] = useState({});
+  const [commentText, setCommentText] = useState("");
+
+  async function toggleLike(post) {
+    if (!profile) return;
+    const isLiked = likes[post.id];
+    if (isLiked) {
+      await supabase.from("post_likes").delete().eq("post_id", post.id).eq("user_id", profile.id);
+      setLikes(l => ({ ...l, [post.id]: false }));
+    } else {
+      await supabase.from("post_likes").insert({ post_id: post.id, user_id: profile.id });
+      setLikes(l => ({ ...l, [post.id]: true }));
+    }
+  }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      <div className="flex gap-3 overflow-x-auto px-3 py-3 border-b border-neutral-900 scrollbar-none">
+        <div className="flex flex-col items-center flex-shrink-0 cursor-pointer" onClick={() => setScreen("create")}>
+          <div className="w-16 h-16 rounded-full bg-neutral-800 border-2 border-amber-500 flex items-center justify-center text-amber-400 font-bold relative">
+            <Plus size={20} className="absolute bottom-1 right-1 bg-amber-500 text-black rounded-full p-0.5" />
+            <User size={24} />
+          </div>
+          <span className="text-[10px] text-neutral-300 mt-1">ਆਪਣੀ ਸਟੋਰੀ</span>
+        </div>
+        {posts.slice(0, 6).map((p, idx) => (
+          <div key={idx} className="flex flex-col items-center flex-shrink-0 cursor-pointer">
+            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-amber-500 via-red-500 to-yellow-400">
+              <div className="w-full h-full rounded-full bg-black flex items-center justify-center font-bold text-xs text-amber-400 overflow-hidden">
+                {p.image_url ? <img src={p.image_url} className="w-full h-full object-cover" alt="" /> : (p.profiles?.username || "P")[0]}
+              </div>
+            </div>
+            <span className="text-[10px] text-neutral-300 mt-1 max-w-[60px] truncate">@{p.profiles?.username || "user"}</span>
+          </div>
+        ))}
+      </div>
+
       {posts.length === 0 ? (
         <div className="text-center py-20 px-4">
           <p className="text-neutral-500 text-xs mb-3">ਅਜੇ ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਹੈ!</p>
@@ -130,27 +218,30 @@ function HomeScreen({ posts, profile, reload, setScreen }) {
         posts.map(post => (
           <article key={post.id} className="bg-black border-b border-neutral-900">
             <div className="flex items-center justify-between p-3">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500 flex items-center justify-center text-xs font-bold text-amber-400">
-                  {(post.author || "P")[0].toUpperCase()}
+                  {(post.profiles?.username || "P")[0].toUpperCase()}
                 </div>
                 <div>
-                  <div className="text-xs font-bold">@{post.author}</div>
-                  <div className="text-[10px] text-neutral-500 flex items-center gap-0.5"><MapPin size={9} /> Punjab</div>
+                  <div className="text-xs font-bold">@{post.profiles?.username || "user"}</div>
+                  <div className="text-[10px] text-neutral-500 flex items-center gap-0.5"><MapPin size={9} /> Punjab, India</div>
                 </div>
               </div>
+              <MoreHorizontal size={18} className="text-neutral-500" />
             </div>
 
-            {post.image && <img src={post.image} alt="" className="w-full aspect-square object-cover bg-neutral-900" />}
+            {post.image_url && <img src={post.image_url} alt="" className="w-full aspect-square object-cover bg-neutral-900" />}
 
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => setLikes(l => ({ ...l, [post.id]: !l[post.id] }))}>
+                  <button onClick={() => toggleLike(post)}>
                     <Heart size={23} fill={likes[post.id] ? "#ef4444" : "none"} stroke={likes[post.id] ? "#ef4444" : "currentColor"} />
                   </button>
-                  <MessageCircle size={23} />
-                  <Send size={22} />
+                  <button onClick={() => setShowComments(s => ({ ...s, [post.id]: !s[post.id] }))}>
+                    <MessageCircle size={23} />
+                  </button>
+                  <Share2 size={22} className="cursor-pointer" />
                 </div>
                 <button onClick={() => setSaved(s => ({ ...s, [post.id]: !s[post.id] }))}>
                   <Bookmark size={22} fill={saved[post.id] ? "#f59e0b" : "none"} stroke={saved[post.id] ? "#f59e0b" : "currentColor"} />
@@ -158,10 +249,26 @@ function HomeScreen({ posts, profile, reload, setScreen }) {
               </div>
 
               {post.caption && (
-                <p className="text-xs text-neutral-200">
-                  <span className="font-bold mr-2 text-amber-400">@{post.author}</span>
+                <p className="text-xs text-neutral-200 mb-2">
+                  <span className="font-bold mr-2 text-amber-400">@{post.profiles?.username}</span>
                   {post.caption}
                 </p>
+              )}
+
+              {showComments[post.id] && (
+                <div className="mt-3 pt-3 border-t border-neutral-900 space-y-2">
+                  <div className="text-[11px] text-neutral-400">ਕਮੈਂਟ (Comments)</div>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="ਕਮੈਂਟ ਲਿਖੋ..." 
+                      value={commentText} 
+                      onChange={e => setCommentText(e.target.value)}
+                      className="w-full bg-neutral-900 border border-neutral-800 p-2 rounded-lg text-xs text-white outline-none focus:border-amber-500"
+                    />
+                    <button onClick={() => { alert("Comment posted!"); setCommentText(""); }} className="bg-amber-500 text-black px-3 py-1 rounded-lg text-xs font-bold">ਭੇਜੋ</button>
+                  </div>
+                </div>
               )}
             </div>
           </article>
@@ -171,7 +278,7 @@ function HomeScreen({ posts, profile, reload, setScreen }) {
   );
 }
 
-function CreateScreen({ user, reload, setScreen }) {
+function CreateScreen({ profile, reload, setScreen }) {
   const [caption, setCaption] = useState("");
   const [preview, setPreview] = useState("");
   const [busy, setBusy] = useState(false);
@@ -200,7 +307,7 @@ function CreateScreen({ user, reload, setScreen }) {
 
   async function publish(e) {
     e.preventDefault();
-    if (!preview || busy) return;
+    if (!preview || !profile || busy) return;
     setBusy(true);
 
     try {
@@ -213,9 +320,9 @@ function CreateScreen({ user, reload, setScreen }) {
           'Prefer': 'return=representation'
         },
         body: JSON.stringify({
-          author: user,
+          user_id: profile.id,
           caption: caption,
-          image: preview,
+          image_url: preview,
           location: "Punjab"
         })
       });
@@ -236,7 +343,7 @@ function CreateScreen({ user, reload, setScreen }) {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between mb-2">
         <button onClick={() => setScreen("home")}><ArrowLeft size={22} /></button>
-        <h2 className="text-sm font-bold">ਨਵੀਂ ਪੋਸਟ</h2>
+        <h2 className="text-sm font-bold">ਨਵੀਂ ਪੋਸਟ / ਸਟੋਰੀ</h2>
         <div className="w-5"></div>
       </div>
 
@@ -245,7 +352,7 @@ function CreateScreen({ user, reload, setScreen }) {
       {!preview ? (
         <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed border-neutral-700 rounded-2xl p-12 text-center cursor-pointer bg-neutral-900/50">
           <Plus className="mx-auto text-amber-500 mb-2" size={36} />
-          <p className="text-xs text-neutral-300 font-medium">ਫੋਟੋ ਚੁਣੋ</p>
+          <p className="text-xs text-neutral-300 font-medium">ਫੋਟੋ ਚੁਣੋ (Select Photo)</p>
         </div>
       ) : (
         <div className="relative aspect-square rounded-2xl overflow-hidden border border-neutral-800">
@@ -256,56 +363,67 @@ function CreateScreen({ user, reload, setScreen }) {
 
       <textarea value={caption} onChange={e => setCaption(e.target.value)} placeholder="ਕੈਪਸ਼ਨ ਲਿਖੋ..." className="w-full bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-white outline-none focus:border-amber-500 min-h-24" />
 
-      <button onClick={publish} disabled={!preview || busy} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold p-3 rounded-xl text-xs disabled:opacity-40">
+      <button onClick={publish} disabled={!preview || busy} className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold p-3 rounded-xl text-xs disabled:opacity-40 shadow-lg">
         {busy ? "ਅਪਲੋਡ ਹੋ ਰਿਹਾ ਹੈ..." : "ਸ਼ੇਅਰ ਕਰੋ (Share)"}
       </button>
     </div>
   );
 }
 
-function ReelsScreen({ posts }) {
+function ReelsScreen({ posts, setScreen }) {
   return (
-    <div className="space-y-4">
-      <div className="p-3 font-bold text-sm border-b border-neutral-900">Reels</div>
-      {posts.map(p => (
-        <div key={p.id} className="bg-black border-b border-neutral-900">
-          {p.image && <img src={p.image} alt="" className="w-full aspect-square object-cover" />}
-          <div className="p-3 text-xs"><span className="font-bold text-amber-400 mr-2">@{p.author}</span>{p.caption}</div>
+    <div className="h-screen bg-black relative flex flex-col justify-between pb-20">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-3">
+        <button onClick={() => setScreen("home")} className="bg-black/50 p-1.5 rounded-full"><ArrowLeft size={20} /></button>
+        <span className="font-bold text-sm">Punjab Reels</span>
+      </div>
+
+      {posts.length > 0 ? (
+        <div className="w-full h-full relative flex items-center justify-center bg-neutral-950">
+          <img src={posts[0].image_url} alt="" className="w-full h-full object-cover" />
+          <div className="absolute bottom-16 left-4 right-4 z-10 bg-gradient-to-t from-black/80 to-transparent p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-xs">
+                {(posts[0].profiles?.username || "P")[0]}
+              </div>
+              <span className="font-bold text-xs">@{posts[0].profiles?.username}</span>
+            </div>
+            <p className="text-xs text-neutral-200">{posts[0].caption}</p>
+          </div>
+          <div className="absolute right-4 bottom-24 flex flex-col items-center gap-4 z-10">
+            <button className="flex flex-col items-center text-white"><Heart size={26} /><span className="text-[10px]">ਲਾਈਕ</span></button>
+            <button className="flex flex-col items-center text-white"><MessageCircle size={26} /><span className="text-[10px]">ਕਮੈਂਟ</span></button>
+            <button className="flex flex-col items-center text-white"><Share2 size={26} /><span className="text-[10px]">ਸ਼ੇਅਰ</span></button>
+          </div>
         </div>
-      ))}
+      ) : (
+        <div className="text-center text-neutral-500 text-xs py-20">ਕੋਈ ਰੀਲ ਉਪਲਬਧ ਨਹੀਂ ਹੈ</div>
+      )}
     </div>
   );
 }
 
-function SearchScreen() {
-  return (
-    <div className="p-4">
-      <div className="bg-neutral-900 border border-neutral-800 p-3 rounded-xl text-xs text-neutral-400">ਖੋਜੋ (Search)...</div>
-    </div>
-  );
-}
-
-function ProfileScreen({ user, posts }) {
-  const myPosts = posts.filter(p => p.author === user);
+function SearchScreen({ posts }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredPosts = posts.filter(p => p.caption?.toLowerCase().includes(searchQuery.toLowerCase()) || p.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-start border-b border-neutral-900 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 rounded-full bg-neutral-900 border-2 border-amber-500 flex items-center justify-center font-bold text-lg text-amber-400">
-            {user[0]?.toUpperCase()}
-          </div>
-          <div>
-            <h2 className="font-bold text-sm">@{user}</h2>
-            <p className="text-xs text-neutral-400">ਪੰਜਾਬ ਯੂਜ਼ਰ</p>
-          </div>
-        </div>
+    <div className="p-3 space-y-3">
+      <div className="relative">
+        <Search className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+        <input 
+          type="text" 
+          placeholder="ਖੋਜੋ (Search users or captions)..." 
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="w-full bg-neutral-900 border border-neutral-800 pl-9 pr-3 py-2 rounded-xl text-xs text-white outline-none focus:border-amber-500"
+        />
       </div>
 
       <div className="grid grid-cols-3 gap-1">
-        {myPosts.map(p => (
-          <div key={p.id} className="aspect-square bg-neutral-900">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
+        {filteredPosts.map(p => (
+          <div key={p.id} className="aspect-square bg-neutral-900 overflow-hidden">
+            {p.image_url && <img src={p.image_url} alt="" className="w-full h-full object-cover" />}
           </div>
         ))}
       </div>
@@ -313,14 +431,9 @@ function ProfileScreen({ user, posts }) {
   );
 }
 
-function MessagesScreen({ setScreen }) {
-  return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center gap-3">
-        <button onClick={() => setScreen("home")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">Messages</h2>
-      </div>
-      <p className="text-neutral-500 text-xs text-center py-20">ਕਮਿਊਨਿਟੀ ਚੈਟ ਜਲਦੀ ਆ ਰਹੀ ਹੈ!</p>
-    </div>
-  );
-}
+function ProfileScreen({ profile, posts, reload }) {
+  const myPosts = posts.filter(p => p.user_id === profile?.id);
+
+  async function deletePost(postId) {
+    if (!confirm("ਕੀ ਤੁਸੀਂ ਇਸ ਪੋਸਟ ਨੂੰ ਡਿਲੀਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?")) return;
+    await supabase.from("posts").dele
