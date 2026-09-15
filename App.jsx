@@ -1,4 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+const SUPABASE_URL = "https://ggylacnqrxezjxqjoeuq.supabase.co";
+const SUPABASE_KEY = "Sb_publishable_B7kdNhTOApIbatGO9Ez1qA_VPD2UEBR";
 
 const getStore = (k, d) => {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; }
@@ -24,6 +27,7 @@ export default function App() {
   const fileRef = useRef(null);
   const [postImg, setPostImg] = useState(null);
   const [caption, setCaption] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const stories = [
     { id: 1, u: "amritsar", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=600&auto=format&fit=crop" },
@@ -32,18 +36,47 @@ export default function App() {
   ];
 
   const reels = [
-    { id: 101, u: "virasat_punjab", desc: "Rangla Punjab 🌾 #Punjab #Reels", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop", likes: 3420 },
+    { id: 101, u: "virasat_punjab", desc: "Rangla Punjab 🌾✨ #Punjab #Reels", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop", likes: 3420 },
     { id: 102, u: "kisaan_jatt", desc: "Fields of Punjab 🚜❤️", img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop", likes: 5120 }
   ];
 
-  const [posts, setPosts] = useState(() => getStore('punjab_feed_data', [
-    { id: 1, u: "virasat_punjab", loc: "Sri Amritsar Sahib", img: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?w=800&auto=format&fit=crop", cap: "Golden Temple Darshan ✨", likes: 1240, liked: false, saved: false }
-  ]));
+  const [posts, setPosts] = useState([]);
 
   const t = {
     en: { login: "Log In", signup: "Sign Up", uid: "User ID", pwd: "Password", name: "Full Name", need: "Need an account? Sign up", has: "Have an account? Log in", out: "Log Out", share: "Share Post", newP: "New Post", cam: "Click to upload from Camera / Gallery", change: "Change Photo", cap: "Write a caption...", likes: "likes", posts: "Posts", fol: "Followers", fing: "Following" },
     pa: { login: "ਲਾਗ ਇਨ", signup: "ਸਾਈਨ ਅੱਪ", uid: "ਯੂਜ਼ਰ ਆਈਡੀ", pwd: "ਪਾਸਵਰਡ", name: "ਪੂਰਾ ਨਾਮ", need: "ਖਾਤਾ ਬਣਾਓ", has: "ਲਾਗ ਇਨ ਕਰੋ", out: "ਲੌਗ ਆਉਟ", share: "ਪੋਸਟ ਕਰੋ", newP: "ਨਵੀਂ ਪੋਸਟ", cam: "ਕੈਮਰਾ ਜਾਂ ਗੈਲਰੀ ਚੋਂ ਫੋਟੋ ਚੁਣੋ", change: "ਹੋਰ ਫੋਟੋ ਚੁਣੋ", cap: "ਕੁਝ ਲਿਖੋ...", likes: "ਪਸੰਦ", posts: "ਪੋਸਟਾਂ", fol: "ਫੋਲੋਅਰਜ਼", fing: "ਫੋਲੋਇੰਗ" }
   }[lang];
+
+  // ਕਲਾਊਡ ਤੋਂ ਸਾਰੀਆਂ ਪੋਸਟਾਂ ਲਿਆਉਣਾ
+  const fetchCloudPosts = async () => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?select=*&order=created_at.desc`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPosts(data.map(p => ({
+          id: p.id,
+          u: p.author,
+          loc: p.location || 'Punjab',
+          img: p.image,
+          cap: p.caption,
+          likes: p.likes || 0,
+          liked: false,
+          saved: false
+        })));
+      }
+    } catch (e) {
+      console.error("Fetch error:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchCloudPosts();
+  }, []);
 
   const handleAuth = (e) => {
     e.preventDefault();
@@ -74,28 +107,54 @@ export default function App() {
     }
   };
 
-  const createPost = (e) => {
+  // ਕਲਾਊਡ ਵਿੱਚ ਫੋਟੋ ਪੋਸਟ ਕਰਨਾ
+  const createPost = async (e) => {
     e.preventDefault();
-    if (!postImg) return;
-    const np = { id: Date.now(), u: user.uid, loc: "Punjab", img: postImg, cap: caption, likes: 0, liked: false, saved: false };
-    const up = [np, ...posts];
-    setPosts(up);
-    setStore('punjab_feed_data', up);
-    setPostImg(null);
-    setCaption('');
-    setTab('home');
+    if (!postImg || loading) return;
+    setLoading(true);
+
+    const payload = {
+      author: user.uid,
+      location: "Punjab",
+      image: postImg,
+      caption: caption,
+      likes: 0
+    };
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/posts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setPostImg(null);
+        setCaption('');
+        setTab('home');
+        fetchCloudPosts();
+      } else {
+        alert("Upload error. Please try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error uploading post.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleLike = (id) => {
-    const up = posts.map(p => p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p);
-    setPosts(up);
-    setStore('punjab_feed_data', up);
+    setPosts(posts.map(p => p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p));
   };
 
   const toggleSave = (id) => {
-    const up = posts.map(p => p.id === id ? { ...p, saved: !p.saved } : p);
-    setPosts(up);
-    setStore('punjab_feed_data', up);
+    setPosts(posts.map(p => p.id === id ? { ...p, saved: !p.saved } : p));
   };
 
   const myPosts = posts.filter(p => p.u === user?.uid);
@@ -199,34 +258,40 @@ export default function App() {
                 ))}
               </div>
 
-              {/* Feed */}
+              {/* Live Cloud Feed */}
               <div className="divide-y divide-neutral-800">
-                {posts.map(p => (
-                  <article key={p.id} className="pb-3">
-                    <div className="flex items-center gap-2.5 px-4 py-2.5">
-                      <div className="w-7 h-7 rounded-full bg-neutral-800 border border-amber-500 flex items-center justify-center text-xs font-bold text-amber-400">
-                        {p.u[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold">@{p.u}</div>
-                        <div className="text-[10px] text-neutral-400">{p.loc}</div>
-                      </div>
-                    </div>
-                    <img src={p.img} alt="Post" className="w-full aspect-square object-cover" />
-                    <div className="px-4 pt-2.5">
-                      <div className="flex items-center justify-between mb-2 text-lg">
-                        <div className="flex items-center gap-3">
-                          <button onClick={() => toggleLike(p.id)}>{p.liked ? "❤️" : "🤍"}</button>
-                          <button>💬</button>
-                          <button>↗️</button>
+                {posts.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-neutral-500">
+                    ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਹੈ। ਹੇਠਾਂ ਦਿੱਤੇ (➕) ਬਟਨ ਤੋਂ ਪਹਿਲੀ ਫ਼ੋਟੋ ਅਪਲੋਡ ਕਰੋ!
+                  </div>
+                ) : (
+                  posts.map(p => (
+                    <article key={p.id} className="pb-3">
+                      <div className="flex items-center gap-2.5 px-4 py-2.5">
+                        <div className="w-7 h-7 rounded-full bg-neutral-800 border border-amber-500 flex items-center justify-center text-xs font-bold text-amber-400">
+                          {p.u ? p.u[0].toUpperCase() : 'P'}
                         </div>
-                        <button onClick={() => toggleSave(p.id)}>{p.saved ? "🔖" : "📑"}</button>
+                        <div>
+                          <div className="text-xs font-bold">@{p.u}</div>
+                          <div className="text-[10px] text-neutral-400">{p.loc}</div>
+                        </div>
                       </div>
-                      <div className="text-xs font-semibold mb-1">{p.likes} {t.likes}</div>
-                      <p className="text-xs text-neutral-200"><span className="font-bold mr-1.5">@{p.u}</span>{p.cap}</p>
-                    </div>
-                  </article>
-                ))}
+                      <img src={p.img} alt="Post" className="w-full aspect-square object-cover" />
+                      <div className="px-4 pt-2.5">
+                        <div className="flex items-center justify-between mb-2 text-lg">
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => toggleLike(p.id)}>{p.liked ? "❤️" : "🤍"}</button>
+                            <button>💬</button>
+                            <button>↗️</button>
+                          </div>
+                          <button onClick={() => toggleSave(p.id)}>{p.saved ? "🔖" : "📑"}</button>
+                        </div>
+                        <div className="text-xs font-semibold mb-1">{p.likes} {t.likes}</div>
+                        <p className="text-xs text-neutral-200"><span className="font-bold mr-1.5">@{p.u}</span>{p.cap}</p>
+                      </div>
+                    </article>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -271,8 +336,8 @@ export default function App() {
                   </div>
                 )}
                 <textarea rows={3} placeholder={t.cap} value={caption} onChange={(e) => setCaption(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500" />
-                <button type="submit" disabled={!postImg} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-xs disabled:opacity-40 transition">
-                  {t.share}
+                <button type="submit" disabled={!postImg || loading} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-xs disabled:opacity-40 transition">
+                  {loading ? "ਕਲਾਊਡ ਵਿੱਚ ਪੋਸਟ ਹੋ ਰਿਹਾ ਹੈ..." : t.share}
                 </button>
               </form>
             </div>
@@ -323,19 +388,4 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-        </main>
-
-        {/* Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 border-t border-neutral-800 flex justify-around py-3 z-30 text-xl">
-          <button onClick={() => setTab('home')} className={tab === 'home' ? "opacity-100 scale-110" : "opacity-50"}>🏠</button>
-          <button onClick={() => setTab('reels')} className={tab === 'reels' ? "opacity-100 scale-110" : "opacity-50"}>🎬</button>
-          <button onClick={() => setTab('create')} className={tab === 'create' ? "opacity-100 scale-110" : "opacity-50"}>➕</button>
-          <button onClick={() => setTab('profile')} className={tab === 'profile' ? "opacity-100 scale-110" : "opacity-50"}>👤</button>
-        </nav>
-
-      </div>
-    </div>
-  );
-}
+            </di
