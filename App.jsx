@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
   Heart, MessageCircle, Send, Bookmark, Home, Film, PlusSquare, 
-  User, LogOut, Globe, Camera, Grid, BookmarkCheck, X 
+  User, LogOut, Globe, Camera, Grid, X 
 } from 'lucide-react';
 
 const safeGet = (k, def) => {
@@ -319,7 +319,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto">
           {tab === 'home' && (
             <div>
-              {/* Stories Bar */}
+              {/* Stories */}
               <div className="flex gap-3 px-4 py-3 overflow-x-auto border-b border-neutral-800 no-scrollbar">
                 {stories.map(s => (
                   <div key={s.id} onClick={() => { setStory(s); setStoryLiked(false); }} className="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer">
@@ -467,69 +467,4 @@ export default function App() {
                     </div>
                     <div>
                       <div className="font-bold text-sm">{currentUser.fol}</div>
-                      <div className="text-[10px] text-neutral-400">{t.fol}</div>
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm">{currentUser.fing}</div>
-                      <div className="text-[10px] text-neutral-400">{t.fing}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <h3 className="font-bold text-sm">{currentUser.name}</h3>
-                <p className="text-xs text-neutral-400 mb-3">@{currentUser.uid}</p>
-
-                <button
-                  onClick={() => { safeSet('punjab_user', null); setCurrentUser(null); }}
-                  className="w-full py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-red-400"
-                >
-                  {t.out}
-                </button>
-              </div>
-
-              <div className="flex border-b border-neutral-800">
-                <button 
-                  onClick={() => setProfileTab('posts')} 
-                  className={`flex-1 py-2.5 flex justify-center border-b-2 ${profileTab === 'posts' ? 'border-amber-500 text-amber-500' : 'border-transparent text-neutral-500'}`}
-                >
-                  <Grid size={16} />
-                </button>
-                <button 
-                  onClick={() => setProfileTab('saved')} 
-                  className={`flex-1 py-2.5 flex justify-center border-b-2 ${profileTab === 'saved' ? 'border-amber-500 text-amber-500' : 'border-transparent text-neutral-500'}`}
-                >
-                  <BookmarkCheck size={16} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1 p-1">
-                {(profileTab === 'posts' ? myPosts : savedPosts).map(item => (
-                  <div key={item.id} className="aspect-square bg-neutral-900">
-                    <img src={item.image} alt="post" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </main>
-
-        {/* Bottom Nav */}
-        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 border-t border-neutral-800 flex justify-around py-3 z-30">
-          <button onClick={() => setTab('home')} className={tab === 'home' ? "text-amber-500" : "text-neutral-400"}>
-            <Home size={20} />
-          </button>
-          <button onClick={() => setTab('reels')} className={tab === 'reels' ? "text-amber-500" : "text-neutral-400"}>
-            <Film size={20} />
-          </button>
-          <button onClick={() => setTab('create')} className={tab === 'create' ? "text-amber-500" : "text-neutral-400"}>
-            <PlusSquare size={20} />
-          </button>
-          <button onClick={() => setTab('profile')} className={tab === 'profile' ? "text-amber-500" : "text-neutral-400"}>
-            <User size={20} />
-          </button>
-        </nav>
-
-      </div>
-    </div>
-  );
-}
+                      <div
