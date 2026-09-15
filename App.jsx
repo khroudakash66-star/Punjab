@@ -18,82 +18,20 @@ const safeSet = (key, value) => {
   }
 };
 
-// ਮਾਤਾ ਜੀ ਦੀ ਪਸੰਦ ਵਾਲਾ ਪੰਜਾਬ ਮੈਪ ਆਰਟਵਰਕ (100% In-Code Vector Art)
-const PunjabHeritageArt = ({ className = "w-full h-full" }) => (
-  <svg viewBox="0 0 400 450" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <defs>
-      <linearGradient id="mapGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
-        <stop offset="50%" stopColor="#d97706" stopOpacity="0.2" />
-        <stop offset="100%" stopColor="#78350f" stopOpacity="0.4" />
-      </linearGradient>
-    </defs>
-
-    {/* ਪੰਜਾਬ ਦਾ ਨਕਸ਼ਾ ਬਾਰਡਰ */}
-    <path 
-      d="M210 30 C270 50, 310 90, 320 140 C330 180, 390 220, 370 280 C350 330, 310 360, 260 410 C210 430, 180 390, 150 330 C120 300, 40 270, 50 200 C60 140, 110 110, 140 80 Z" 
-      fill="url(#mapGradient)" 
-      stroke="#f59e0b" 
-      strokeWidth="4" 
-      strokeDasharray="6 3"
-    />
-
-    {/* ਖੰਡਾ ਸਾਹਿਬ */}
-    <g transform="translate(255, 45) scale(0.65)">
-      <circle cx="50" cy="50" r="32" stroke="#fbbf24" strokeWidth="6" fill="none" />
-      <path d="M50 10 L50 90" stroke="#fbbf24" strokeWidth="8" strokeLinecap="round" />
-      <path d="M25 40 Q50 90 50 90 Q50 90 75 40" stroke="#fbbf24" strokeWidth="6" fill="none" />
-    </g>
-
-    {/* ਕਣਕ ਦੀਆਂ ਬੱਲੀਆਂ */}
-    <g transform="translate(90, 70) scale(0.75)">
-      <path d="M40 90 Q30 50 10 20" stroke="#f59e0b" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M40 90 Q50 50 70 20" stroke="#f59e0b" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <circle cx="15" cy="25" r="6" fill="#fbbf24" />
-      <circle cx="28" cy="45" r="6" fill="#fbbf24" />
-      <circle cx="65" cy="25" r="6" fill="#fbbf24" />
-      <circle cx="52" cy="45" r="6" fill="#fbbf24" />
-    </g>
-
-    {/* ਵਿਚਕਾਰ ਸ਼ੁੱਧ ਪੰਜਾਬੀ ਵਿੱਚ: ਪੰਜਾਬ */}
-    <text 
-      x="200" 
-      y="245" 
-      textAnchor="middle" 
-      fill="#ffffff" 
-      fontSize="62" 
-      fontWeight="900" 
-      fontFamily="system-ui, -apple-system, sans-serif"
-      letterSpacing="2"
-      filter="drop-shadow(0px 3px 6px rgba(0,0,0,0.9))"
-    >
-      ਪੰਜਾਬ
-    </text>
-
-    {/* ਦੇਸੀ ਟਰੈਕਟਰ */}
-    <g transform="translate(90, 280) scale(0.65)">
-      <circle cx="35" cy="65" r="22" stroke="#fbbf24" strokeWidth="5" fill="#171717" />
-      <circle cx="105" cy="72" r="15" stroke="#fbbf24" strokeWidth="5" fill="#171717" />
-      <path d="M35 65 L80 65 L85 45 L50 45 L50 25 L105 25 L105 72" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      <path d="M60 25 L60 10 L70 10" stroke="#f59e0b" strokeWidth="4" strokeLinecap="round" />
-    </g>
-
-    {/* ਢੋਲ */}
-    <g transform="translate(240, 285) scale(0.6)">
-      <ellipse cx="60" cy="50" rx="30" ry="45" fill="#d97706" stroke="#fbbf24" strokeWidth="5" />
-      <path d="M35 25 L85 75 M35 75 L85 25" stroke="#ffffff" strokeWidth="2.5" strokeOpacity="0.8" />
-    </g>
-  </svg>
-);
-
 const PunjabLogo = ({ size = "small" }) => {
   if (size === "large") {
     return (
       <div className="flex flex-col items-center">
-        <div className="w-40 h-44 rounded-3xl overflow-hidden border border-amber-500/50 shadow-2xl bg-neutral-900/80 p-2 flex items-center justify-center backdrop-blur-md">
-          <PunjabHeritageArt />
+        <div className="w-36 h-36 rounded-3xl border-2 border-amber-500/60 bg-gradient-to-b from-amber-950/40 to-neutral-900 flex flex-col items-center justify-center shadow-2xl p-2 relative">
+          <span className="text-4xl select-none">🌾</span>
+          <span className="font-black text-2xl text-amber-400 mt-1 select-none tracking-wide">
+            ਪੰਜਾਬ
+          </span>
+          <span className="text-[10px] tracking-widest text-amber-200/60 uppercase font-semibold mt-0.5">
+            Heritage
+          </span>
         </div>
-        <span className="font-extrabold text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
+        <span className="font-black text-2xl tracking-[0.25em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent mt-3">
           PUNJAB
         </span>
       </div>
@@ -102,12 +40,17 @@ const PunjabLogo = ({ size = "small" }) => {
 
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-10 h-11 rounded-xl overflow-hidden border border-amber-500/40 bg-neutral-900 flex items-center justify-center p-0.5">
-        <PunjabHeritageArt />
+      <div className="w-10 h-10 rounded-xl border border-amber-500/50 bg-neutral-900 flex items-center justify-center text-xl shadow-md">
+        🌾
       </div>
-      <span className="font-extrabold text-lg tracking-[0.2em] bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent">
-        PUNJAB
-      </span>
+      <div className="flex flex-col">
+        <span className="font-extrabold text-base tracking-wider bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-200 bg-clip-text text-transparent leading-none">
+          PUNJAB
+        </span>
+        <span className="text-[10px] tracking-widest text-amber-300/80 font-medium">
+          ਪੰਜਾਬ
+        </span>
+      </div>
     </div>
   );
 };
@@ -178,7 +121,7 @@ export default function App() {
     {
       id: 101,
       author: "virasat_punjab",
-      desc: "Virasat-E-Punjab 🌾✨ #Punjab #Virasat #Reels",
+      desc: "Virasat-E-Punjab #Punjab #Reels",
       videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4",
       likes: 3420,
       isLiked: false
@@ -186,7 +129,7 @@ export default function App() {
     {
       id: 102,
       author: "kisaan_jatt",
-      desc: "Fields of Punjab 🚜❤️ #Kisaan #DesiPunjab",
+      desc: "Fields of Punjab #Kisaan #DesiPunjab",
       videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-countryside-road-between-fields-41315-large.mp4",
       likes: 5120,
       isLiked: false
@@ -200,7 +143,7 @@ export default function App() {
       authorName: "Virasat Punjab",
       location: "Sri Amritsar Sahib",
       image: "https://images.unsplash.com/photo-1596701062351-8c2c14d1fdd1?auto=format&fit=crop&w=800&q=80",
-      caption: "Golden Temple Darshan ✨ #HarmandirSahib",
+      caption: "Golden Temple Darshan",
       likes: 1240,
       isLiked: false
     },
@@ -210,7 +153,7 @@ export default function App() {
       authorName: "Punjab Fields",
       location: "Malwa, Punjab",
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
-      caption: "Lush green fields of Punjab 🌾 #Farmer",
+      caption: "Lush green fields of Punjab",
       likes: 890,
       isLiked: false
     }
@@ -224,7 +167,7 @@ export default function App() {
     setAuthError('');
     setAuthSuccess('');
 
-    const users = safeGet('punjab_accounts_v6', []);
+    const users = safeGet('punjab_accounts_v7', []);
 
     if (authMode === 'signup') {
       if (!usernameInput.trim() || !passwordInput.trim()) {
@@ -242,7 +185,7 @@ export default function App() {
         password: passwordInput.trim()
       };
       users.push(newUser);
-      safeSet('punjab_accounts_v6', users);
+      safeSet('punjab_accounts_v7', users);
       safeSet('punjab_user_session', newUser);
       setCurrentUser(newUser);
     } 
@@ -270,8 +213,8 @@ export default function App() {
         return;
       }
       users[userIndex].password = newPasswordInput.trim();
-      safeSet('punjab_accounts_v6', users);
-      setAuthSuccess(lang === 'en' ? 'Password updated! Please login.' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ! ਹੁਣ ਲਾਗ ਇਨ ਕਰੋ।');
+      safeSet('punjab_accounts_v7', users);
+      setAuthSuccess(lang === 'en' ? 'Password updated successfully' : 'ਪਾਸਵਰਡ ਬਦਲ ਗਿਆ ਹੈ');
       setTimeout(() => {
         setAuthMode('login');
         setPasswordInput('');
@@ -309,7 +252,7 @@ export default function App() {
         return {
           ...reel,
           isLiked: !reel.isLiked,
-          likes: reel.likes - 1 : reel.likes + 1
+          likes: reel.isLiked ? reel.likes - 1 : reel.likes + 1
         };
       }
       return reel;
@@ -342,8 +285,6 @@ export default function App() {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-4 font-sans">
-        
-        {/* Language Switch Button */}
         <div className="w-full max-w-sm flex justify-end mb-3">
           <button
             onClick={() => setLang(lang === 'en' ? 'pa' : 'en')}
@@ -466,8 +407,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black text-white flex justify-center pb-16 font-sans">
       <div className="w-full max-w-md border-x border-neutral-800 min-h-screen flex flex-col bg-neutral-950">
-        
-        {/* Header */}
         <header className="sticky top-0 z-30 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 px-4 py-2 flex items-center justify-between">
           <PunjabLogo size="small" />
           <div className="flex items-center gap-2">
@@ -487,7 +426,6 @@ export default function App() {
           </div>
         </header>
 
-        {/* Stories Modal */}
         {activeStory && (
           <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between p-4">
             <div className="flex items-center justify-between text-white pt-2">
@@ -503,7 +441,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           {activeTab === 'home' && (
             <div>
@@ -518,3 +455,151 @@ export default function App() {
                       <img src={story.img} alt={story.user} className="w-full h-full rounded-full object-cover border-2 border-black" />
                     </div>
                     <span className="text-[11px] text-neutral-300 truncate w-16 text-center">@{story.user}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="divide-y divide-neutral-800">
+                {posts.map(post => (
+                  <article key={post.id} className="pb-4">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-8 h-8 rounded-full bg-neutral-800 border border-amber-500/40 flex items-center justify-center text-xs font-bold text-amber-400">
+                        {post.authorName[0]}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">{post.authorName}</div>
+                        <div className="text-[10px] text-neutral-400">{post.location}</div>
+                      </div>
+                    </div>
+
+                    <img src={post.image} alt="Post" className="w-full aspect-square object-cover" />
+
+                    <div className="px-4 pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-4">
+                          <button onClick={() => handleLikePost(post.id)}>
+                            <Heart size={22} className={post.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
+                          </button>
+                          <MessageCircle size={22} className="text-white" />
+                          <Send size={22} className="text-white" />
+                        </div>
+                        <Bookmark size={22} className="text-white" />
+                      </div>
+                      <div className="text-xs font-semibold mb-1">{post.likes.toLocaleString()} {t.likes}</div>
+                      <p className="text-xs text-neutral-200">
+                        <span className="font-bold mr-2">{post.author}</span>
+                        {post.caption}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'reels' && (
+            <div className="h-[calc(100vh-125px)] overflow-y-scroll snap-y snap-mandatory">
+              {reels.map(reel => (
+                <div key={reel.id} className="relative h-full w-full snap-start bg-black flex items-center justify-center">
+                  <video
+                    src={reel.videoUrl}
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  />
+                  <div className="absolute right-4 bottom-16 flex flex-col items-center gap-5">
+                    <button onClick={() => handleLikeReel(reel.id)} className="flex flex-col items-center">
+                      <Heart size={28} className={reel.isLiked ? "fill-red-500 text-red-500" : "text-white"} />
+                      <span className="text-[11px] mt-1 font-semibold">{reel.likes}</span>
+                    </button>
+                    <button className="flex flex-col items-center">
+                      <MessageCircle size={28} className="text-white" />
+                      <span className="text-[11px] mt-1 font-semibold">45</span>
+                    </button>
+                    <button className="flex flex-col items-center">
+                      <Send size={26} className="text-white" />
+                      <span className="text-[11px] mt-1 font-semibold">Share</span>
+                    </button>
+                  </div>
+
+                  <div className="absolute left-4 bottom-6 right-16">
+                    <div className="font-bold text-sm text-amber-400 mb-1">@{reel.author}</div>
+                    <div className="text-xs text-neutral-200 line-clamp-2">{reel.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'create' && (
+            <div className="p-4">
+              <h2 className="text-base font-bold mb-4">{t.newPost}</h2>
+              <form onSubmit={handleCreatePost} className="space-y-4">
+                <div>
+                  <label className="text-xs text-neutral-400 block mb-1">{t.imgUrl}</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newImage}
+                    onChange={(e) => setNewImage(e.target.value)}
+                    required
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-xs focus:outline-none focus:border-amber-500 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-400 block mb-1">{t.caption}</label>
+                  <textarea
+                    rows={3}
+                    value={newCaption}
+                    onChange={(e) => setNewCaption(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-3 text-xs focus:outline-none focus:border-amber-500 text-white"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-lg bg-amber-500 text-black font-bold text-xs hover:bg-amber-400 transition"
+                >
+                  {t.sharePost}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div className="p-4 flex flex-col items-center">
+              <div className="w-20 h-20 rounded-full bg-neutral-800 border-2 border-amber-500 flex items-center justify-center text-2xl font-bold text-amber-400 mt-4 mb-3">
+                {currentUser.name[0]?.toUpperCase()}
+              </div>
+              <h3 className="text-base font-bold">{currentUser.name}</h3>
+              <p className="text-xs text-neutral-400 mb-6">@{currentUser.username}</p>
+
+              <button
+                onClick={handleLogout}
+                className="w-full max-w-xs py-2.5 rounded-lg bg-red-950/40 border border-red-800/50 text-red-400 text-xs font-semibold hover:bg-red-900/40 transition"
+              >
+                {t.logout}
+              </button>
+            </div>
+          )}
+        </main>
+
+        <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-neutral-950/95 border-t border-neutral-800 flex justify-around py-3 z-30">
+          <button onClick={() => setActiveTab('home')} className={activeTab === 'home' ? "text-amber-500" : "text-neutral-400"}>
+            <Home size={22} />
+          </button>
+          <button onClick={() => setActiveTab('reels')} className={activeTab === 'reels' ? "text-amber-500" : "text-neutral-400"}>
+            <Film size={22} />
+          </button>
+          <button onClick={() => setActiveTab('create')} className={activeTab === 'create' ? "text-amber-500" : "text-neutral-400"}>
+            <PlusSquare size={22} />
+          </button>
+          <button onClick={() => setActiveTab('profile')} className={activeTab === 'profile' ? "text-amber-500" : "text-neutral-400"}>
+            <User size={22} />
+          </button>
+        </nav>
+      </div>
+    </div>
+  );
+}
