@@ -15,9 +15,13 @@ import {
   LogOut,
   Sparkles,
   ArrowLeft,
+  Settings,
+  Edit3,
+  Grid,
   Video,
   Radio,
   Image as ImageIcon,
+  Check,
 } from "lucide-react";
 
 export default function App() {
@@ -37,6 +41,8 @@ export default function App() {
       }
     ];
   });
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [following, setFollowing] = useState(["jassu_082"]);
 
   useEffect(() => {
     localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
@@ -65,15 +71,16 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="pb-12">
-        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} currentUser={user} />}
+        {tab === "home" && <HomeScreen posts={posts} setTab={setTab} currentUser={user} following={following} setFollowing={setFollowing} savedPosts={savedPosts} setSavedPosts={setSavedPosts} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
         {tab === "create-menu" && <CreateMenuScreen setTab={setTab} />}
         {tab === "create-post" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="post" />}
         {tab === "create-reel" && <CreateScreen user={user} setTab={setTab} setPosts={setPosts} type="reel" />}
         {tab === "camera" && <CameraScreen user={user} setTab={setTab} setPosts={setPosts} />}
         {tab === "live" && <LiveScreen setTab={setTab} user={user} />}
-        {tab === "reels" && <ReelsScreen posts={posts} />}
-        {tab === "profile" && <ProfileScreen user={user} posts={posts} setUser={setUser} />}
+        {tab === "reels" && <ReelsScreen posts={posts} currentUser={user} following={following} setFollowing={setFollowing} />}
+        {tab === "profile" && <ProfileScreen user={user} posts={posts} savedPosts={savedPosts} setUser={setUser} setTab={setTab} followingCount={following.length} />}
+        {tab === "settings" && <SettingsScreen setTab={setTab} setUser={setUser} />}
         {tab === "notifications" && <NotificationsScreen setTab={setTab} />}
         {tab === "messages" && <MessagesScreen setTab={setTab} currentUser={user} />}
         {tab === "story" && <StoryViewScreen setTab={setTab} />}
@@ -191,7 +198,7 @@ function CreateMenuScreen({ setTab }) {
   );
 }
 
-function HomeScreen({ posts, setTab, currentUser }) {
+function HomeScreen({ posts, setTab, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
   const stories = [
     { name: currentUser, active: true },
     { name: "jassu_082" },
@@ -223,18 +230,29 @@ function HomeScreen({ posts, setTab, currentUser }) {
           <button onClick={() => setTab("create-menu")} className="bg-amber-500 text-black font-bold text-xs px-4 py-2 rounded-xl">ਪਹਿਲੀ ਪੋਸਟ ਪਾਓ</button>
         </div>
       ) : (
-        posts.map((p) => <PostCard key={p.id} post={p} currentUser={currentUser} />)
+        posts.map((p) => (
+          <PostCard
+            key={p.id}
+            post={p}
+            currentUser={currentUser}
+            following={following}
+            setFollowing={setFollowing}
+            savedPosts={savedPosts}
+            setSavedPosts={setSavedPosts}
+          />
+        ))
       )}
     </div>
   );
 }
 
-function PostCard({ post, currentUser }) {
+function PostCard({ post, currentUser, following, setFollowing, savedPosts, setSavedPosts }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes || 14);
-  const [saved, setSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(savedPosts.some(s => s.id === post.id));
   const [comment, setComment] = useState("");
   const [commentsList, setCommentsList] = useState([]);
+  const isFollowing = following.includes(post.author);
 
   function handleLike() {
     if (!liked) {
@@ -243,6 +261,24 @@ function PostCard({ post, currentUser }) {
     } else {
       setLiked(false);
       setLikesCount(prev => prev - 1);
+    }
+  }
+
+  function toggleFollow() {
+    if (isFollowing) {
+      setFollowing(following.filter(f => f !== post.author));
+    } else {
+      setFollowing([...following, post.author]);
+    }
+  }
+
+  function toggleSave() {
+    if (isSaved) {
+      setIsSaved(false);
+      setSavedPosts(savedPosts.filter(s => s.id !== post.id));
+    } else {
+      setIsSaved(true);
+      setSavedPosts([...savedPosts, post]);
     }
   }
 
@@ -263,7 +299,14 @@ function PostCard({ post, currentUser }) {
             </div>
           </div>
           <div>
-            <div className="text-xs font-bold">@{post.author}</div>
+            <div className="text-xs font-bold flex items-center gap-2">
+              <span>@{post.author}</span>
+              {post.author !== currentUser && (
+                <button onClick={toggleFollow} className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${isFollowing ? 'bg-neutral-800 text-neutral-300' : 'bg-amber-500 text-black'}`}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </button>
+              )}
+            </div>
             <div className="text-[10px] text-neutral-400">{post.location || "Punjab, India"}</div>
           </div>
         </div>
@@ -281,8 +324,8 @@ function PostCard({ post, currentUser }) {
             <MessageCircle size={24} />
             <Send size={24} />
           </div>
-          <button onClick={() => setSaved(!saved)}>
-            <Bookmark size={24} fill={saved ? "#f59e0b" : "none"} stroke={saved ? "#f59e0b" : "currentColor"} />
+          <button onClick={toggleSave}>
+            <Bookmark size={24} fill={isSaved ? "#f59e0b" : "none"} stroke={isSaved ? "#f59e0b" : "currentColor"} />
           </button>
         </div>
 
@@ -361,7 +404,7 @@ function CreateScreen({ user, setTab, setPosts, type }) {
     };
 
     setPosts(prev => [newPost, ...prev]);
-    setTab("home");
+    setTab(type === 'reel' ? 'reels' : 'home');
   }
 
   return (
@@ -502,7 +545,7 @@ function LiveScreen({ setTab, user }) {
   );
 }
 
-function ReelsScreen({ posts }) {
+function ReelsScreen({ posts, currentUser, following, setFollowing }) {
   const reelPosts = posts.filter(p => p.type === 'reel' || p.caption?.includes('#Reels'));
   const displayPosts = reelPosts.length > 0 ? reelPosts : posts;
 
@@ -512,15 +555,130 @@ function ReelsScreen({ posts }) {
         <span>Reels</span>
         <Sparkles size={18} className="text-amber-400" />
       </div>
-      {displayPosts.map((p) => (
-        <div key={p.id} className="bg-black border-b border-neutral-900 relative">
-          {p.image && <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
-          <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl">
-            <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
-            <p className="text-neutral-200 mt-1">{p.caption}</p>
+      {displayPosts.map((p) => {
+        const isFollowing = following.includes(p.author);
+        return (
+          <div key={p.id} className="bg-black border-b border-neutral-900 relative">
+            {p.image && <img src={p.image} alt="" className="w-full aspect-[9/16] object-cover bg-neutral-900 max-h-[500px]" />}
+            <div className="absolute bottom-4 left-3 right-3 text-xs bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3 rounded-xl flex justify-between items-end">
+              <div>
+                <span className="font-bold text-amber-400 mr-2 text-sm">@{p.author}</span>
+                <p className="text-neutral-200 mt-1">{p.caption}</p>
+              </div>
+              {p.author !== currentUser && (
+                <button onClick={() => {
+                  if (isFollowing) setFollowing(following.filter(f => f !== p.author));
+                  else setFollowing([...following, p.author]);
+                }} className={`px-3 py-1 rounded-lg text-xs font-bold ${isFollowing ? 'bg-neutral-800 text-neutral-300' : 'bg-amber-500 text-black'}`}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProfileScreen({ user, posts, savedPosts, setUser, setTab, followingCount }) {
+  const [profileTab, setProfileTab] = useState("posts"); // posts, reels, saved
+  const myPosts = posts.filter((p) => p.author === user && p.type !== 'reel');
+  const myReels = posts.filter((p) => p.author === user && (p.type === 'reel' || p.caption?.includes('#Reels')));
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex justify-between items-start border-b border-neutral-900 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 p-0.5">
+            <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-lg font-bold text-amber-400">
+              {user[0]?.toUpperCase()}
+            </div>
+          </div>
+          <div>
+            <h2 className="font-bold text-sm">@{user}</h2>
+            <p className="text-xs text-neutral-400">Punjab Creator</p>
           </div>
         </div>
-      ))}
+        <div className="flex items-center gap-2">
+          <button onClick={() => setTab("settings")} className="border border-neutral-800 p-2 rounded-xl text-neutral-300 bg-neutral-900">
+            <Settings size={16} />
+          </button>
+          <button onClick={() => { localStorage.removeItem("punjab_user"); setUser(""); }} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900">
+            <LogOut size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="flex justify-around py-2 border-b border-neutral-900 text-center text-xs">
+        <div>
+          <span className="font-bold block text-sm">{posts.filter(p => p.author === user).length}</span>
+          <span className="text-neutral-500">Posts</span>
+        </div>
+        <div>
+          <span className="font-bold block text-sm">1,248</span>
+          <span className="text-neutral-500">Followers</span>
+        </div>
+        <div>
+          <span className="font-bold block text-sm">{followingCount}</span>
+          <span className="text-neutral-500">Following</span>
+        </div>
+      </div>
+
+      {/* Profile Tabs */}
+      <div className="flex justify-around border-b border-neutral-900 text-xs font-bold text-neutral-400">
+        <button onClick={() => setProfileTab("posts")} className={`py-2 border-b-2 ${profileTab === 'posts' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Grid size={18} /></button>
+        <button onClick={() => setProfileTab("reels")} className={`py-2 border-b-2 ${profileTab === 'reels' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Film size={18} /></button>
+        <button onClick={() => setProfileTab("saved")} className={`py-2 border-b-2 ${profileTab === 'saved' ? 'border-amber-400 text-amber-400' : 'border-transparent'}`}><Bookmark size={18} /></button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-1">
+        {profileTab === 'posts' && myPosts.map((p) => (
+          <div key={p.id} className="aspect-square bg-neutral-900">
+            <img src={p.image} alt="" className="w-full h-full object-cover" />
+          </div>
+        ))}
+        {profileTab === 'reels' && myReels.map((p) => (
+          <div key={p.id} className="aspect-square bg-neutral-900 relative">
+            <img src={p.image} alt="" className="w-full h-full object-cover" />
+            <Film size={14} className="absolute bottom-2 right-2 text-white" />
+          </div>
+        ))}
+        {profileTab === 'saved' && savedPosts.map((p) => (
+          <div key={p.id} className="aspect-square bg-neutral-900">
+            <img src={p.image} alt="" className="w-full h-full object-cover" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SettingsScreen({ setTab, setUser }) {
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
+        <button onClick={() => setTab("profile")}><ArrowLeft size={20} /></button>
+        <h2 className="text-sm font-bold">Settings</h2>
+      </div>
+      <div className="space-y-2 text-xs">
+        <div className="p-3 bg-neutral-900 rounded-xl flex items-center justify-between cursor-pointer">
+          <span>Edit Profile</span>
+          <Edit3 size={16} className="text-neutral-400" />
+        </div>
+        <div className="p-3 bg-neutral-900 rounded-xl flex items-center justify-between cursor-pointer">
+          <span>Notifications Settings</span>
+          <Heart size={16} className="text-neutral-400" />
+        </div>
+        <div className="p-3 bg-neutral-900 rounded-xl flex items-center justify-between cursor-pointer">
+          <span>Privacy & Security</span>
+          <Settings size={16} className="text-neutral-400" />
+        </div>
+        <button onClick={() => { localStorage.removeItem("punjab_user"); setUser(""); }} className="w-full p-3 bg-red-500/10 text-red-400 font-bold rounded-xl mt-4">
+          Log Out
+        </button>
+      </div>
     </div>
   );
 }
@@ -621,39 +779,6 @@ function StoryViewScreen({ setTab }) {
         </div>
       </div>
       <div className="z-10 text-center text-xs text-neutral-400">Tap X to close</div>
-    </div>
-  );
-}
-
-function ProfileScreen({ user, posts, setUser }) {
-  const myPosts = posts.filter((p) => p.author === user);
-
-  return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-start border-b border-neutral-900 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 p-0.5">
-            <div className="w-full h-full bg-black rounded-full flex items-center justify-center text-lg font-bold text-amber-400">
-              {user[0]?.toUpperCase()}
-            </div>
-          </div>
-          <div>
-            <h2 className="font-bold text-sm">@{user}</h2>
-            <p className="text-xs text-neutral-400">Punjab Creator</p>
-          </div>
-        </div>
-        <button onClick={() => { localStorage.removeItem("punjab_user"); setUser(""); }} className="border border-neutral-800 p-2 rounded-xl text-red-400 bg-neutral-900">
-          <LogOut size={16} />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-3 gap-1">
-        {myPosts.map((p) => (
-          <div key={p.id} className="aspect-square bg-neutral-900">
-            <img src={p.image} alt="" className="w-full h-full object-cover" />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
