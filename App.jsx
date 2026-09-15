@@ -26,43 +26,35 @@ import {
 export default function App() {
   const [user, setUser] = useState(() => localStorage.getItem("punjab_user") || "");
   const [tab, setTab] = useState("home");
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      author: "jassu_082",
-      caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
-      image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
-      location: "Amritsar, Punjab",
-      likes: [],
-      comments: [],
-      type: "post"
+  const [posts, setPosts] = useState(() => {
+    try {
+      const saved = localStorage.getItem("punjab_posts_db");
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 1,
+          author: "jassu_082",
+          caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
+          image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
+          location: "Amritsar, Punjab",
+          likes: [],
+          comments: [],
+          type: "post"
+        }
+      ];
+    } catch {
+      return [];
     }
-  ]);
+  });
   const [savedPosts, setSavedPosts] = useState([]);
   const [following, setFollowing] = useState([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("punjab_posts_db");
-    if (saved) {
-      try {
-        setPosts(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
     try {
       localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
-    } catch (e) {
-      console.error(e);
-    }
+    } catch {}
   }, [posts]);
 
-  if (!user) {
-    return <AuthScreen setUser={setUser} />;
-  }
+  if (!user) return <AuthScreen setUser={setUser} />;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 select-none">
