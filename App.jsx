@@ -18,7 +18,6 @@ import {
   Settings,
   Edit3,
   Grid,
-  Video,
   Radio,
   Image as ImageIcon,
   Share2,
@@ -28,25 +27,31 @@ export default function App() {
   const [user, setUser] = useState(() => localStorage.getItem("punjab_user") || "");
   const [tab, setTab] = useState("home");
   const [posts, setPosts] = useState(() => {
-    const saved = localStorage.getItem("punjab_posts_db");
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 1,
-        author: "jassu_082",
-        caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
-        image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
-        location: "Amritsar, Punjab",
-        likes: [],
-        comments: [],
-        type: "post"
-      }
-    ];
+    try {
+      const saved = localStorage.getItem("punjab_posts_db");
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 1,
+          author: "jassu_082",
+          caption: "ਸੋਹਣਾ ਪੰਜਾਬ #Punjab #GoldenTemple",
+          image: "https://images.unsplash.com/photo-1588580000645-4562a6d2c839?w=600&auto=format&fit=crop&q=80",
+          location: "Amritsar, Punjab",
+          likes: [],
+          comments: [],
+          type: "post"
+        }
+      ];
+    } catch {
+      return [];
+    }
   });
   const [savedPosts, setSavedPosts] = useState([]);
   const [following, setFollowing] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
+    try {
+      localStorage.setItem("punjab_posts_db", JSON.stringify(posts));
+    } catch {}
   }, [posts]);
 
   if (!user) return <AuthScreen setUser={setUser} />;
@@ -100,7 +105,7 @@ export default function App() {
 }
 
 function AuthScreen({ setUser }) {
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // login, signup, forgot
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -108,15 +113,18 @@ function AuthScreen({ setUser }) {
   function handleSubmit(e) {
     e.preventDefault();
     if (!username.trim()) return;
+
     if (mode === "forgot") {
-      setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
+      setMessage("ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰਨ ਲਈ ਲਿੰਕ ਤੁਹਾਡੀ ਈਮੇਲ ਤੇ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।");
       return;
     }
+
     if (mode === "signup") {
-      setMessage("ਸਾਈਨ ਅੱਪ ਸਫ਼ਲ ਰਿਹਾ! ਲੌਗਇਨ ਕਰੋ।");
-      setMode("login");
+      localStorage.setItem("punjab_user", username.trim());
+      setUser(username.trim());
       return;
     }
+
     localStorage.setItem("punjab_user", username.trim());
     setUser(username.trim());
   }
@@ -155,15 +163,24 @@ function AuthScreen({ setUser }) {
             {mode === "login" ? "ਲੌਗ ਇൻ (Log In)" : mode === "signup" ? "ਸਾਈਨ ਅੱਪ (Sign Up)" : "ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ"}
           </button>
         </form>
+
         {message && <p className="text-xs text-amber-300 mt-3 bg-amber-500/10 p-2 rounded-lg">{message}</p>}
+
         {mode === "login" && (
           <div className="mt-5 space-y-2">
-            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?</button>
-            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ</button>
+            <button onClick={() => { setMode("forgot"); setMessage(""); }} className="text-[11px] text-neutral-400 hover:text-amber-400 block w-full">
+              ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ? (Forgot Password)
+            </button>
+            <button onClick={() => { setMode("signup"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full pt-2 border-t border-neutral-800">
+              ਖਾਤਾ ਨਹੀਂ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ
+            </button>
           </div>
         )}
+
         {(mode === "signup" || mode === "forgot") && (
-          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ</button>
+          <button onClick={() => { setMode("login"); setMessage(""); }} className="text-xs text-amber-400 font-bold block w-full mt-5 pt-3 border-t border-neutral-800">
+            ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਲੌਗ ਇਨ ਕਰੋ
+          </button>
         )}
       </div>
     </div>
