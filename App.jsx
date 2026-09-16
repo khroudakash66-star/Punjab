@@ -1,103 +1,174 @@
-import React from "react";
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-export default function App() {
-  return (
-    <div style={styles.page}>
-      <div style={styles.logo}>
-        {/* Punjabi Title */}
-        <div style={styles.punjabi}>ਪੰਜਾਬ</div>
-
-        {/* English Title */}
-        <div style={styles.english}>Punjab</div>
-
-        {/* Field + Farmer + Boy */}
-        <div style={styles.scene}>
-          <div style={styles.sun} />
-
-          <div style={styles.field}>
-            <span>🌾</span>
-            <span>🌾</span>
-            <span>🌾</span>
-            <span>🌾</span>
-            <span>🌾</span>
-            <span>🌾</span>
-          </div>
-
-          <div style={styles.people}>
-            {/* Farmer */}
-            <div style={styles.farmer}>
-              <div style={styles.farmerHead} />
-              <div style={styles.farmerBody} />
-              <div style={styles.farmerLeg1} />
-              <div style={styles.farmerLeg2} />
-              <div style={styles.farmerArm} />
-            </div>
-
-            {/* Boy */}
-            <div style={styles.boy}>
-              <div style={styles.boyHead} />
-              <div style={styles.boyBody} />
-              <div style={styles.boyLeg1} />
-              <div style={styles.boyLeg2} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // ਕਲਾਉਡ (Firebase) ਨਾਲ ਕਨੈਕਸ਼ਨ
+  runApp(MyApp());
 }
 
-const styles = {
-  page: {
-    minHeight: "100vh",
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background:
-      "linear-gradient(to bottom, #fffdf5 0%, #f8e7bd 48%, #c99548 100%)",
-    padding: "20px",
-    boxSizing: "border-box",
-  },
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'ਜੁੜੀ ਓਏ',
+      theme: ThemeData(
+        brightness: Brightness.dark, // ਪ੍ਰੀਮੀਅਮ ਡਾਰਕ ਥੀਮ
+        primarySwatch: Colors.amber,
+      ),
+      home: LoginScreen(),
+    );
+  }
+}
 
-  logo: {
-    width: "min(92vw, 650px)",
-    textAlign: "center",
-    overflow: "hidden",
-    borderRadius: "24px",
-    background:
-      "linear-gradient(to bottom, #fffef9 0%, #fff8e7 45%, #d7a452 100%)",
-    boxShadow: "0 15px 40px rgba(0,0,0,0.18)",
-    paddingTop: "35px",
-  },
+// 1. ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ OTP ਲੌਗਇਨ ਸਕ੍ਰੀਨ
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
 
-  punjabi: {
-    fontSize: "clamp(65px, 14vw, 125px)",
-    fontWeight: "900",
-    color: "#111",
-    lineHeight: "1",
-    textShadow: "3px 4px 4px rgba(0,0,0,.25)",
-    fontFamily: "Noto Sans Gurmukhi, Arial, sans-serif",
-  },
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _phoneController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  english: {
-    marginTop: "10px",
-    fontSize: "clamp(32px, 7vw, 60px)",
-    fontFamily: "cursive",
-    color: "#111",
-    fontWeight: "600",
-  },
+  void _verifyPhoneNumber() async {
+    String phoneNumber = "+91" + _phoneController.text.trim();
+    
+    await _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await _auth.signInWithCredential(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        print("ਵੈਰੀਫਿਕੇਸ਼ਨ ਫੇਲ੍ਹ: ${e.message}");
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        // OTP ਭੇਜਣ ਤੋਂ ਬਾਅਦ ਹੋਮ ਸਕ੍ਰੀਨ 'ਤੇ ਭੇਜਣ ਦਾ ਕੋਡ ਇੱਥੇ ਆਵੇਗਾ
+        print("OTP ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ!");
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
+    );
+  }
 
-  scene: {
-    position: "relative",
-    height: "300px",
-    marginTop: "15px",
-    overflow: "hidden",
-    background:
-      "linear-gradient(to bottom, #f6d9a1 0%, #e8bb6c 45%, #9d682d 46%, #c28b3e 100%)",
-  },
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF121212),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'ਜੁੜੀ ਓਏ',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.amberAccent),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'ਆਪਣੀਆਂ ਜੜ੍ਹਾਂ ਨਾਲ ਜੁੜੋ',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            SizedBox(height: 40),
+            TextField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'ਮੋਬਾਈਲ ਨੰਬਰ ਦਰਜ ਕਰੋ',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: Icon(Icons.phone),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _verifyPhoneNumber,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[800],
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('OTP ਪ੍ਰਾਪਤ ਕਰੋ', style: TextStyle(fontSize: 18, color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-  sun: {
-    position: "absolute",
-    width: "65px",
-    height: "
+// 2. ਫੋਟੋ ਅਪਲੋਡ ਕਰਨ ਅਤੇ ਕਲਾਉਡ ਵਿੱਚ ਸੇਵ ਕਰਨ ਵਾਲੀ ਸਕ੍ਰੀన్
+class UploadScreen extends StatefulWidget {
+  @override
+  _UploadScreenState createState() => _UploadScreenState();
+}
+
+class _UploadScreenState extends State<UploadScreen> {
+  File? _image;
+  final ImagePicker _picker = ImagePicker();
+
+  // ਫੋਨ ਦੀ ਗੈਲਰੀ ਵਿੱਚੋਂ ਫੋਟੋ ਚੁਣਨਾ
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  // ਫੋਟੋ ਨੂੰ Firebase ਕਲਾਉਡ ਸਟੋਰੇਜ ਵਿੱਚ ਸੇਵ ਕਰਨਾ (ਕਦੇ ਨਾ ਉੱਡਣ ਲਈ)
+  Future<void> _uploadImageToCloud() async {
+    if (_image == null) return;
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      Reference ref = FirebaseStorage.instance.ref().child('punjab_views/$fileName.jpg');
+      
+      await ref.putFile(_image!);
+      String downloadUrl = await ref.getDownloadURL();
+      
+      print("ਫੋਟੋ ਕਲਾਉਡ ਵਿੱਚ ਸਫਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ: $downloadUrl");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ਫੋਟੋ ਸਫ਼ਲਤਾਪੂਰਵਕ ਪੋਸਟ ਹੋ ਗਈ!')),
+      );
+    } catch (e) {
+      print("ਅਪਲੋਡ ਕਰਨ ਵਿੱਚ ਗਲਤੀ: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('ਪੰਜਾਬ ਦਾ ਵਿਊ ਪਾਓ')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _image == null
+                ? Text('ਕੋਈ ਫੋਟੋ ਨਹੀਂ ਚੁਣੀ ਗਈ', style: TextStyle(color: Colors.grey))
+                : Image.file(_image!, height: 200),
+            SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: Icon(Icons.image),
+              label: Text('ਗੈਲਰੀ ਤੋਂ ਫੋਟੋ ਚੁਣੋ'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _uploadImageToCloud,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: Text('ਕਲਾਉਡ ਵਿੱਚ ਅਪਲੋਡ ਕਰੋ'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
