@@ -1,296 +1,233 @@
 import React, { useState } from 'react';
 
-export default function PunjabApp() {
-  // One-time Signup / Login Memory
+export default function PunjabTopApp() {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('punjab_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    const saved = localStorage.getItem('punjab_top_user');
+    return saved ? JSON.parse(saved) : null;
   });
 
-  const [authMode, setAuthMode] = useState('login');
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [village, setVillage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const [currentTab, setCurrentTab] = useState('feed'); // 'feed', 'create', 'profile', 'settings'
+  const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'create', 'profile', 'settings'
 
-  // Stories (Instagram style top bar)
-  const stories = [
-    { id: 1, name: 'ਵਿਰਸਾ', icon: '🌾' },
-    { id: 2, name: 'ਪਿੰਡ ਧਾਰੀਵਾਲ', icon: '🚜' },
-    { id: 3, name: 'ਲੋਕ ਗੀਤ', icon: '🎶' },
-    { id: 4, name: 'ਸਰਪੰਚ ਮਸਲਾ', icon: '⚠️' },
-    { id: 5, name: 'ਰੁਜ਼ਾਨਾ ਜ਼ਿੰਦਗੀ', icon: '☀️' }
-  ];
-
-  // Feed Posts
+  // Unique Feed Data (Culture + Village Accountability)
   const [posts, setPosts] = useState([
     {
       id: 1,
-      user: 'ਜਤਿੰਦਰ ਸਿੰਘ',
+      user: 'ਜਤਿੰਦਰ ਸਿੰਘ ਖਹਿਰਾ',
       village: 'ਪਿੰਡ ਧਾਰੀਵਾਲ',
-      type: 'culture',
-      content: 'ਸਾਡੇ ਪਿੰਡ ਦਾ ਪੁਰਾਣਾ ਵਿਰਸਾ ਅਤੇ ਸਾਂਝੀ ਸੋਚ! #Punjab #Virasat',
-      likes: 124,
+      category: 'culture',
+      content: 'ਸਾਡੇ ਪਿੰਡ ਦਾ ਪੁਰਾਣਾ ਵਿਰਸਾ, ਸਾਂਝੀ ਸੋਚ ਅਤੇ ਸਾਡੀ ਬੋਲੀ! #Punjab #Virasat',
+      likes: 420,
       isLiked: false
     },
     {
       id: 2,
-      user: 'ਅਮਨਪ੍ਰੀਤ ਕੌਰ',
+      user: 'ਗੁਰਪ੍ਰੀਤ ਸਿੰਘ',
       village: 'ਪਿੰਡ ਰਾਮਪੁਰ',
-      type: 'issue',
-      content: 'ਸਾਡੇ ਪਿੰਡ ਦੀ ਫਿਰਨੀ ਵਾਲੀ ਗਲੀ ਦਾ ਕੰਮ ਸਰਪੰਚ ਵੱਲੋਂ ਰੋਕਿਆ ਗਿਆ ਹੈ। #VillageIssues',
-      likes: 310,
+      category: 'issue',
+      content: 'ਸਾਡੇ ਪਿੰਡ ਦੀ ਫਿਰਨੀ ਵਾਲੀ ਗਲੀ ਦਾ ਬਜਟ ਪਾਸ ਹੋਣ ਦੇ ਬਾਵਜੂਦ ਸਰਪੰਚ ਵੱਲੋਂ ਕੰਮ ਰੋਕਿਆ ਗਿਆ ਹੈ। ਸਾਰੇ ਵੀਰ ਇੱਕਜੁੱਟ ਹੋ ਕੇ ਆਵਾਜ਼ ਚੁੱਕੋ! #VillageIssues #PunjabVoice',
+      likes: 890,
       isLiked: false
     }
   ]);
 
   const [newContent, setNewContent] = useState('');
-  const [postType, setPostType] = useState('culture');
+  const [category, setCategory] = useState('culture');
   const [postVillage, setPostVillage] = useState('');
 
-  // Handle Signup
-  const handleSignup = (e) => {
+  // Authentication Handlers
+  const handleAuth = (e) => {
     e.preventDefault();
-    if (phone.length < 10 || !password || !name) {
-      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਸਾਰੀ ਜਾਣਕਾਰੀ ਸਹੀ ਭਰੋ!');
+    if (phone.length < 10 || !password || (!isLoginMode && !name)) {
+      setError('ਕਿਰਪਾ ਕਰਕੇ ਸਾਰੀ ਜਾਣਕਾਰੀ ਸਹੀ ਭਰੋ!');
       return;
     }
-    const userData = { name, phone, village: village || 'ਪੰਜਾਬ', password };
-    localStorage.setItem('punjab_user', JSON.stringify(userData));
-    setUser(userData);
-  };
-
-  // Handle Login
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const saved = JSON.parse(localStorage.getItem('punjab_user'));
-    if (saved && saved.phone === phone && saved.password === password) {
-      setUser(saved);
+    if (isLoginMode) {
+      const saved = JSON.parse(localStorage.getItem('punjab_top_user'));
+      if (saved && saved.phone === phone && saved.password === password) {
+        setUser(saved);
+        setError('');
+      } else {
+        setError('ਗਲਤ ਨੰਬਰ ਜਾਂ ਪਾਸਵਰਡ!');
+      }
     } else {
-      setErrorMessage('ਗਲਤ ਨੰਬਰ ਜਾਂ ਪਾਸਵਰਡ!');
+      const newUser = { name, phone, village: village || 'ਪੰਜਾਬ', password };
+      localStorage.setItem('punjab_top_user', JSON.stringify(newUser));
+      setUser(newUser);
+      setError('');
     }
   };
 
-  // Handle Logout
   const handleLogout = () => {
-    localStorage.removeItem('punjab_user');
+    localStorage.removeItem('punjab_top_user');
     setUser(null);
   };
 
-  // Like Post Toggle
-  const handleLike = (id) => {
-    setPosts(posts.map(p => {
-      if (p.id === id) {
-        return { ...p, likes: p.isLiked ? p.likes - 1 : p.likes + 1, isLiked: !p.isLiked };
-      }
-      return p;
-    }));
+  const toggleLike = (id) => {
+    setPosts(posts.map(p => p.id === id ? { ...p, likes: p.isLiked ? p.likes - 1 : p.likes + 1, isLiked: !p.isLiked } : p));
   };
 
-  // Handle New Post
-  const handlePostSubmit = (e) => {
+  const createPost = (e) => {
     e.preventDefault();
     if (!newContent.trim()) return;
-
-    const newPostObj = {
+    const newPost = {
       id: posts.length + 1,
       user: user.name,
       village: postVillage || user.village || 'ਪੰਜਾਬ',
-      type: postType,
+      category,
       content: newContent,
-      likes: 0,
-      isLiked: false
+      likes: 1,
+      isLiked: true
     };
-
-    setPosts([newPostObj, ...posts]);
+    setPosts([newPost, ...posts]);
     setNewContent('');
     setPostVillage('');
-    setCurrentTab('feed');
+    setActiveTab('feed');
   };
 
-  // Auth Screen (Dark Theme)
   if (!user) {
     return (
-      <div style={{ fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto', backgroundColor: '#000', color: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
-        <div style={{ backgroundColor: '#121212', padding: '30px', borderRadius: '15px', border: '1px solid #222', textAlign: 'center' }}>
-          <h2 style={{ color: '#fff', marginBottom: '5px' }}>ਪੰਜਾਬ (Panjaab) 🌾</h2>
-          <p style={{ fontSize: '13px', color: '#888', marginBottom: '25px' }}>ਕਲਚਰ, ਰੀਲਾਂ ਤੇ ਪਿੰਡਾਂ ਦੀ ਆਵਾਜ਼</p>
+      <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', padding: '20px' }}>
+        <div style={{ width: '100%', maxWidth: '400px', backgroundColor: '#111', padding: '30px', borderRadius: '16px', border: '1px solid #222', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '28px', marginBottom: '5px', fontWeight: '800', letterSpacing: '1px' }}>ਪੰਜਾਬ 🌾</h1>
+          <p style={{ fontSize: '13px', color: '#888', marginBottom: '25px' }}>ਵਿਰਸਾ, ਤਾਕਤ ਅਤੇ ਪਿੰਡਾਂ ਦੀ ਅਸਲ ਆਵਾਜ਼</p>
 
-          {errorMessage && <div style={{ backgroundColor: '#3b1111', color: '#ff8a80', padding: '10px', borderRadius: '5px', fontSize: '13px', marginBottom: '15px' }}>{errorMessage}</div>}
+          {error && <div style={{ backgroundColor: '#3b1111', color: '#ff8a80', padding: '10px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px' }}>{error}</div>}
 
-          {authMode === 'signup' ? (
-            <form onSubmit={handleSignup}>
-              <input type="text" placeholder="ਪੂਰਾ ਨਾਮ" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              <input type="text" placeholder="ਪਿੰਡ / ਸ਼ਹਿਰ" value={village} onChange={(e) => setVillage(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              <input type="tel" placeholder="ਮੋਬਾਈਲ ਨੰਬਰ (10 ਅੰਕ)" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              <input type="password" placeholder="ਪਾਸਵਰਡ" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              <button type="submit" style={{ width: '100%', backgroundColor: '#fff', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>ਸਾਈਨ ਅੱਪ ਕਰੋ</button>
-              <p style={{ marginTop: '15px', fontSize: '13px', color: '#888' }}>ਪਹਿਲਾਂ ਹੀ ਅਕਾਊਂਟ ਹੈ? <span style={{ color: '#4dabf7', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setAuthMode('login')}>ਲੌਗਇਨ ਕਰੋ</span></p>
-            </form>
-          ) : (
-            <form onSubmit={handleLogin}>
-              <input type="tel" placeholder="ਮੋਬਾਈਲ ਨੰਬਰ" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              <input type="password" placeholder="ਪਾਸਵਰਡ" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              <button type="submit" style={{ width: '100%', backgroundColor: '#fff', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>ਲੌਗਇਨ ਕਰੋ</button>
-              <p style={{ marginTop: '15px', fontSize: '13px', color: '#888' }}>ਨਵਾਂ ਅਕਾਊਂਟ ਬਣਾਉਣਾ ਹੈ? <span style={{ color: '#4dabf7', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setAuthMode('signup')}>ਸਾਈਨ ਅੱਪ ਕਰੋ</span></p>
-            </form>
-          )}
+          <form onSubmit={handleAuth}>
+            {!isLoginMode && (
+              <>
+                <input type="text" placeholder="ਪੂਰਾ ਨਾਮ" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '12px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }} />
+                <input type="text" placeholder="ਪਿੰਡ / ਸ਼ਹਿਰ" value={village} onChange={e => setVillage(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '12px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }} />
+              </>
+            )}
+            <input type="tel" placeholder="ਮੋਬਾਈਲ ਨੰਬਰ (10 ਅੰਕ)" value={phone} onChange={e => setPhone(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '12px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }} />
+            <input type="password" placeholder="ਪਾਸਵਰਡ" value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '20px', backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }} />
+            
+            <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}>
+              {isLoginMode ? 'ਲੌਗਇਨ ਕਰੋ' : 'ਅਕਾਊਂਟ ਬਣਾਓ'}
+            </button>
+          </form>
+
+          <p style={{ marginTop: '20px', fontSize: '13px', color: '#888', cursor: 'pointer' }} onClick={() => setIsLoginMode(!isLoginMode)}>
+            {isLoginMode ? 'ਨਵਾਂ ਅਕਾਊਂਟ ਬਣਾਉਣਾ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ' : 'ਪਹਿਲਾਂ ਹੀ ਅਕਾਊਂਟ ਹੈ? ਲੌਗਇਨ ਕਰੋ'}
+          </p>
         </div>
       </div>
     );
   }
 
-  const userPosts = posts.filter(p => p.user === user.name);
+  const myPosts = posts.filter(p => p.user === user.name);
 
   return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto', backgroundColor: '#000', color: '#fff', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh', maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif', position: 'relative' }}>
       
-      {/* Instagram Style Header */}
-      <div style={{ backgroundColor: '#000', color: '#fff', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #222', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ fontWeight: 'bold', fontSize: '20px', letterSpacing: '0.5px' }}>ਪੰਜਾਬ 🌾</div>
-        <div style={{ display: 'flex', gap: '15px', fontSize: '20px' }}>
-          <span>➕</span>
-          <span>❤️</span>
+      {/* Top Header */}
+      <div style={{ padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1a1a1a', backgroundColor: '#000', position: 'sticky', top: 0, zIndex: 10 }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0 }}>ਪੰਜਾਬ 🌾</h2>
+        <div style={{ fontSize: '12px', backgroundColor: '#1a1a1a', padding: '6px 12px', borderRadius: '20px', color: '#ccc', border: '1px solid #333' }}>
+          📍 {user.village}
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, overflowY: 'auto', marginBottom: '60px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
         
-        {/* Feed Tab (Instagram Style) */}
-        {currentTab === 'feed' && (
+        {/* Feed Section */}
+        {activeTab === 'feed' && (
           <div>
-            {/* Stories Bar */}
-            <div style={{ display: 'flex', gap: '15px', padding: '12px 15px', overflowX: 'auto', borderBottom: '1px solid #222', backgroundColor: '#000' }}>
-              {stories.map(s => (
-                <div key={s.id} style={{ textAlign: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#121212', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>
-                      {s.icon}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '11px', color: '#aaa', marginTop: '4px', display: 'block', width: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Posts Feed */}
             {posts.map(post => (
-              <div key={post.id} style={{ backgroundColor: '#000', borderBottom: '1px solid #222', marginBottom: '10px' }}>
-                {/* Post Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🧑‍🌾</div>
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{post.user}</div>
-                      <div style={{ fontSize: '11px', color: '#888' }}>📍 {post.village}</div>
-                    </div>
+              <div key={post.id} style={{ backgroundColor: '#0a0a0a', borderBottom: '1px solid #1a1a1a', padding: '16px', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{post.user}</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>📍 {post.village}</div>
                   </div>
-                  <span style={{ fontSize: '10px', backgroundColor: post.type === 'issue' ? '#3b1111' : '#1b3b1a', color: post.type === 'issue' ? '#ff8a80' : '#b9f6ca', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
-                    {post.type === 'issue' ? '⚠️ ਪਿੰਡ ਦਾ ਮਸਲਾ' : '✨ ਵਿਰਸਾ'}
+                  <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold', backgroundColor: post.category === 'issue' ? '#3b1111' : '#113b1a', color: post.category === 'issue' ? '#ff8a80' : '#b9f6ca' }}>
+                    {post.category === 'issue' ? '⚠️ ਪਿੰਡ ਦਾ ਮਸਲਾ' : '✨ ਵਿਰਸਾ / ਰੀਲ'}
                   </span>
                 </div>
+                
+                <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#e0e0e0', margin: '10px 0' }}>{post.content}</p>
 
-                {/* Post Media Box (Mock Image/Reel view) */}
-                <div style={{ width: '100%', height: '300px', backgroundColor: '#121212', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: '14px', textAlign: 'center', padding: '20px', boxSizing: 'border-box' }}>
-                  🌾 [ਪੰਜਾਬੀ ਕਲਚਰਲ ਰੀਲ ਜਾਂ ਫੋਟੋ - {post.village}]
-                </div>
-
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px', fontSize: '20px' }}>
-                  <div style={{ display: 'flex', gap: '15px' }}>
-                    <span onClick={() => handleLike(post.id)} style={{ cursor: 'pointer' }}>{post.isLiked ? '❤️' : '🤍'}</span>
-                    <span>💬</span>
-                    <span>↗️</span>
-                  </div>
-                  <div>🔖</div>
-                </div>
-
-                {/* Likes & Caption */}
-                <div style={{ padding: '0 15px 12px 15px', fontSize: '13px' }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{post.likes} ਲਾਈਕਸ</div>
-                  <div><b style={{ marginRight: '8px' }}>{post.user}</b>{post.content}</div>
+                <div style={{ display: 'flex', gap: '20px', marginTop: '12px', fontSize: '13px', color: '#aaa', borderTop: '1px solid #1a1a1a', paddingTop: '10px' }}>
+                  <span onClick={() => toggleLike(post.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    {post.isLiked ? '❤️' : '🤍'} {post.likes} ਲਾਈਕਸ
+                  </span>
+                  <span>💬 ਕਮੈਂਟਸ</span>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Create Post Tab */}
-        {currentTab === 'create' && (
-          <div style={{ backgroundColor: '#121212', padding: '20px', margin: '15px', borderRadius: '12px', border: '1px solid #222' }}>
-            <h3 style={{ marginBottom: '15px', fontSize: '16px' }}>➕ ਨਵੀਂ ਰੀਲ ਜਾਂ ਪਿੰਡ ਦਾ ਮਸਲਾ ਪਾਓ</h3>
-            <form onSubmit={handlePostSubmit}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', color: '#aaa' }}>ਕਿਸਮ:</label>
-                <select value={postType} onChange={(e) => setPostType(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff' }}>
-                  <option value="culture">ਸੱਭਿਆਚਾਰ / ਡੇਲੀ ਲਾਈਫ / ਰੀਲ</option>
-                  <option value="issue">ਪਿੰਡ ਦਾ ਮਸਲਾ (ਸਰਪੰਚ / ਕੰਮ ਬਾਰੇ)</option>
-                </select>
-              </div>
+        {/* Create Post Section */}
+        {activeTab === 'create' && (
+          <div style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>➕ ਪੋਸਟ ਜਾਂ ਪਿੰਡ ਦਾ ਮਸਲਾ ਪਾਓ</h3>
+            <form onSubmit={createPost}>
+              <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '5px' }}>ਕਿਸਮ ਚੁਣੋ:</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '15px', backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff' }}>
+                <option value="culture">ਸੱਭਿਆਚਾਰ ਅਤੇ ਡੇਲੀ ਲਾਈਫ (Culture)</option>
+                <option value="issue">ਪਿੰਡ ਦਾ ਅਸਲ ਮਸਲਾ / ਸਰਪੰਚ ਬਾਰੇ (Issue)</option>
+              </select>
 
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', color: '#aaa' }}>ਪਿੰਡ / ਸ਼ਹਿਰ:</label>
-                <input type="text" placeholder="ਜਿਵੇਂ: ਪਿੰਡ ਮੱਲ੍ਹੀਆਂ" value={postVillage} onChange={(e) => setPostVillage(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }} />
-              </div>
+              <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '5px' }}>ਪਿੰਡ / ਸ਼ਹਿਰ:</label>
+              <input type="text" placeholder="ਜਿਵੇਂ: ਪਿੰਡ ਮੱਲ੍ਹੀਆਂ" value={postVillage} onChange={e => setPostVillage(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '15px', backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }} />
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', color: '#aaa' }}>ਵੇਰਵਾ ਲਿਖੋ:</label>
-                <textarea rows="4" placeholder="ਆਪਣੀ ਗੱਲ ਲਿਖੋ..." value={newContent} onChange={(e) => setNewContent(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#1a1a1a', color: '#fff', boxSizing: 'border-box' }}></textarea>
-              </div>
+              <label style={{ fontSize: '12px', color: '#888', display: 'block', marginBottom: '5px' }}>ਵੇਰਵਾ ਲਿਖੋ:</label>
+              <textarea rows="4" placeholder="ਆਪਣੀ ਗੱਲ ਖੁੱਲ੍ਹ ਕੇ ਲਿਖੋ..." value={newContent} onChange={e => setNewContent(e.target.value)} style={{ width: '100%', padding: '12px', marginBottom: '20px', backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}></textarea>
 
-              <button type="submit" style={{ width: '100%', backgroundColor: '#fff', color: '#000', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>ਸ਼ੇਅਰ ਕਰੋ</button>
+              <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#fff', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                ਪੰਜਾਬ ਵਿੱਚ ਸ਼ੇਅਰ ਕਰੋ
+              </button>
             </form>
           </div>
         )}
 
-        {/* Profile Tab */}
-        {currentTab === 'profile' && (
-          <div style={{ padding: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-              <div style={{ width: '70px', height: '70px', borderRadius: '50%', backgroundColor: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px' }}>🧑‍🌾</div>
-              <div>
-                <h3 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>{user.name}</h3>
-                <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#888' }}>📍 {user.village}</p>
-                <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>📞 {user.phone}</p>
-              </div>
+        {/* Profile Section */}
+        {activeTab === 'profile' && (
+          <div style={{ padding: '20px' }}>
+            <div style={{ backgroundColor: '#111', padding: '20px', borderRadius: '12px', border: '1px solid #222', textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '40px', marginBottom: '10px' }}>🧑‍🌾</div>
+              <h3 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>{user.name}</h3>
+              <p style={{ margin: '0 0 5px 0', fontSize: '13px', color: '#888' }}>📍 {user.village}</p>
+              <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>📞 {user.phone}</p>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #222', borderBottom: '1px solid #222', padding: '10px 0', marginBottom: '15px', textAlign: 'center' }}>
-              <div><b>{userPosts.length}</b><div style={{ fontSize: '11px', color: '#888' }}>ਪੋਸਟਾਂ</div></div>
-              <div><b>0</b><div style={{ fontSize: '11px', color: '#888' }}>ਫਾਲੋਅਰਜ਼</div></div>
-              <div><b>0</b><div style={{ fontSize: '11px', color: '#888' }}>ਫਾਲੋਇੰਗ</div></div>
-            </div>
-
-            <h4 style={{ fontSize: '13px', color: '#aaa', marginBottom: '10px' }}>ਮੇਰੀਆਂ ਪੋਸਟਾਂ:</h4>
-            {userPosts.map(p => (
-              <div key={p.id} style={{ backgroundColor: '#121212', padding: '12px', borderRadius: '8px', marginBottom: '10px', fontSize: '13px', border: '1px solid #222' }}>
-                <b style={{ color: '#fff' }}>{p.village}</b>
-                <p style={{ margin: '5px 0 0 0', color: '#ccc' }}>{p.content}</p>
-              </div>
-            ))}
+            <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#aaa' }}>ਤੁਹਾਡੀਆਂ ਪਾਈਆਂ ਪੋਸਟਾਂ ({myPosts.length}):</h4>
+            {myPosts.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#666', fontSize: '13px', padding: '20px' }}>ਕੋਈ ਪੋਸਟ ਨਹੀਂ ਪਾਈ ਗਈ।</p>
+            ) : (
+              myPosts.map(p => (
+                <div key={p.id} style={{ backgroundColor: '#111', padding: '12px', borderRadius: '8px', marginBottom: '10px', border: '1px solid #222', fontSize: '13px' }}>
+                  <b>{p.village}</b>
+                  <p style={{ margin: '5px 0 0 0', color: '#ccc' }}>{p.content}</p>
+                </div>
+              ))
+            )}
           </div>
         )}
 
-        {/* Settings Tab (12 Snapchat/Instagram Settings Points) */}
-        {currentTab === 'settings' && (
-          <div style={{ padding: '15px' }}>
-            <h3 style={{ marginBottom: '15px', fontSize: '16px' }}>⚙️ ਸੈਟਿੰਗਸ (Settings)</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222' }}>👤 <b>Profile:</b> {user.name}</div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222' }}>📍 <b>Village:</b> {user.village}</div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਪਾਸਵਰਡ ਬਦਲਣ ਦਾ ਵਿਕਲਪ!')}>🔑 <b>Change Password</b></div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222' }}>💾 <b>Saved Login:</b> ਐਕਟਿਵ (ਵਨ-ਟਾਈਮ)</div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਕੈਸ਼ ਸਾਫ਼ ਕਰ ਦਿੱਤਾ ਗਿਆ!')}>🧹 <b>Clear Cache</b></div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਕੋਈ ਬਲੌਕ ਯੂਜ਼ਰ ਨਹੀਂ।')}>🚫 <b>Blocked Users</b></div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਸਹਾਇਤਾ ਲਈ ਸੰਪਰਕ ਕਰੋ।')}>🛟 <b>Help & Support</b></div>
-              <div style={{ padding: '12px', backgroundColor: '#121212', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਨਿਯਮ: ਸਿਰਫ਼ ਕਲਚਰ ਅਤੇ ਪਿੰਡਾਂ ਦੇ ਮਸਲੇ।')}>📜 <b>Terms & Policy</b></div>
-              
-              <button onClick={handleLogout} style={{ backgroundColor: '#1a1a1a', color: '#fff', padding: '12px', border: '1px solid #333', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left', marginTop: '10px' }}>
-                🚪 Log Out (ਬਾਹਰ ਆਓ)
+        {/* Settings Section (Top-class Settings) */}
+        {activeTab === 'settings' && (
+          <div style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '18px', marginBottom: '15px' }}>⚙️ ਸੈਟਿੰਗਸ (Settings)</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
+              <div style={{ padding: '14px', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #222' }}>👤 ਪ੍ਰੋਫਾਈਲ: {user.name}</div>
+              <div style={{ padding: '14px', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #222' }}>📍 ਪਿੰਡ: {user.village}</div>
+              <div style={{ padding: '14px', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਪਾਸਵਰਡ ਅੱਪਡੇਟ ਸਿਸਟਮ ਐਕਟਿਵ ਹੈ!')}>🔑 ਪਾਸਵਰਡ ਬਦਲੋ</div>
+              <div style={{ padding: '14px', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਕੈਸ਼ ਸਾਫ਼ ਕਰ ਦਿੱਤਾ ਗਿਆ!')}>🧹 ਕੈਸ਼ ਸਾਫ਼ ਕਰੋ (Clear Cache)</div>
+              <div style={{ padding: '14px', backgroundColor: '#111', borderRadius: '8px', border: '1px solid #222', color: '#4dabf7', cursor: 'pointer' }} onClick={() => alert('ਨਿਯਮ: ਸਿਰਫ਼ ਪੰਜਾਬੀ ਕਲਚਰ ਅਤੇ ਪਿੰਡਾਂ ਦੇ ਅਸਲ ਮਸਲੇ।')}>📜 ਨਿਯਮ ਅਤੇ ਸ਼ਰਤਾਂ (Terms)</div>
+
+              <button onClick={handleLogout} style={{ marginTop: '15px', padding: '12px', backgroundColor: '#3b1111', color: '#ff8a80', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', textAlign: 'left' }}>
+                🚪 ਅਕਾਊਂਟ ਤੋਂ ਬਾਹਰ ਆਓ (Log Out)
               </button>
             </div>
           </div>
@@ -298,12 +235,12 @@ export default function PunjabApp() {
 
       </div>
 
-      {/* Instagram Style Bottom Navigation Bar */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '480px', margin: '0 auto', backgroundColor: '#000', borderTop: '1px solid #222', display: 'flex', justifyContent: 'space-around', padding: '12px 0', fontSize: '20px' }}>
-        <span onClick={() => setCurrentTab('feed')} style={{ cursor: 'pointer', opacity: currentTab === 'feed' ? '1' : '0.5' }}>🏠</span>
-        <span onClick={() => setCurrentTab('create')} style={{ cursor: 'pointer', opacity: currentTab === 'create' ? '1' : '0.5' }}>➕</span>
-        <span onClick={() => setCurrentTab('profile')} style={{ cursor: 'pointer', opacity: currentTab === 'profile' ? '1' : '0.5' }}>👤</span>
-        <span onClick={() => setCurrentTab('settings')} style={{ cursor: 'pointer', opacity: currentTab === 'settings' ? '1' : '0.5' }}>⚙️</span>
+      {/* Bottom Modern Navigation Bar */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '480px', margin: '0 auto', backgroundColor: '#000', borderTop: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-around', padding: '12px 0', zIndex: 10 }}>
+        <span onClick={() => setActiveTab('feed')} style={{ cursor: 'pointer', fontSize: '20px', opacity: activeTab === 'feed' ? '1' : '0.4' }}>🏠</span>
+        <span onClick={() => setActiveTab('create')} style={{ cursor: 'pointer', fontSize: '20px', opacity: activeTab === 'create' ? '1' : '0.4' }}>➕</span>
+        <span onClick={() => setActiveTab('profile')} style={{ cursor: 'pointer', fontSize: '20px', opacity: activeTab === 'profile' ? '1' : '0.4' }}>👤</span>
+        <span onClick={() => setActiveTab('settings')} style={{ cursor: 'pointer', fontSize: '20px', opacity: activeTab === 'settings' ? '1' : '0.4' }}>⚙️</span>
       </div>
 
     </div>
