@@ -1,108 +1,103 @@
-// server.js - Backend for PUNJAB App
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
+import React from "react";
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+export default function App() {
+  return (
+    <div style={styles.page}>
+      <div style={styles.logo}>
+        {/* Punjabi Title */}
+        <div style={styles.punjabi}>ਪੰਜਾਬ</div>
 
-// MongoDB Connection (Real Production Database)
-mongoose.connect('mongodb+srv://punjab_admin:secure_password@cluster.mongodb.net/punjab_db?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('Database Connected Successfully')).catch(err => console.log(err));
+        {/* English Title */}
+        <div style={styles.english}>Punjab</div>
 
-// User Schema
-const UserSchema = new mongoose.Schema({
-  name: String,
-  phone: { type: String, unique: true },
-  village: String,
-  password: { type: String, required: true },
-  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
-});
-const User = mongoose.model('User', UserSchema);
+        {/* Field + Farmer + Boy */}
+        <div style={styles.scene}>
+          <div style={styles.sun} />
 
-// Post Schema
-const PostSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  username: String,
-  village: String,
-  category: String,
-  content: String,
-  mediaUrl: String,
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  comments: [{ username: String, text: String, createdAt: { type: Date, default: Date.now } }],
-  createdAt: { type: Date, default: Date.now }
-});
-const Post = mongoose.model('Post', PostSchema);
+          <div style={styles.field}>
+            <span>🌾</span>
+            <span>🌾</span>
+            <span>🌾</span>
+            <span>🌾</span>
+            <span>🌾</span>
+            <span>🌾</span>
+          </div>
 
-// Signup Route
-app.post('/api/signup', async (req, res) => {
-  try {
-    const { name, phone, village, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ name, phone, village, password: hashedPassword });
-    await user.save();
-    res.status(201).json({ success: true, message: 'Account created successfully', user });
-  } catch (err) {
-    res.status(400).json({ success: false, message: 'Phone number already registered or invalid data' });
-  }
-});
+          <div style={styles.people}>
+            {/* Farmer */}
+            <div style={styles.farmer}>
+              <div style={styles.farmerHead} />
+              <div style={styles.farmerBody} />
+              <div style={styles.farmerLeg1} />
+              <div style={styles.farmerLeg2} />
+              <div style={styles.farmerArm} />
+            </div>
 
-// Login Route
-app.post('/api/login', async (req, res) => {
-  try {
-    const { phone, password } = req.body;
-    const user = await User.findOne({ phone });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ success: false, message: 'Invalid phone number or password' });
-    }
-    res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+            {/* Boy */}
+            <div style={styles.boy}>
+              <div style={styles.boyHead} />
+              <div style={styles.boyBody} />
+              <div style={styles.boyLeg1} />
+              <div style={styles.boyLeg2} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-// Get Feed Route
-app.get('/api/posts', async (req, res) => {
-  try {
-    const posts = await Post.find().sort({ createdAt: -1 });
-    res.json(posts);
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
+const styles = {
+  page: {
+    minHeight: "100vh",
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background:
+      "linear-gradient(to bottom, #fffdf5 0%, #f8e7bd 48%, #c99548 100%)",
+    padding: "20px",
+    boxSizing: "border-box",
+  },
 
-// Create Post Route
-app.post('/api/posts', async (req, res) => {
-  try {
-    const { userId, username, village, category, content, mediaUrl } = req.body;
-    const newPost = new Post({ userId, username, village, category, content, mediaUrl });
-    await newPost.save();
-    res.status(201).json({ success: true, post: newPost });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
+  logo: {
+    width: "min(92vw, 650px)",
+    textAlign: "center",
+    overflow: "hidden",
+    borderRadius: "24px",
+    background:
+      "linear-gradient(to bottom, #fffef9 0%, #fff8e7 45%, #d7a452 100%)",
+    boxShadow: "0 15px 40px rgba(0,0,0,0.18)",
+    paddingTop: "35px",
+  },
 
-// Like/Unlike Route
-app.post('/api/posts/:id/like', async (req, res) => {
-  try {
-    const { userId } = req.body;
-    const post = await Post.findById(req.params.id);
-    if (post.likes.includes(userId)) {
-      post.likes.pull(userId);
-    } else {
-      post.likes.push(userId);
-    }
-    await post.save();
-    res.json({ success: true, likes: post.likes });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
+  punjabi: {
+    fontSize: "clamp(65px, 14vw, 125px)",
+    fontWeight: "900",
+    color: "#111",
+    lineHeight: "1",
+    textShadow: "3px 4px 4px rgba(0,0,0,.25)",
+    fontFamily: "Noto Sans Gurmukhi, Arial, sans-serif",
+  },
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+  english: {
+    marginTop: "10px",
+    fontSize: "clamp(32px, 7vw, 60px)",
+    fontFamily: "cursive",
+    color: "#111",
+    fontWeight: "600",
+  },
+
+  scene: {
+    position: "relative",
+    height: "300px",
+    marginTop: "15px",
+    overflow: "hidden",
+    background:
+      "linear-gradient(to bottom, #f6d9a1 0%, #e8bb6c 45%, #9d682d 46%, #c28b3e 100%)",
+  },
+
+  sun: {
+    position: "absolute",
+    width: "65px",
+    height: "
