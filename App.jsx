@@ -40,7 +40,6 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [user, setUser] = useState(() => localStorage.getItem("punjab_active_user") || "");
   
-  // ਕਲਾਊਡ ਤੋਂ ਯੂਜ਼ਰ ਦਾ ਡਾਟਾ ਲੋਡ ਕਰਨਾ
   const [userData, setUserData] = useState(() => {
     const active = localStorage.getItem("punjab_active_user");
     if (!active) return { bio: "ਸੋਹਣਾ ਪੰਜਾਬ • ਪੰਜਾਬੀ ਕ੍ਰਿਏਟਰ 🌾", avatar: "", isPrivate: false, wallet: 250 };
@@ -59,7 +58,6 @@ export default function App() {
 
   const [tab, setTab] = useState("home");
   
-  // ਕਲਾਊਡ ਤੋਂ ਸਾਰੀਆਂ ਪੋਸਟਾਂ ਲੋਡ ਕਰਨਾ
   const [posts, setPosts] = useState(() => {
     try {
       const cloudPosts = localStorage.getItem("punjab_cloud_all_posts");
@@ -69,7 +67,6 @@ export default function App() {
     }
   });
 
-  // ਕਲਾਊਡ ਤੋਂ ਸੇਵ ਕੀਤੀਆਂ ਪੋਸਟਾਂ
   const [savedPosts, setSavedPosts] = useState(() => {
     try {
       const active = localStorage.getItem("punjab_active_user");
@@ -80,7 +77,6 @@ export default function App() {
     }
   });
 
-  // ਕਲਾਊਡ ਤੋਂ ਫਾਲੋਅਰਜ਼/ਫੋਲੋਇੰਗ ਡਾਟਾ
   const [following, setFollowing] = useState(() => {
     try {
       const active = localStorage.getItem("punjab_active_user");
@@ -101,7 +97,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // ਕਲਾਊਡ ਵਿੱਚ ਹਰ ਇੱਕ ਬਦਲਾਅ ਨੂੰ ਆਟੋਮੈਟਿਕ ਸੇਵ (Sync) ਕਰਨਾ
   useEffect(() => {
     if (!user) return;
     try {
@@ -137,7 +132,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans max-w-md mx-auto relative pb-20 border-x border-neutral-900 select-none">
-      {/* Top Header */}
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur border-b border-neutral-900 px-4 h-12 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setTab("home")}>
           <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 via-orange-600 to-yellow-400 p-0.5 flex items-center justify-center shadow-lg">
@@ -162,7 +156,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="pb-12">
         {tab === "home" && <HomeScreen posts={posts} setPosts={setPosts} setTab={setTab} currentUser={user} avatar={userData.avatar} following={following} setFollowing={setFollowing} savedPosts={savedPosts} setSavedPosts={setSavedPosts} />}
         {tab === "search" && <ExploreScreen posts={posts} />}
@@ -183,7 +176,6 @@ export default function App() {
         {tab === "story" && <StoryViewScreen setTab={setTab} />}
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-black/95 backdrop-blur border-t border-neutral-900 flex justify-around items-center h-14 z-50">
         <button onClick={() => setTab("home")} className={tab === "home" ? "text-amber-400 scale-110" : "text-white/60"}><Home size={24} /></button>
         <button onClick={() => setTab("search")} className={tab === "search" ? "text-amber-400 scale-110" : "text-white/60"}><Search size={24} /></button>
@@ -195,7 +187,6 @@ export default function App() {
   );
 }
 
-// ਕਲਾਊਡ ਸਿಂಕ್ਡ Auth Screen
 function AuthScreen({ setUser, setUserData, setPosts, setSavedPosts, setFollowing }) {
   const [mode, setMode] = useState("login");
   const [mobile, setMobile] = useState("");
@@ -212,13 +203,10 @@ function AuthScreen({ setUser, setUserData, setPosts, setSavedPosts, setFollowin
       setErrorMsg("ਸਹੀ 10-ਅੰਕਾਂ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ, ਯੂਜ਼ਰਨੇਮ ਅਤੇ ਪਾਸਵਰਡ ਭਰੋ!");
       return;
     }
-    
     const cleanUser = username.trim();
-    // ਕਲਾਊਡ ਵਿੱਚ ਅਕਾਊਂਟ ਰਜਿਸਟਰ ਕਰੋ
     localStorage.setItem(`punjab_pwd_${cleanUser}`, password);
     localStorage.setItem(`punjab_mobile_${cleanUser}`, mobile.trim());
-
-    setSuccessMsg("ਖਾਤਾ ਕਲਾਊਡ 'ਤੇ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ! ਹੁਣ ਲੌਗ ਇൻ ਕਰੋ।");
+    setSuccessMsg("ਖਾਤਾ ਕਲਾਊਡ 'ਤੇ ਸਫ਼ਲਤਾਪੂਰਵਕ ਬਣ ਗਿਆ ਹੈ! ਹੁਣ ਲੌਗ ਇਨ ਕਰੋ।");
     setErrorMsg("");
     setTimeout(() => {
       setMode("login");
@@ -242,7 +230,6 @@ function AuthScreen({ setUser, setUserData, setPosts, setSavedPosts, setFollowin
       return;
     }
 
-    // ਯੂਜ਼ਰ ਐਕਟਿਵ ਕਰੋ ਅਤੇ ਉਸਦਾ ਕਲਾਊਡ ਡਾਟਾ ਲੋਡ ਕਰੋ
     localStorage.setItem("punjab_active_user", cleanUser);
     
     try {
@@ -276,7 +263,6 @@ function AuthScreen({ setUser, setUserData, setPosts, setSavedPosts, setFollowin
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     setGeneratedForgotOtp(otp);
-
     setSuccessMsg(`ਮੋਬਾਈਲ ਨੰਬਰ (${savedMobile}) 'ਤੇ OTP ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ! ਕੋਡ: ${otp}`);
     setErrorMsg("");
     setMode("verifyForgotOTP");
@@ -439,4 +425,9 @@ function CreateMenuScreen({ setTab }) {
           <ImageIcon size={32} className="text-amber-400" />
           <span className="text-xs font-bold">ਨਵੀਂ ਪੋਸਟ</span>
         </button>
-        <button onClick={() => setTab("create-reel")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex
+        <button onClick={() => setTab("create-reel")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
+          <Film size={32} className="text-orange-500" />
+          <span className="text-xs font-bold">ਰੀਲ</span>
+        </button>
+        <button onClick={() => setTab("camera")} className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl flex flex-col items-center gap-3 hover:border-amber-500 transition">
+          <Camera size={32} clas
