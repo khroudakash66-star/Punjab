@@ -30,7 +30,10 @@ import {
   DollarSign,
   Bot,
   Smartphone,
-  ShieldCheck
+  ShieldCheck,
+  FileText,
+  HelpCircle,
+  Info
 } from "lucide-react";
 
 export default function App() {
@@ -144,6 +147,8 @@ export default function App() {
         {tab === "reels" && <ReelsScreen currentUser={user} following={following} setFollowing={setFollowing} />}
         {tab === "profile" && <ProfileScreen user={user} bio={bio} avatar={avatar} posts={posts} savedPosts={savedPosts} setPosts={setPosts} setUser={setUser} setTab={setTab} following={following} isPrivate={isPrivate} />}
         {tab === "settings" && <SettingsScreen setTab={setTab} user={user} setUser={setUser} setBio={setBio} setAvatar={setAvatar} isPrivate={isPrivate} setIsPrivate={setIsPrivate} />}
+        {tab === "terms" && <TermsScreen setTab={setTab} />}
+        {tab === "privacy-policy" && <PrivacyPolicyScreen setTab={setTab} />}
         {tab === "notifications" && <NotificationsScreen notifications={notifications} setTab={setTab} />}
         {tab === "messages" && <MessagesScreen setTab={setTab} currentUser={user} notes={notes} setNotes={setNotes} />}
         {tab === "monetization" && <MonetizationScreen setTab={setTab} wallet={wallet} />}
@@ -855,7 +860,7 @@ function SettingsScreen({ setTab, user, setUser, setBio, setAvatar, isPrivate, s
     <div className="p-4 space-y-4">
       <div className="flex items-center gap-3 border-b border-neutral-900 pb-3">
         <button onClick={() => setTab("profile")}><ArrowLeft size={20} /></button>
-        <h2 className="text-sm font-bold">Edit Profile & Privacy</h2>
+        <h2 className="text-sm font-bold">Settings & Legal (ਸੈਟਿੰਗਜ਼)</h2>
       </div>
 
       <div className="bg-neutral-900 p-4 rounded-2xl border border-neutral-800 flex items-center justify-between">
@@ -866,6 +871,18 @@ function SettingsScreen({ setTab, user, setUser, setBio, setAvatar, isPrivate, s
           onChange={(e) => setIsPrivate(e.target.checked)}
           className="w-4 h-4 accent-amber-500 cursor-pointer"
         />
+      </div>
+
+      {/* Terms & Policies Links (Instagram Style) */}
+      <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden divide-y divide-neutral-800 text-xs">
+        <button onClick={() => setTab("terms")} className="w-full p-4 text-left flex items-center justify-between hover:bg-neutral-800/50 transition">
+          <span className="flex items-center gap-2 font-medium"><FileText size={16} className="text-amber-400" /> Terms of Use (ਨਿਯਮ ਅਤੇ ਸ਼ਰਤਾਂ)</span>
+          <span className="text-neutral-500">›</span>
+        </button>
+        <button onClick={() => setTab("privacy-policy")} className="w-full p-4 text-left flex items-center justify-between hover:bg-neutral-800/50 transition">
+          <span className="flex items-center gap-2 font-medium"><ShieldCheck size={16} className="text-amber-400" /> Privacy Policy (ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ)</span>
+          <span className="text-neutral-500">›</span>
+        </button>
       </div>
 
       <div className="bg-neutral-900 p-4 rounded-2xl border border-neutral-800 text-center space-y-3">
@@ -889,6 +906,42 @@ function SettingsScreen({ setTab, user, setUser, setBio, setAvatar, isPrivate, s
 
       <div className="space-y-2 text-xs">
         <button onClick={() => { localStorage.removeItem("punjab_app_user"); setUser(""); }} className="w-full p-3 bg-red-500/10 text-red-400 font-bold rounded-xl mt-4">Log Out</button>
+      </div>
+    </div>
+  );
+}
+
+// Terms of Use Screen
+function TermsScreen({ setTab }) {
+  return (
+    <div className="p-4 space-y-4 text-xs text-neutral-300">
+      <div className="flex items-center gap-3 border-b border-neutral-900 pb-3 text-white">
+        <button onClick={() => setTab("settings")}><ArrowLeft size={20} /></button>
+        <h2 className="text-sm font-bold text-amber-400">Terms of Use (ਨਿਯਮ ਅਤੇ ਸ਼ਰਤਾਂ)</h2>
+      </div>
+      <div className="space-y-3 bg-neutral-900 p-4 rounded-2xl border border-neutral-800 leading-relaxed">
+        <p className="font-bold text-white text-sm">ਅਸਲੀ ਪੰਜਾਬ ਸੋਸ਼ਲ ਨੈੱਟਵਰਕ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ!</p>
+        <p>1. ਇਸ ਪਲੇਟਫਾਰਮ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਸਮੇਂ ਹਰ ਯੂਜ਼ਰ ਨੂੰ ਪੰਜਾਬੀ ਸੱਭਿਆਚਾਰ ਅਤੇ ਭਾਈਚਾਰਕ ਸਾਂਝ ਦਾ ਸਤਿਕਾਰ ਕਰਨਾ ਪਵੇਗਾ।</p>
+        <p>2. ਕੋਈ ਵੀ ਗਲਤ, ਅਸ਼ਲੀਲ ਜਾਂ ਨਫ਼ਰਤ ਫੈਲਾਉਣ ਵਾਲੀ ਪੋਸਟ ਜਾਂ ਰੀਲ ਸਾਂਝੀ ਕਰਨ ਦੀ ਮਨਾਹੀ ਹੈ।</p>
+        <p>3. ਸਾਰੇ ਯੂਜ਼ਰ ਆਪਣੇ ਅਕਾਊਂਟ ਅਤੇ ਪਾਸਵਰਡ ਦੀ ਸੁਰੱਖਿਆ ਲਈ ਖੁਦ ਜ਼ਿੰਮੇवार ਹਨ।</p>
+      </div>
+    </div>
+  );
+}
+
+// Privacy Policy Screen
+function PrivacyPolicyScreen({ setTab }) {
+  return (
+    <div className="p-4 space-y-4 text-xs text-neutral-300">
+      <div className="flex items-center gap-3 border-b border-neutral-900 pb-3 text-white">
+        <button onClick={() => setTab("settings")}><ArrowLeft size={20} /></button>
+        <h2 className="text-sm font-bold text-amber-400">Privacy Policy (ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ)</h2>
+      </div>
+      <div className="space-y-3 bg-neutral-900 p-4 rounded-2xl border border-neutral-800 leading-relaxed">
+        <p className="font-bold text-white text-sm">ਤੁਹਾਡੀ ਪ੍ਰਾਈਵੇਸੀ ਸਾਡੀ ਪਹਿਲ ਹੈ:</p>
+        <p>1. ਅਸੀਂ ਤੁਹਾਡਾ ਨਿੱਜੀ ਡਾਟਾ (ਜਿਵੇਂ ਮੋਬਾਈਲ ਨੰਬਰ ਅਤੇ ਪਾਸਵਰਡ) ਪੂਰੀ ਤਰ੍ਹਾਂ ਸੁਰੱਖਿਅਤ ਰੱਖਦੇ ਹਾਂ।</p>
+        <p>2. ਤੁਹਾਡੀਆਂ ਪੋਸਟਾਂ, ਚੈਟਸ ਅਤੇ ਰੀਲਾਂ ਸਿਰਫ਼ ਤੁਹਾਡੇ ਅਕਾਊਂਟ ਤੱਕ ਸੀਮਤ ਰਹਿੰਦੀਆਂ ਹਨ ਜਦੋਂ ਤੱਕ ਤੁਸੀਂ ਉਨ੍ਹਾਂ ਨੂੰ ਪਬਲਿਕ ਨਹੀਂ ਕਰਦੇ।</p>
+        <p>3. ਅਸੀਂ ਤੁਹਾਡੀ ਕੋਈ ਵੀ ਨਿੱਜੀ ਜਾਣਕਾਰੀ ਕਿਸੇ ਤੀਜੀ ਧਿਰ (Third Party) ਨਾਲ ਸਾਂਝੀ ਨਹੀਂ ਕਰਦੇ।</p>
       </div>
     </div>
   );
